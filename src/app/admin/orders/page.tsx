@@ -9,7 +9,7 @@ interface Order {
   total_amount: number;
   payment_method: string;
   payment_status: string;
-  delivery_status: string; // <-- NEW: Tracking delivery state
+  delivery_status: string; 
   first_name: string;
   last_name: string;
   email: string | null;
@@ -19,6 +19,8 @@ interface Order {
   landmark: string | null;
   state: string;
   lga: string;
+  // --- NEW: Added order_items to the main interface for filtering ---
+  order_items?: { product_name: string; purchase_type: string }[];
 }
 
 interface OrderItem {
@@ -44,9 +46,11 @@ export default function AdminOrdersPage() {
   const [sortConfig, setSortConfig] = useState<'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'>('date-desc');
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'paystack' | 'offline'>('all');
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month' | '6-months' | 'year'>('all');
+  const [deliveryFilter, setDeliveryFilter] = useState<'all' | 'Pending Delivery' | 'Processing' | 'Delayed' | 'Delivered' | 'Cancelled'>('all');
   
-  // --- NEW: DELIVERY FILTER STATE ---
-  const [deliveryFilter, setDeliveryFilter] = useState<'all' | 'Pending Delivery' | 'Delayed' | 'Delivered'>('all');
+  // --- NEW: PURCHASE TYPE FILTER & BULK SELECTION STATE ---
+  const [purchaseFilter, setPurchaseFilter] = useState<'all' | 'standard' | 'bulk' | 'group'>('all');
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
@@ -54,7 +58,8 @@ export default function AdminOrdersPage() {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.from('orders').select('*');
+      // UPGRADED QUERY: We now fetch the product names and purchase types directly with the order!
+      const { data, error } = await supabase.from('orders').select('*, order_items(product_name, purchase_type)');
       if (error) throw error;
       setOrders(data || []);
     } catch (error: any) {
@@ -66,23 +71,28 @@ export default function AdminOrdersPage() {
 
   useEffect(() => { fetchOrders(); }, []);
 
+  // Clear selections when filters change
+  useEffect(() => { setSelectedOrders([]); setCurrentPage(1); }, [searchTerm, sortConfig, paymentFilter, deliveryFilter, dateFilter, purchaseFilter]);
+
   // --- UPGRADED DATA PIPELINE ---
   const processedOrders = useMemo(() => {
     let result = orders.filter(order => {
-      // 1. Text Search
+      // 1. Upgraded Text Search (Now searches inside the products purchased!)
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch = 
         order.tracking_number.toLowerCase().includes(searchLower) ||
         order.first_name.toLowerCase().includes(searchLower) ||
         order.last_name.toLowerCase().includes(searchLower) ||
         order.contact_phone.includes(searchTerm) ||
-        (order.email && order.email.toLowerCase().includes(searchLower));
+        (order.email && order.email.toLowerCase().includes(searchLower)) ||
+        order.order_items?.some(item => item.product_name.toLowerCase().includes(searchLower));
 
-      // 2. Payment Match
+      // 2. Exact Match Filters
       const matchesPayment = paymentFilter === 'all' || order.payment_method === paymentFilter;
-
-      // 3. NEW: Delivery Match
       const matchesDelivery = deliveryFilter === 'all' || order.delivery_status === deliveryFilter;
+      
+      // 3. Purchase Type Match (Checks if any item in the order matches the filter)
+      const matchesPurchase = purchaseFilter === 'all' || order.order_items?.some(item => item.purchase_type === purchaseFilter);
 
       // 4. Date Match
       let matchesDate = true;
@@ -98,7 +108,7 @@ export default function AdminOrdersPage() {
         if (dateFilter === 'year') matchesDate = (now - orderDate) <= (365 * oneDay);
       }
 
-      return matchesSearch && matchesPayment && matchesDelivery && matchesDate;
+      return matchesSearch && matchesPayment && matchesDelivery && matchesPurchase && matchesDate;
     });
 
     result.sort((a, b) => {
@@ -110,25 +120,23 @@ export default function AdminOrdersPage() {
     });
 
     return result;
-  }, [orders, searchTerm, sortConfig, paymentFilter, deliveryFilter, dateFilter]);
+  }, [orders, searchTerm, sortConfig, paymentFilter, deliveryFilter, dateFilter, purchaseFilter]);
 
   const totalPages = Math.ceil(processedOrders.length / itemsPerPage);
   const currentOrders = processedOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, sortConfig, paymentFilter, deliveryFilter, dateFilter]);
-
-  // --- UPGRADED CSV EXPORT ---
+  // --- UPGRADED CSV EXPORT (Now includes products list!) ---
   const exportToCSV = () => {
     if (processedOrders.length === 0) return alert("No orders to export!");
 
     const headers = [
       "Tracking Number", "Date Placed", "Customer First Name", "Customer Last Name", 
-      "Email", "Primary Phone", "Additional Phone", "State", "LGA", "Full Address", "Landmark",
-      "Payment Method", "Payment Status", "Delivery Status", "Total Amount (NGN)" // Added Delivery Status
+      "Email", "Primary Phone", "State", "LGA", "Full Address",
+      "Payment Method", "Payment Status", "Delivery Status", "Total Amount (NGN)", "Products Ordered"
     ];
 
     const csvRows = processedOrders.map(order => {
-      const cleanString = (str: string | null) => `"${(str || '').replace(/"/g, '""')}"`;
+      const cleanString = (str: string | null | undefined) => `"${(str || '').replace(/"/g, '""')}"`;
       return [
         cleanString(order.tracking_number),
         cleanString(new Date(order.created_at).toLocaleDateString()),
@@ -136,15 +144,14 @@ export default function AdminOrdersPage() {
         cleanString(order.last_name),
         cleanString(order.email),
         cleanString(order.contact_phone),
-        cleanString(order.additional_phone),
         cleanString(order.state),
         cleanString(order.lga),
         cleanString(order.shipping_address),
-        cleanString(order.landmark),
         cleanString(order.payment_method.toUpperCase()),
         cleanString(order.payment_status.toUpperCase()),
-        cleanString(order.delivery_status.toUpperCase()), // Added Delivery Status
-        order.total_amount
+        cleanString(order.delivery_status.toUpperCase()), 
+        order.total_amount,
+        cleanString(order.order_items?.map(i => i.product_name).join(' | '))
       ].join(",");
     });
 
@@ -192,7 +199,6 @@ export default function AdminOrdersPage() {
     }
   };
 
-  // --- NEW: DELIVERY STATUS UPDATER ---
   const handleUpdateDeliveryStatus = async (orderId: string, newStatus: string) => {
     if (!window.confirm(`Update delivery status to: ${newStatus}?`)) return;
     setUpdating(true);
@@ -208,12 +214,39 @@ export default function AdminOrdersPage() {
     }
   };
 
-  // Helper function to color-code the delivery badge
+  // --- NEW: BULK ACTION ENGINE ---
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) setSelectedOrders(currentOrders.map(o => o.id));
+    else setSelectedOrders([]);
+  };
+
+  const handleSelectOne = (id: string, checked: boolean) => {
+    if (checked) setSelectedOrders(prev => [...prev, id]);
+    else setSelectedOrders(prev => prev.filter(orderId => orderId !== id));
+  };
+
+  const handleBulkUpdateDelivery = async (newStatus: string) => {
+    if (!window.confirm(`Are you sure you want to mark ${selectedOrders.length} selected orders as ${newStatus.toUpperCase()}?`)) return;
+    setUpdating(true);
+    try {
+      const { error } = await supabase.from('orders').update({ delivery_status: newStatus }).in('id', selectedOrders);
+      if (error) throw error;
+      setOrders(prev => prev.map(o => selectedOrders.includes(o.id) ? { ...o, delivery_status: newStatus } : o));
+      setSelectedOrders([]);
+      alert(`Successfully updated ${selectedOrders.length} orders!`);
+    } catch (error: any) {
+      alert(`Bulk update error: ${error.message}`);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const getDeliveryBadgeStyle = (status: string) => {
     switch (status) {
       case 'Delivered': return 'bg-green-100 text-green-800 border-green-200';
       case 'Delayed': return 'bg-red-100 text-red-800 border-red-200 animate-pulse';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200'; // Pending
+      case 'Cancelled': return 'bg-gray-100 text-gray-500 border-gray-300 line-through';
+      default: return 'bg-blue-50 text-blue-800 border-blue-200'; 
     }
   };
 
@@ -231,12 +264,24 @@ export default function AdminOrdersPage() {
 
       <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-col gap-4">
         <div className="w-full relative">
-          <input type="text" placeholder="Search by ID, Name, Phone, or Email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-sm bg-gray-50" />
+          <input type="text" placeholder="Search by Product Name, Tracking ID, Customer..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-sm bg-gray-50 text-gray-900" />
           <span className="absolute left-3 top-3.5 text-gray-400">🔍</span>
         </div>
         
         <div className="flex flex-col xl:flex-row gap-4 justify-between items-center border-t border-gray-100 pt-4">
           <div className="flex flex-wrap gap-4 w-full xl:w-auto">
+            
+            {/* --- NEW: PURCHASE TYPE FILTER --- */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-500 font-medium">Type:</label>
+              <select value={purchaseFilter} onChange={(e) => setPurchaseFilter(e.target.value as any)} className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white font-medium">
+                <option value="all">All Orders</option>
+                <option value="group">🤝 Group Buys</option>
+                <option value="bulk">📦 Bulk Buys</option>
+                <option value="standard">Standard</option>
+              </select>
+            </div>
+
             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-500 font-medium">Payment:</label>
               <select value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value as any)} className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white">
@@ -246,25 +291,14 @@ export default function AdminOrdersPage() {
               </select>
             </div>
             
-            {/* --- NEW: DELIVERY FILTER DROPDOWN --- */}
             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-500 font-medium">Delivery:</label>
               <select value={deliveryFilter} onChange={(e) => setDeliveryFilter(e.target.value as any)} className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white">
                 <option value="all">All Statuses</option>
                 <option value="Pending Delivery">Pending</option>
+                <option value="Processing">Processing</option>
                 <option value="Delayed">Delayed</option>
                 <option value="Delivered">Delivered</option>
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-500 font-medium">Timeframe:</label>
-              <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value as any)} className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white">
-                <option value="all">All Time</option>
-                <option value="today">Today</option>
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="year">This Year</option>
               </select>
             </div>
           </div>
@@ -281,6 +315,19 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
+      {/* --- NEW: BULK ACTIONS BAR --- */}
+      {selectedOrders.length > 0 && (
+        <div className="bg-[#1A4331] text-white p-4 rounded-xl mb-6 shadow-md flex flex-col sm:flex-row justify-between items-center gap-4 animate-fade-in">
+          <span className="font-bold">{selectedOrders.length} Order(s) Selected</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-green-200 mr-2">Bulk Delivery Update:</span>
+            <button onClick={() => handleBulkUpdateDelivery('Processing')} disabled={updating} className="bg-blue-600 hover:bg-blue-700 text-xs font-bold px-3 py-2 rounded transition-colors shadow-sm disabled:opacity-50">Processing</button>
+            <button onClick={() => handleBulkUpdateDelivery('Delivered')} disabled={updating} className="bg-green-500 hover:bg-green-600 text-xs font-bold px-3 py-2 rounded transition-colors shadow-sm disabled:opacity-50">Mark Delivered</button>
+            <button onClick={() => handleBulkUpdateDelivery('Cancelled')} disabled={updating} className="bg-red-500 hover:bg-red-600 text-xs font-bold px-3 py-2 rounded transition-colors shadow-sm disabled:opacity-50">Cancel</button>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
         {loading ? (
           <div className="p-12 text-center text-gray-500 animate-pulse font-medium">Loading orders...</div>
@@ -293,40 +340,39 @@ export default function AdminOrdersPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100 text-sm text-gray-500">
+                  <th className="p-4 w-12 text-center">
+                    {/* MASTER CHECKBOX */}
+                    <input type="checkbox" onChange={handleSelectAll} checked={currentOrders.length > 0 && selectedOrders.length === currentOrders.length} className="w-4 h-4 text-green-600 rounded cursor-pointer" />
+                  </th>
                   <th className="p-4 font-medium">Date & ID</th>
                   <th className="p-4 font-medium">Customer</th>
                   <th className="p-4 font-medium">Total Value</th>
-                  <th className="p-4 font-medium">Payment</th>
                   <th className="p-4 font-medium">Logistics</th>
                   <th className="p-4 font-medium text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {currentOrders.map(order => (
-                  <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={order.id} className={`transition-colors ${selectedOrders.includes(order.id) ? 'bg-green-50/50' : 'hover:bg-gray-50'}`}>
+                    <td className="p-4 text-center">
+                      {/* INDIVIDUAL CHECKBOX */}
+                      <input type="checkbox" checked={selectedOrders.includes(order.id)} onChange={(e) => handleSelectOne(order.id, e.target.checked)} className="w-4 h-4 text-green-600 rounded cursor-pointer" />
+                    </td>
                     <td className="p-4">
                       <p className="font-bold text-gray-900">{order.tracking_number}</p>
                       <p className="text-xs text-gray-500">{new Date(order.created_at).toLocaleDateString()}</p>
                     </td>
                     <td className="p-4">
                       <p className="font-medium text-gray-900">{order.first_name} {order.last_name}</p>
-                      <p className="text-xs text-blue-600">{order.email || 'No email provided'}</p>
-                    </td>
-                    <td className="p-4 font-bold text-gray-900">
-                      ₦{order.total_amount.toLocaleString()}
+                      <p className="text-xs text-blue-600">{order.email || 'No email'}</p>
                     </td>
                     <td className="p-4">
-                      <div className="flex flex-col gap-1 items-start">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${order.payment_method === 'paystack' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'}`}>
-                          {order.payment_method}
-                        </span>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${order.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                          {order.payment_status}
-                        </span>
-                      </div>
+                      <p className="font-bold text-gray-900 mb-1">₦{order.total_amount.toLocaleString()}</p>
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${order.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                        {order.payment_status}
+                      </span>
                     </td>
                     <td className="p-4">
-                      {/* --- NEW: DELIVERY BADGE --- */}
                       <span className={`text-xs font-bold px-3 py-1.5 rounded-full border ${getDeliveryBadgeStyle(order.delivery_status)}`}>
                         {order.delivery_status || 'Pending Delivery'}
                       </span>
@@ -356,6 +402,7 @@ export default function AdminOrdersPage() {
         </div>
       )}
 
+      {/* --- ORDER DETAILS MODAL --- */}
       {selectedOrder && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto border border-gray-100">
@@ -372,10 +419,7 @@ export default function AdminOrdersPage() {
             
             <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
               
-              {/* LEFT COLUMN: Controls & Delivery Info */}
               <div className="space-y-6">
-                
-                {/* 1. Payment Control */}
                 <div>
                   <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Finance Status</h3>
                   <div className="bg-white p-4 rounded-xl border border-gray-200 flex items-center justify-between shadow-sm">
@@ -397,39 +441,28 @@ export default function AdminOrdersPage() {
                   </div>
                 </div>
 
-                {/* 2. Logistics Control (NEW) */}
                 <div>
                   <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Logistics Control</h3>
                   <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                      <p className="text-sm text-gray-600 mb-3">Current Status: <span className={`font-bold px-2 py-0.5 rounded-full text-xs ${getDeliveryBadgeStyle(selectedOrder.delivery_status || 'Pending Delivery')}`}>{selectedOrder.delivery_status || 'Pending Delivery'}</span></p>
                      
-                     <div className="grid grid-cols-3 gap-2">
-                       <button 
-                         onClick={() => handleUpdateDeliveryStatus(selectedOrder.id, 'Pending Delivery')} 
-                         disabled={updating || selectedOrder.delivery_status === 'Pending Delivery'}
-                         className="px-2 py-2 text-xs font-bold rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:bg-gray-100 transition-colors text-gray-700"
-                       >
-                         Pending
+                     <div className="grid grid-cols-2 gap-2">
+                       <button onClick={() => handleUpdateDeliveryStatus(selectedOrder.id, 'Processing')} disabled={updating || selectedOrder.delivery_status === 'Processing'} className="px-2 py-2 text-xs font-bold rounded-lg border border-blue-300 text-blue-700 hover:bg-blue-50 disabled:opacity-50 transition-colors">
+                         Processing
                        </button>
-                       <button 
-                         onClick={() => handleUpdateDeliveryStatus(selectedOrder.id, 'Delayed')} 
-                         disabled={updating || selectedOrder.delivery_status === 'Delayed'}
-                         className="px-2 py-2 text-xs font-bold rounded-lg border border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50 disabled:bg-red-100 transition-colors"
-                       >
+                       <button onClick={() => handleUpdateDeliveryStatus(selectedOrder.id, 'Delivered')} disabled={updating || selectedOrder.delivery_status === 'Delivered'} className="px-2 py-2 text-xs font-bold rounded-lg border border-green-300 text-green-700 hover:bg-green-50 disabled:opacity-50 transition-colors">
+                         Delivered ✓
+                       </button>
+                       <button onClick={() => handleUpdateDeliveryStatus(selectedOrder.id, 'Delayed')} disabled={updating || selectedOrder.delivery_status === 'Delayed'} className="px-2 py-2 text-xs font-bold rounded-lg border border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50 transition-colors">
                          Mark Delayed
                        </button>
-                       <button 
-                         onClick={() => handleUpdateDeliveryStatus(selectedOrder.id, 'Delivered')} 
-                         disabled={updating || selectedOrder.delivery_status === 'Delivered'}
-                         className="px-2 py-2 text-xs font-bold rounded-lg border border-green-300 text-green-700 hover:bg-green-50 disabled:opacity-50 disabled:bg-green-100 transition-colors"
-                       >
-                         Delivered ✓
+                       <button onClick={() => handleUpdateDeliveryStatus(selectedOrder.id, 'Cancelled')} disabled={updating || selectedOrder.delivery_status === 'Cancelled'} className="px-2 py-2 text-xs font-bold rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">
+                         Cancel Order
                        </button>
                      </div>
                   </div>
                 </div>
 
-                {/* 3. Delivery Manifest */}
                 <div>
                   <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Delivery Manifest</h3>
                   <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
@@ -444,10 +477,8 @@ export default function AdminOrdersPage() {
                     </div>
                   </div>
                 </div>
-
               </div>
               
-              {/* RIGHT COLUMN: Items List */}
               <div>
                 <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Order Contents</h3>
                 <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">

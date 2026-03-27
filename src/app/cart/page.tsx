@@ -1,17 +1,104 @@
 'use client';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase'; 
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
   const router = useRouter();
+  
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (cartItems.length === 0) return;
-    // For now, we will alert. Next sprint: The actual Checkout page!
-    // alert(`Proceeding to checkout! Grand Total: ₦${cartTotal.toLocaleString()}`);
-    router.push('/checkout'); 
+    setIsCheckingOut(true); 
+
+    try {
+      // ====================================================================
+      // 🚨 UPGRADED CAMPAIGN-SCOPED CHECK & OVER-SUBSCRIPTION DEFENSE 🚨
+      // ====================================================================
+      const groupBuyItems = cartItems.filter(item => item.purchaseType === 'group');
+
+      if (groupBuyItems.length > 0) {
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session?.user) {
+          alert("Please log in to proceed with a Group Buy purchase.");
+          router.push('/login'); 
+          return;
+        }
+
+        const userId = session.user.id;
+        const groupProductIds = groupBuyItems.map(item => item.productId);
+
+        // Fetch live product data for the group buys
+        const { data: productsData, error: productsError } = await supabase
+          .from('products')
+          .select('id, name, current_group_buyers, group_threshold')
+          .in('id', groupProductIds);
+
+        if (productsError) throw productsError;
+
+        if (productsData) {
+          for (const product of productsData) {
+            
+            // 1. OVER-SUBSCRIPTION DEFENSE
+            if (product.current_group_buyers >= (product.group_threshold || 1)) {
+               alert(`Cannot proceed: The campaign for "${product.name}" is already full (${product.group_threshold}/${product.group_threshold}). Please remove it from your cart to continue.`);
+               setIsCheckingOut(false);
+               return; 
+            }
+
+            // 2. THE CURRENT CAMPAIGN BATCH DEFENSE 
+            if (product.current_group_buyers > 0) {
+               const { data: allGroupItems, error: itemsError } = await supabase
+                  .from('order_items')
+                  .select('order_id, product_name, orders(user_id, created_at)')
+                  .eq('product_id', product.id)
+                  .eq('purchase_type', 'group');
+
+               if (itemsError) throw itemsError;
+
+               if (allGroupItems && allGroupItems.length > 0) {
+                  // Sort them all by Date Descending
+                  const sortedItems = allGroupItems.sort((a, b) => {
+                      const dateA = a.orders ? (Array.isArray(a.orders) ? new Date(a.orders[0]?.created_at).getTime() : new Date((a.orders as any).created_at).getTime()) : 0;
+                      const dateB = b.orders ? (Array.isArray(b.orders) ? new Date(b.orders[0]?.created_at).getTime() : new Date((b.orders as any).created_at).getTime()) : 0;
+                      return dateB - dateA; 
+                  });
+
+                  // Slice precisely to the size of the CURRENT active campaign
+                  const currentCampaignItems = sortedItems.slice(0, product.current_group_buyers);
+                  
+                  // Check if this user owns one of these recent slots
+                  const userInCurrentCampaign = currentCampaignItems.some(item => {
+                      const itemUserId = item.orders ? (Array.isArray(item.orders) ? item.orders[0]?.user_id : (item.orders as any).user_id) : null;
+                      return itemUserId === userId;
+                  });
+
+                  if (userInCurrentCampaign) {
+                      alert(`Cannot proceed: You are already a participant in the current active campaign for "${product.name}". The limit is 1 slot per customer until the campaign completes and restarts.`);
+                      setIsCheckingOut(false);
+                      return;
+                  }
+               }
+            }
+          }
+        }
+      }
+      // ====================================================================
+
+      // If no duplicates are found, or there are no group buys in the cart, proceed!
+      router.push('/checkout'); 
+
+    } catch (error: any) {
+      console.error("Cart verification error:", error);
+      alert(`An error occurred while verifying your cart: ${error.message}`);
+    } finally {
+      setIsCheckingOut(false); 
+    }
   };
 
   // --- EMPTY CART STATE ---
@@ -141,11 +228,13 @@ export default function CartPage() {
                 <span className="text-3xl font-black text-green-700">₦{cartTotal.toLocaleString()}</span>
               </div>
 
+              {/* --- UPGRADED BUTTON STATE --- */}
               <button 
                 onClick={handleCheckout}
-                className="w-full bg-gray-900 text-white font-black text-lg py-4 rounded-xl hover:bg-black transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
+                disabled={isCheckingOut}
+                className="w-full bg-gray-900 text-white font-black text-lg py-4 rounded-xl hover:bg-black transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 disabled:opacity-70 disabled:cursor-wait disabled:hover:-translate-y-0"
               >
-                Proceed to Checkout
+                {isCheckingOut ? 'Verifying Cart...' : 'Proceed to Checkout'}
               </button>
 
               <div className="mt-4 text-center flex items-center justify-center gap-2 text-gray-400 text-xs">

@@ -24,6 +24,16 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<'paystack' | 'offline'>('paystack');
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // --- NEW: PAYSTACK ENFORCEMENT STATE ---
+  const hasGroupBuy = cartItems.some(item => item.purchaseType === 'group');
+
+  useEffect(() => {
+    // If cart has a group buy, strictly force Paystack online payment
+    if (hasGroupBuy) {
+      setPaymentMethod('paystack');
+    }
+  }, [hasGroupBuy]);
+
   useEffect(() => {
     const getUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -42,7 +52,7 @@ export default function CheckoutPage() {
     getUser();
   }, [router]);
 
-  // --- THE NEW SYNCHRONIZED DATABASE ENGINE ---
+  // --- THE CLEAN DATABASE ENGINE (Runs ONLY after verification & payment) ---
   const saveOrderToDatabase = async (paymentStatus: string, method: string) => {
     setIsProcessing(true);
     try {
@@ -50,7 +60,7 @@ export default function CheckoutPage() {
 
       const trackingNumber = `GGN-${new Date().getTime().toString().slice(-8)}`;
 
-      // 1. Save the Main Order (Now includes delivery_status!)
+      // 1. Save the Main Order
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -68,7 +78,7 @@ export default function CheckoutPage() {
           landmark: landmark,
           state: state,
           lga: lga,
-          delivery_status: 'Pending Delivery' // New tracking default
+          delivery_status: 'Pending Delivery' 
         })
         .select()
         .single();
@@ -90,7 +100,6 @@ export default function CheckoutPage() {
 
       // 3. INVENTORY & CAMPAIGN MATHEMATICS
       for (const item of cartItems) {
-        // Fetch current product state to do safe math
         const { data: productData, error: productError } = await supabase
           .from('products')
           .select('stock_quantity, current_group_buyers, group_threshold, name')
@@ -160,17 +169,96 @@ export default function CheckoutPage() {
 
   const initializePayment = usePaystackPayment(paystackConfig);
 
-  const handleCheckout = (e: React.FormEvent) => {
+  // --- UPGRADED ASYNC GATEKEEPER FUNCTION ---
+  const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     if (itemCount === 0) return alert("Your cart is empty!");
-    
-    if (paymentMethod === 'paystack') {
-      initializePayment({ 
-        onSuccess: () => saveOrderToDatabase('paid', 'paystack'), 
-        onClose: () => alert("Payment window closed.") 
-      });
-    } else {
-      saveOrderToDatabase('pending', 'offline');
+
+    setIsProcessing(true); // Lock the button while we verify with the DB
+
+    try {
+      // ====================================================================
+      // 🚨 UPGRADED CAMPAIGN-SCOPED CHECK & OVER-SUBSCRIPTION DEFENSE 🚨
+      // This runs BEFORE Paystack is allowed to open!
+      // ====================================================================
+      const groupBuyItems = cartItems.filter(item => item.purchaseType === 'group');
+      
+      if (groupBuyItems.length > 0) {
+        if (!userId) throw new Error("Authentication error. Please log in again.");
+
+        const groupProductIds = groupBuyItems.map(item => item.productId);
+        
+        // Fetch live product data for the group buys
+        const { data: productsData, error: productsError } = await supabase
+          .from('products')
+          .select('id, name, current_group_buyers, group_threshold')
+          .in('id', groupProductIds);
+
+        if (productsError) throw productsError;
+          
+        if (productsData) {
+          for (const product of productsData) {
+            
+            // 1. OVER-SUBSCRIPTION DEFENSE
+            if (product.current_group_buyers >= (product.group_threshold || 1)) {
+               alert(`Payment Blocked: The campaign for "${product.name}" is already full (${product.group_threshold}/${product.group_threshold}). Please remove it from your cart to continue.`);
+               setIsProcessing(false);
+               return; 
+            }
+
+            // 2. THE CURRENT CAMPAIGN BATCH DEFENSE 
+            if (product.current_group_buyers > 0) {
+               const { data: allGroupItems, error: itemsError } = await supabase
+                  .from('order_items')
+                  .select('order_id, product_name, orders(user_id, created_at)')
+                  .eq('product_id', product.id)
+                  .eq('purchase_type', 'group');
+
+               if (itemsError) throw itemsError;
+
+               if (allGroupItems && allGroupItems.length > 0) {
+                  // Sort them all by Date Descending
+                  const sortedItems = allGroupItems.sort((a, b) => {
+                      const dateA = a.orders ? (Array.isArray(a.orders) ? new Date(a.orders[0]?.created_at).getTime() : new Date((a.orders as any).created_at).getTime()) : 0;
+                      const dateB = b.orders ? (Array.isArray(b.orders) ? new Date(b.orders[0]?.created_at).getTime() : new Date((b.orders as any).created_at).getTime()) : 0;
+                      return dateB - dateA; 
+                  });
+
+                  // Slice precisely to the size of the CURRENT active campaign
+                  const currentCampaignItems = sortedItems.slice(0, product.current_group_buyers);
+                  
+                  // Check if this user owns one of these recent slots
+                  const userInCurrentCampaign = currentCampaignItems.some(item => {
+                      const itemUserId = item.orders ? (Array.isArray(item.orders) ? item.orders[0]?.user_id : (item.orders as any).user_id) : null;
+                      return itemUserId === userId;
+                  });
+
+                  if (userInCurrentCampaign) {
+                      alert(`Payment Blocked: You are already a participant in the active campaign for "${product.name}". The limit is 1 slot per customer until the campaign is completed and restarted.`);
+                      setIsProcessing(false);
+                      return;
+                  }
+               }
+            }
+          }
+        }
+      }
+      // ====================================================================
+
+      // If we pass the check, allow the checkout to proceed!
+      if (paymentMethod === 'paystack') {
+        setIsProcessing(false); // Let Paystack's UI take over loading state
+        initializePayment({ 
+          onSuccess: () => saveOrderToDatabase('paid', 'paystack'), 
+          onClose: () => alert("Payment window closed.") 
+        });
+      } else {
+        saveOrderToDatabase('pending', 'offline');
+      }
+
+    } catch (error: any) {
+      alert(`Checkout Verification Error: ${error.message}`);
+      setIsProcessing(false);
     }
   };
 
@@ -236,7 +324,7 @@ export default function CheckoutPage() {
               <div className="pt-6 border-t border-gray-200">
                 <h3 className="font-bold text-gray-900 mb-3">Payment Method</h3>
                 <div className="space-y-3">
-                  <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-colors ${paymentMethod === 'paystack' ? 'border-green-500 bg-green-50' : 'hover:bg-gray-50'}`}>
+                  <label className={`flex items-center gap-3 p-4 border rounded-xl transition-colors ${paymentMethod === 'paystack' ? 'border-green-500 bg-green-50' : 'hover:bg-gray-50'} cursor-pointer`}>
                     <input type="radio" name="payment" checked={paymentMethod === 'paystack'} onChange={() => setPaymentMethod('paystack')} className="text-green-600 focus:ring-green-500 w-4 h-4" />
                     <div>
                       <span className="font-bold text-gray-900 block">Pay Online via Paystack</span>
@@ -244,11 +332,13 @@ export default function CheckoutPage() {
                     </div>
                   </label>
                   
-                  <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-colors ${paymentMethod === 'offline' ? 'border-green-500 bg-green-50' : 'hover:bg-gray-50'}`}>
-                    <input type="radio" name="payment" checked={paymentMethod === 'offline'} onChange={() => setPaymentMethod('offline')} className="text-green-600 focus:ring-green-500 w-4 h-4" />
+                  {/* --- UPGRADED: Offline Payment is Disabled for Group Buys --- */}
+                  <label className={`flex items-center gap-3 p-4 border rounded-xl transition-colors ${paymentMethod === 'offline' ? 'border-green-500 bg-green-50' : 'hover:bg-gray-50'} ${hasGroupBuy ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}>
+                    <input type="radio" name="payment" checked={paymentMethod === 'offline'} onChange={() => !hasGroupBuy && setPaymentMethod('offline')} disabled={hasGroupBuy} className="text-green-600 focus:ring-green-500 w-4 h-4" />
                     <div>
                       <span className="font-bold text-gray-900 block">Offline (Bank Transfer)</span>
                       <span className="text-sm text-gray-500">Order will be processed after manual admin verification.</span>
+                      {hasGroupBuy && <span className="block text-xs font-bold text-red-500 mt-1">Not available for Group Buys. Online payment required.</span>}
                     </div>
                   </label>
                 </div>

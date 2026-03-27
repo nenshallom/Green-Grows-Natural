@@ -111,6 +111,9 @@ export default function ProductDetailsPage() {
 
   const allImages = [product.image_url, ...(product.additional_images || [])].filter(Boolean);
 
+  // --- NEW: UI CHECK FOR OVER-SUBSCRIPTION ---
+  const isGroupFull = product.current_group_buyers >= (product.group_threshold || 1);
+
   return (
     <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-12">
       <div className="max-w-6xl mx-auto">
@@ -162,12 +165,18 @@ export default function ProductDetailsPage() {
               >
                 Standard & Bulk Buy
               </button>
+              
+              {/* --- UPGRADED: GROUP BUY BUTTON LOGIC --- */}
               {product.is_group_buy_enabled && (
                 <button 
-                  onClick={() => setPurchaseMode('group')} 
-                  className={`flex-1 py-2.5 px-2 rounded-md font-bold text-xs transition-colors ${purchaseMode === 'group' ? 'bg-[#7BA69D] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                  onClick={() => !isGroupFull && setPurchaseMode('group')} 
+                  disabled={isGroupFull}
+                  className={`flex-1 py-2.5 px-2 rounded-md font-bold text-xs transition-colors 
+                    ${purchaseMode === 'group' ? 'bg-[#7BA69D] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'} 
+                    ${isGroupFull ? 'opacity-50 cursor-not-allowed border border-gray-300' : ''}`
+                  }
                 >
-                  Join Group Buy
+                  {isGroupFull ? 'Campaign Full' : 'Join Group Buy'}
                 </button>
               )}
             </div>
@@ -213,13 +222,13 @@ export default function ProductDetailsPage() {
               </div>
             )}
 
-            {/* ADD TO CART BUTTON (Matched to Bright Green) */}
+            {/* --- UPGRADED ADD TO CART BUTTON LOGIC --- */}
             <button 
               onClick={handleAddToCart}
-              disabled={product.stock_quantity < 1}
-              className="w-full bg-[#00C261] text-white font-bold text-sm py-4 rounded-lg hover:bg-green-600 transition-colors shadow-md disabled:bg-gray-300"
+              disabled={product.stock_quantity < 1 || (purchaseMode === 'group' && isGroupFull)}
+              className="w-full bg-[#00C261] text-white font-bold text-sm py-4 rounded-lg hover:bg-green-600 transition-colors shadow-md disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
-              {product.stock_quantity < 1 ? 'Out of Stock' : 'Add to Cart'}
+              {product.stock_quantity < 1 ? 'Out of Stock' : (purchaseMode === 'group' && isGroupFull) ? 'Campaign Full' : 'Add to Cart'}
             </button>
             
           </div>

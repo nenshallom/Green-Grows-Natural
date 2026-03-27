@@ -8,7 +8,7 @@ interface Product {
   description: string;
   category: string;
   price_per_unit: number;
-  original_price?: number | null; // <--- NEW: Added to interface
+  original_price?: number | null; 
   unit: string;
   stock_quantity: number;
   image_url: string | null;
@@ -52,7 +52,7 @@ export default function AdminProductsPage() {
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
   const [price, setPrice] = useState('');
-  const [originalPrice, setOriginalPrice] = useState(''); // <--- NEW: State for original price
+  const [originalPrice, setOriginalPrice] = useState(''); 
   const [unit, setUnit] = useState('kg');
   const [stock, setStock] = useState('');
   
@@ -85,10 +85,19 @@ export default function AdminProductsPage() {
 
   useEffect(() => { fetchProducts(); }, []);
 
+  // --- UPGRADED: LIVE CRM PARTICIPANTS FETCHER ---
   const handleViewParticipants = async (product: Product) => {
     setSelectedCampaign(product);
     setLoadingParticipants(true);
+    
     try {
+      // 1. If no one is currently in the active campaign, stop early to save DB calls
+      if (product.current_group_buyers === 0) {
+        setParticipants([]);
+        setLoadingParticipants(false);
+        return;
+      }
+
       const { data: orderItems, error: itemsError } = await supabase
         .from('order_items')
         .select('order_id, quantity')
@@ -124,7 +133,13 @@ export default function AdminProductsPage() {
         };
       });
 
-      setParticipants(mergedData.sort((a, b) => new Date(b.date_joined).getTime() - new Date(a.date_joined).getTime()));
+      // 2. Sort by newest orders first
+      const sortedData = mergedData.sort((a, b) => new Date(b.date_joined).getTime() - new Date(a.date_joined).getTime());
+
+      // 3. THE MAGIC SLICE: Only grab the exact number of people in the *current* active campaign!
+      const currentActiveParticipants = sortedData.slice(0, product.current_group_buyers);
+
+      setParticipants(currentActiveParticipants);
     } catch (error: any) {
       console.error("Error fetching participants:", error.message);
       alert("Failed to load participants.");
@@ -148,7 +163,7 @@ export default function AdminProductsPage() {
     setDescription(product.description || '');
     setCategory(product.category);
     setPrice(product.price_per_unit.toString());
-    setOriginalPrice(product.original_price?.toString() || ''); // <--- NEW: Load existing original price
+    setOriginalPrice(product.original_price?.toString() || ''); 
     setUnit(product.unit || 'kg');
     setStock(product.stock_quantity.toString());
     setTempMainImageUrl(product.image_url);
@@ -197,7 +212,7 @@ export default function AdminProductsPage() {
       const productData = {
         name, description, category, unit,
         price_per_unit: Number(price),
-        original_price: originalPrice ? Number(originalPrice) : null, // <--- NEW: Save to database
+        original_price: originalPrice ? Number(originalPrice) : null, 
         stock_quantity: Number(stock),
         image_url: finalMainImageUrl, 
         additional_images: finalAdditionalUrls,
@@ -237,6 +252,22 @@ export default function AdminProductsPage() {
       fetchProducts();
     } catch (error: any) {
       alert(`Error deleting product: ${error.message}`);
+    }
+  };
+
+  // --- RESTART CAMPAIGN LOGIC ---
+  const handleRestartCampaign = async (id: string, productName: string) => {
+    if (!window.confirm(`Are you sure you want to start a new Group Buy campaign for ${productName}? This will reset the current buyer count to 0.`)) return;
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({ current_group_buyers: 0, group_buy_deadline: null })
+        .eq('id', id);
+      if (error) throw error;
+      alert(`New campaign started for ${productName}!`);
+      fetchProducts();
+    } catch (error: any) {
+      alert(`Error restarting campaign: ${error.message}`);
     }
   };
 
@@ -300,7 +331,7 @@ export default function AdminProductsPage() {
               <textarea required rows={3} value={description} onChange={(e)=>setDescription(e.target.value)} className="w-full px-4 py-2 border rounded-lg focus:border-green-500 outline-none text-black"></textarea>
             </div>
 
-            {/* --- NEW: UPGRADED 3-COLUMN PRICING GRID --- */}
+            {/* --- UPGRADED 4-COLUMN PRICING GRID --- */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Standard Price (₦)</label>
@@ -409,7 +440,7 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      {/* --- UPGRADED PRODUCTS LISTING TABLE --- */}
+      {/* --- PRODUCTS LISTING TABLE --- */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
         {loading ? (
           <div className="p-12 text-center text-gray-500 animate-pulse font-medium">Loading secure inventory...</div>
@@ -449,7 +480,6 @@ export default function AdminProductsPage() {
                       <td className="p-4 pr-6">
                         <div className="flex items-center gap-2">
                           <p className="font-bold text-gray-900 leading-tight">{product.name}</p>
-                          {/* Admin table badge showing if it's on sale */}
                           {product.original_price && product.original_price > product.price_per_unit && (
                             <span className="bg-red-100 text-red-700 text-[10px] font-black px-1.5 rounded">SALE</span>
                           )}
@@ -478,7 +508,15 @@ export default function AdminProductsPage() {
                               <div className="flex justify-between items-center mb-1">
                                 <span className="text-xs font-bold text-gray-700">Group Buy</span>
                                 {isGroupComplete ? (
-                                  <span className="text-[10px] font-black text-green-600 bg-green-100 px-1.5 py-0.5 rounded uppercase">Completed</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-black text-green-600 bg-green-100 px-1.5 py-0.5 rounded uppercase">Completed</span>
+                                    <button 
+                                      onClick={() => handleRestartCampaign(product.id, product.name)}
+                                      className="text-[9px] font-bold bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white px-2 py-0.5 rounded transition-colors border border-blue-200 shadow-sm"
+                                    >
+                                      Restart
+                                    </button>
+                                  </div>
                                 ) : (
                                   <span className="text-[10px] font-bold text-gray-500">{groupCurrent}/{groupTarget} Joined</span>
                                 )}
@@ -487,12 +525,13 @@ export default function AdminProductsPage() {
                                 <div className={`h-1.5 rounded-full ${isGroupComplete ? 'bg-green-500' : 'bg-gray-800'}`} style={{ width: `${progressPercentage}%` }}></div>
                               </div>
                               
+                              {/* Always show the View Participants button if there are buyers */}
                               {groupCurrent > 0 && (
                                 <button 
                                   onClick={() => handleViewParticipants(product)}
                                   className="w-full text-xs font-bold text-gray-700 bg-white border border-gray-300 hover:bg-gray-100 py-1 rounded transition-colors"
                                 >
-                                  View Participants
+                                  View Current Participants
                                 </button>
                               )}
                             </div>
@@ -521,7 +560,7 @@ export default function AdminProductsPage() {
             
             <div className="p-6 border-b border-gray-100 flex justify-between items-start bg-gray-50">
               <div>
-                <p className="text-sm font-bold text-green-600 uppercase tracking-wider mb-1">Campaign CRM</p>
+                <p className="text-sm font-bold text-green-600 uppercase tracking-wider mb-1">Live Campaign CRM</p>
                 <h2 className="text-2xl font-black text-gray-900">{selectedCampaign.name}</h2>
                 <p className="text-gray-500 text-sm mt-1">
                   Target: {selectedCampaign.group_threshold} | Current: {selectedCampaign.current_group_buyers} 
@@ -535,9 +574,9 @@ export default function AdminProductsPage() {
 
             <div className="p-0 overflow-y-auto bg-white flex-1">
               {loadingParticipants ? (
-                 <div className="p-12 text-center text-gray-500 animate-pulse font-medium">Hunting down participants...</div>
+                 <div className="p-12 text-center text-gray-500 animate-pulse font-medium">Fetching current campaign participants...</div>
               ) : participants.length === 0 ? (
-                 <div className="p-12 text-center text-gray-500">No one has joined this campaign yet.</div>
+                 <div className="p-12 text-center text-gray-500">No one is currently in this active campaign.</div>
               ) : (
                 <table className="w-full text-left text-sm">
                   <thead className="bg-gray-50 border-b border-gray-200 sticky top-0">
