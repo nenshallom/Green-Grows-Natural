@@ -23,7 +23,8 @@ export default function CheckoutPage() {
 
   const [paymentMethod, setPaymentMethod] = useState<'paystack' | 'offline'>('paystack');
   const [isProcessing, setIsProcessing] = useState(false);
-
+  // --- NEW: Authentication Loading State ---
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
   // --- NEW: PAYSTACK ENFORCEMENT STATE ---
   const hasGroupBuy = cartItems.some(item => item.purchaseType === 'group');
 
@@ -48,6 +49,9 @@ export default function CheckoutPage() {
       setFirstName(meta?.first_name || meta?.full_name?.split(' ')[0] || '');
       setLastName(meta?.last_name || meta?.full_name?.split(' ')[1] || '');
       setPhone(meta?.phone_number || '');
+
+      // Auth is confirmed! Reveal the checkout page.
+      setIsAuthChecking(false);
     };
     getUser();
   }, [router]);
@@ -261,6 +265,15 @@ export default function CheckoutPage() {
       setIsProcessing(false);
     }
   };
+
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
+        <p className="text-gray-500 font-medium">Securing your session...</p>
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-gray-50 p-4 md:p-8 lg:p-16">

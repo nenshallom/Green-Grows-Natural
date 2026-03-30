@@ -80,7 +80,7 @@ export default function Hero() {
         {/* --- SLIDE 1: Main Left Banner --- */}
         <div 
           className="w-1/2 lg:w-full lg:col-span-2 bg-cover bg-center bg-no-repeat rounded-3xl p-8 md:p-12 relative overflow-hidden flex flex-col justify-center shadow-sm"
-          style={{ backgroundImage: "url('/images/banner1.png')" }}
+          style={{ backgroundImage: "url('/images/banner1.jpeg')" }}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/70 to-transparent"></div>
           <div className="z-10 relative max-w-lg">
@@ -108,7 +108,7 @@ export default function Hero() {
           {/* Top Right: Bulk Purchase */}
           <Link href="/bulk" 
             className="flex-1 rounded-3xl relative overflow-hidden group cursor-pointer shadow-sm block bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: "url('/images/banner2.png')" }}
+            style={{ backgroundImage: "url('/images/banner2.jpeg')" }}
           >
             <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors"></div>
             <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-center text-white">
@@ -121,7 +121,7 @@ export default function Hero() {
           {/* Bottom Right: Group Purchase */}
           <Link href="/group-deals" 
             className="flex-1 rounded-3xl relative overflow-hidden group cursor-pointer shadow-sm block bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: "url('/images/banner3.png')" }}
+            style={{ backgroundImage: "url('/images/banner3.jpeg')" }}
           >
             <div className="absolute inset-0 bg-[#1A4331]/60 group-hover:bg-[#1A4331]/70 transition-colors mix-blend-multiply"></div>
             <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-center text-white">
