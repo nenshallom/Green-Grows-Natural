@@ -49,129 +49,81 @@ export default function CheckoutPage() {
       setFirstName(meta?.first_name || meta?.full_name?.split(' ')[0] || '');
       setLastName(meta?.last_name || meta?.full_name?.split(' ')[1] || '');
       setPhone(meta?.phone_number || '');
-
+      
       // Auth is confirmed! Reveal the checkout page.
-      setIsAuthChecking(false);
+      setIsAuthChecking(false); 
     };
     getUser();
   }, [router]);
 
-  // --- THE CLEAN DATABASE ENGINE (Runs ONLY after verification & payment) ---
-  const saveOrderToDatabase = async (paymentStatus: string, method: string) => {
-    setIsProcessing(true);
-    try {
-      if (!userId) throw new Error("Authentication error. Please log in again.");
+// --- NEW: Generate a stable Tracking Number / Reference for this session ---
+const [checkoutReference, setCheckoutReference] = useState('');
+useEffect(() => {
+  if (userId) setCheckoutReference(`GGN-${new Date().getTime().toString().slice(-8)}`);
+}, [userId, cartTotal]);
 
-      const trackingNumber = `GGN-${new Date().getTime().toString().slice(-8)}`;
+// ====================================================================
+// 🚨 THE ENTERPRISE DATABASE ENGINE (Uses Supabase RPC Transaction) 🚨
+// ====================================================================
+const saveOrderToDatabase = async (paymentStatus: string, method: string) => {
+  setIsProcessing(true);
+  try {
+    if (!userId) throw new Error("Authentication error. Please log in again.");
 
-      // 1. Save the Main Order
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          user_id: userId,
-          email: email,
-          tracking_number: trackingNumber,
-          total_amount: cartTotal, 
-          payment_method: method,
-          payment_status: paymentStatus,
-          first_name: firstName,
-          last_name: lastName,
-          contact_phone: phone,
-          additional_phone: additionalPhone,
-          shipping_address: address,
-          landmark: landmark,
-          state: state,
-          lga: lga,
-          delivery_status: 'Pending Delivery' 
-        })
-        .select()
-        .single();
+    const rpcCartItems = cartItems.map(item => ({
+      product_id: item.productId, quantity: item.quantity, purchaseType: item.purchaseType
+    }));
 
-      if (orderError) throw orderError;
+    // We use the synchronized checkoutReference here!
+    const { error } = await supabase.rpc('process_checkout', {
+      p_user_id: userId, p_email: email, p_first_name: firstName, p_last_name: lastName,
+      p_phone: phone, p_additional_phone: additionalPhone, p_address: address,
+      p_landmark: landmark, p_state: state, p_lga: lga,
+      p_payment_method: method, p_payment_status: paymentStatus,
+      p_tracking_number: checkoutReference, 
+      p_cart_items: rpcCartItems
+    });
 
-      // 2. Save the Order Items
-      const orderItems = cartItems.map(item => ({
-        order_id: orderData.id,
-        product_id: item.productId,
-        product_name: item.name,
-        quantity: item.quantity,
-        price_at_purchase: item.priceAtAddition, 
-        purchase_type: item.purchaseType
-      }));
+    // If the webhook already inserted it, the UNIQUE constraint will throw an error. 
+    // We can safely ignore that specific error because it means the order is already safe!
+    if (error && !error.message.includes('unique constraint')) throw error;
 
-      const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
-      if (itemsError) throw itemsError;
+    clearCart();
+    alert(`Order Successful! Your Tracking Number is: ${checkoutReference}`);
+    router.push('/dashboard');
 
-      // 3. INVENTORY & CAMPAIGN MATHEMATICS
-      for (const item of cartItems) {
-        const { data: productData, error: productError } = await supabase
-          .from('products')
-          .select('stock_quantity, current_group_buyers, group_threshold, name')
-          .eq('id', item.productId)
-          .single();
+  } catch (error: any) {
+    console.error("RPC Checkout Error:", error);
+    alert(`Transaction Failed: ${error.message}`);
+  } finally {
+    setIsProcessing(false);
+  }
+};
 
-        if (!productError && productData) {
-          // A: Deduct Stock
-          const newStock = Math.max(0, productData.stock_quantity - item.quantity);
-          let updatePayload: any = { stock_quantity: newStock };
-
-          let notificationTitle = '🛒 New Product Sale';
-          let notificationType = 'new_order';
-
-          // B: Increment Group Campaign Tally
-          if (item.purchaseType === 'group') {
-            const newGroupCount = productData.current_group_buyers + 1;
-            updatePayload.current_group_buyers = newGroupCount;
-            
-            notificationTitle = '🤝 New Group Buy Participant';
-            notificationType = 'group_join';
-
-            // Check if this purchase completed the campaign!
-            if (newGroupCount === productData.group_threshold) {
-              await supabase.from('admin_notifications').insert({
-                title: '✅ Group Campaign Completed!',
-                message: `The campaign for ${productData.name} has hit its target of ${productData.group_threshold} buyers! Time to fulfill.`,
-                type: 'group_complete'
-              });
-            }
-          }
-
-          if (item.purchaseType === 'bulk') {
-            notificationTitle = '📦 Wholesale Bulk Order';
-            notificationType = 'bulk_order';
-          }
-
-          // C: Save the updated stock and group counts to the database
-          await supabase.from('products').update(updatePayload).eq('id', item.productId);
-
-          // D: Push a standard notification to the Admin
-          await supabase.from('admin_notifications').insert({
-            title: notificationTitle,
-            message: `${firstName} bought ${item.quantity}x ${productData.name} via ${item.purchaseType.toUpperCase()} pricing.`,
-            type: notificationType
-          });
-        }
+const paystackConfig = {
+  reference: checkoutReference, // Synchronized reference!
+  email: email,
+  amount: cartTotal * 100, 
+  publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY as string,
+  // --- NEW: Embed the cart data into the payment so the Webhook can read it ---
+  metadata: {
+    custom_fields: [
+      { display_name: "User ID", variable_name: "user_id", value: userId },
+      { 
+        display_name: "Checkout Data", 
+        variable_name: "checkout_data", 
+        value: JSON.stringify({ firstName, lastName, phone, additionalPhone, address, landmark, state, lga }) 
+      },
+      { 
+        display_name: "Cart Payload", 
+        variable_name: "cart_payload", 
+        value: JSON.stringify(cartItems.map(item => ({ product_id: item.productId, quantity: item.quantity, purchase_type: item.purchaseType }))) 
       }
+    ]
+  }
+};
 
-      clearCart();
-      alert(`Order Successful! Your Tracking Number is: ${trackingNumber}`);
-      router.push('/dashboard');
-
-    } catch (error: any) {
-      alert(`Error saving order: ${error.message}`);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const paystackConfig = {
-    reference: `TXN_${new Date().getTime()}`,
-    email: email,
-    amount: cartTotal * 100, 
-    publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY as string,
-  };
-
-  const initializePayment = usePaystackPayment(paystackConfig);
+const initializePayment = usePaystackPayment(paystackConfig);
 
   // --- UPGRADED ASYNC GATEKEEPER FUNCTION ---
   const handleCheckout = async (e: React.FormEvent) => {
@@ -182,8 +134,7 @@ export default function CheckoutPage() {
 
     try {
       // ====================================================================
-      // 🚨 UPGRADED CAMPAIGN-SCOPED CHECK & OVER-SUBSCRIPTION DEFENSE 🚨
-      // This runs BEFORE Paystack is allowed to open!
+      // 🚨 UI PRE-FLIGHT CHECK (Over-Subscription & Active Batch Defense) 🚨
       // ====================================================================
       const groupBuyItems = cartItems.filter(item => item.purchaseType === 'group');
       
@@ -249,7 +200,7 @@ export default function CheckoutPage() {
       }
       // ====================================================================
 
-      // If we pass the check, allow the checkout to proceed!
+      // If we pass the UI check, allow the checkout to proceed!
       if (paymentMethod === 'paystack') {
         setIsProcessing(false); // Let Paystack's UI take over loading state
         initializePayment({ 
@@ -266,6 +217,7 @@ export default function CheckoutPage() {
     }
   };
 
+  // --- NEW: Block the UI from flashing ---
   if (isAuthChecking) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
