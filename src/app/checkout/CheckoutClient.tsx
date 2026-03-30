@@ -71,7 +71,9 @@ const saveOrderToDatabase = async (paymentStatus: string, method: string) => {
     if (!userId) throw new Error("Authentication error. Please log in again.");
 
     const rpcCartItems = cartItems.map(item => ({
-      product_id: item.productId, quantity: item.quantity, purchaseType: item.purchaseType
+      product_id: item.productId, 
+      quantity: item.quantity, 
+      purchase_type: item.purchaseType
     }));
 
     // We use the synchronized checkoutReference here!
