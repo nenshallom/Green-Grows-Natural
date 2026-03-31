@@ -23,7 +23,6 @@ interface Product {
   group_buy_deadline: string | null;
 }
 
-// This interface is used to merge order and order item data for campaign participants
 interface Participant {
   order_id: string;
   first_name: string;
@@ -85,13 +84,11 @@ export default function AdminProductsPage() {
 
   useEffect(() => { fetchProducts(); }, []);
 
-  // --- UPGRADED: LIVE CRM PARTICIPANTS FETCHER ---
   const handleViewParticipants = async (product: Product) => {
     setSelectedCampaign(product);
     setLoadingParticipants(true);
     
     try {
-      // 1. If no one is currently in the active campaign, stop early to save DB calls
       if (product.current_group_buyers === 0) {
         setParticipants([]);
         setLoadingParticipants(false);
@@ -133,10 +130,7 @@ export default function AdminProductsPage() {
         };
       });
 
-      // 2. Sort by newest orders first
       const sortedData = mergedData.sort((a, b) => new Date(b.date_joined).getTime() - new Date(a.date_joined).getTime());
-
-      // 3. THE MAGIC SLICE: Only grab the exact number of people in the *current* active campaign!
       const currentActiveParticipants = sortedData.slice(0, product.current_group_buyers);
 
       setParticipants(currentActiveParticipants);
@@ -148,13 +142,21 @@ export default function AdminProductsPage() {
     }
   };
 
+  // --- NEW: Helper to extract filename from Supabase public URLs ---
+  const extractFileName = (url: string | null) => {
+    if (!url) return null;
+    const parts = url.split('/product-images/');
+    return parts.length > 1 ? parts[1] : null;
+  };
+
+  // --- UPGRADED: Image upload now returns both URL and Filename ---
   const handleImageUpload = async (file: File) => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
     const { error: uploadError } = await supabase.storage.from('product-images').upload(fileName, file);
     if (uploadError) throw uploadError;
     const { data: { publicUrl } } = supabase.storage.from('product-images').getPublicUrl(fileName);
-    return publicUrl;
+    return { publicUrl, fileName };
   };
 
   const handleEditClick = (product: Product) => {
@@ -192,21 +194,26 @@ export default function AdminProductsPage() {
     setTempAdditionalUrls(prev => prev.filter(url => url !== urlToRemove));
   };
 
+  // --- UPGRADED: Save with Storage Rollback ---
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     setProcessing(true);
+    let newlyUploadedFiles: string[] = []; // Used for cleanup if DB fails!
 
     try {
       let finalMainImageUrl = tempMainImageUrl; 
       let finalAdditionalUrls = [...tempAdditionalUrls]; 
       
       if (newMainImageFile) {
-        finalMainImageUrl = await handleImageUpload(newMainImageFile);
+        const upload = await handleImageUpload(newMainImageFile);
+        finalMainImageUrl = upload.publicUrl;
+        newlyUploadedFiles.push(upload.fileName);
       }
       
       if (newAdditionalFiles.length > 0) {
-        const uploadedNewUrls = await Promise.all(newAdditionalFiles.map(file => handleImageUpload(file)));
-        finalAdditionalUrls = [...finalAdditionalUrls, ...uploadedNewUrls]; 
+        const uploads = await Promise.all(newAdditionalFiles.map(file => handleImageUpload(file)));
+        finalAdditionalUrls = [...finalAdditionalUrls, ...uploads.map(u => u.publicUrl)]; 
+        newlyUploadedFiles.push(...uploads.map(u => u.fileName));
       }
 
       const productData = {
@@ -238,24 +245,49 @@ export default function AdminProductsPage() {
       resetForm();
       fetchProducts();
     } catch (error: any) {
+      // 🚨 ROLLBACK TRIGGERED: Clean up storage if database insert fails
+      if (newlyUploadedFiles.length > 0) {
+        await supabase.storage.from('product-images').remove(newlyUploadedFiles);
+        console.log("Storage rollback complete. Deleted orphaned images.");
+      }
       alert(`Error saving product: ${error.message}`);
     } finally {
       setProcessing(false);
     }
   };
 
-  const handleDeleteProduct = async (id: string, productName: string) => {
-    if (!window.confirm(`Permanently delete ${productName}?`)) return;
+  // --- UPGRADED: Delete Product and its Images ---
+  const handleDeleteProduct = async (product: Product) => {
+    if (!window.confirm(`Permanently delete ${product.name}? This will also remove its images from storage.`)) return;
     try {
-      const { error } = await supabase.from('products').delete().eq('id', id);
+      // 1. Delete from Database
+      const { error } = await supabase.from('products').delete().eq('id', product.id);
       if (error) throw error;
+
+      // 2. Gather filenames for Storage Cleanup
+      const filesToDelete: string[] = [];
+      const mainFile = extractFileName(product.image_url);
+      if (mainFile) filesToDelete.push(mainFile);
+
+      if (product.additional_images && product.additional_images.length > 0) {
+        product.additional_images.forEach(img => {
+          const fileName = extractFileName(img);
+          if (fileName) filesToDelete.push(fileName);
+        });
+      }
+
+      // 3. Delete from Storage
+      if (filesToDelete.length > 0) {
+        const { error: storageError } = await supabase.storage.from('product-images').remove(filesToDelete);
+        if (storageError) console.error("Error cleaning up storage:", storageError.message);
+      }
+
       fetchProducts();
     } catch (error: any) {
       alert(`Error deleting product: ${error.message}`);
     }
   };
 
-  // --- RESTART CAMPAIGN LOGIC ---
   const handleRestartCampaign = async (id: string, productName: string) => {
     if (!window.confirm(`Are you sure you want to start a new Group Buy campaign for ${productName}? This will reset the current buyer count to 0.`)) return;
     try {
@@ -331,7 +363,6 @@ export default function AdminProductsPage() {
               <textarea required rows={3} value={description} onChange={(e)=>setDescription(e.target.value)} className="w-full px-4 py-2 border rounded-lg focus:border-green-500 outline-none text-black"></textarea>
             </div>
 
-            {/* --- UPGRADED 4-COLUMN PRICING GRID --- */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Standard Price (₦)</label>
@@ -525,7 +556,6 @@ export default function AdminProductsPage() {
                                 <div className={`h-1.5 rounded-full ${isGroupComplete ? 'bg-green-500' : 'bg-gray-800'}`} style={{ width: `${progressPercentage}%` }}></div>
                               </div>
                               
-                              {/* Always show the View Participants button if there are buyers */}
                               {groupCurrent > 0 && (
                                 <button 
                                   onClick={() => handleViewParticipants(product)}
@@ -542,7 +572,8 @@ export default function AdminProductsPage() {
 
                       <td className="p-4 text-right space-x-3 whitespace-nowrap pr-6">
                         <button onClick={() => handleEditClick(product)} className="text-blue-600 hover:text-blue-800 text-sm font-bold transition-colors">Edit</button>
-                        <button onClick={() => handleDeleteProduct(product.id, product.name)} className="text-red-500 hover:text-red-700 text-sm font-medium transition-colors">Delete</button>
+                        {/* UPGRADED DELETE BUTTON CALL */}
+                        <button onClick={() => handleDeleteProduct(product)} className="text-red-500 hover:text-red-700 text-sm font-medium transition-colors">Delete</button>
                       </td>
                     </tr>
                   );

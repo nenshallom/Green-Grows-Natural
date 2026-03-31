@@ -6,27 +6,61 @@ import {
   PieChart, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
 
+// Helper function for the Activity Feed
+const timeAgo = (dateString: string) => {
+  const now = new Date();
+  const past = new Date(dateString);
+  const diffMs = now.getTime() - past.getTime();
+  const diffMins = Math.round(diffMs / 60000);
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHrs = Math.floor(diffMins / 60);
+  if (diffHrs < 24) return `${diffHrs}h ago`;
+  const diffDays = Math.floor(diffHrs / 24);
+  return `${diffDays}d ago`;
+};
+
 export default function AdminDashboardOverview() {
   const [orders, setOrders] = useState<any[]>([]);
+  // --- NEW STATES FOR TRACKERS ---
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // --- NEW: FILTER STATES ---
-  // Controls the KPI Cards, Payment Pie Chart, and Logistics Bar Chart
+  // --- FILTER STATES ---
   const [globalTimeframe, setGlobalTimeframe] = useState<'today' | '7d' | '30d' | '90d' | 'year' | 'all'>('30d');
-  
-  // Controls ONLY the Revenue Area Chart so you can compare long-term trends while looking at short-term KPIs
   const [trendTimeframe, setTrendTimeframe] = useState<'7d' | '30d' | 'year'>('30d');
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const { data, error } = await supabase
+        // 1. Fetch Orders (Existing)
+        const { data: ordersData, error: ordersError } = await supabase
           .from('orders')
           .select('created_at, total_amount, payment_method, delivery_status')
           .eq('payment_status', 'paid');
-          
-        if (error) throw error;
-        setOrders(data || []);
+        if (ordersError) throw ordersError;
+        setOrders(ordersData || []);
+
+        // 2. Fetch Active Group Buy Campaigns (NEW)
+        const { data: campaignsData, error: campaignsError } = await supabase
+          .from('products')
+          .select('id, name, current_group_buyers, group_threshold, image_url')
+          .eq('is_group_buy_enabled', true)
+          .order('current_group_buyers', { ascending: false })
+          .limit(5); // Show top 5 most active campaigns
+        if (campaignsError) throw campaignsError;
+        setCampaigns(campaignsData || []);
+
+        // 3. Fetch Live Activity Feed (NEW)
+        const { data: notifData, error: notifError } = await supabase
+          .from('admin_notifications')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(8); // Show latest 8 events
+        if (notifError) throw notifError;
+        setNotifications(notifData || []);
+
       } catch (error) {
         console.error("Error fetching analytics:", error);
       } finally {
@@ -58,7 +92,6 @@ export default function AdminDashboardOverview() {
 
   // --- 1. REVENUE TRENDS (Smart Grouping Engine) ---
   const revenueData = useMemo(() => {
-    // First, filter orders based on the Trend Timeframe
     const now = new Date().getTime();
     const day = 24 * 60 * 60 * 1000;
     const trendOrders = orders.filter(order => {
@@ -74,21 +107,16 @@ export default function AdminDashboardOverview() {
     trendOrders.forEach(order => {
       const dateObj = new Date(order.created_at);
       let dateKey = '';
-
-      // SMART GROUPING: If looking at a whole year, group by Month. Otherwise, group by Day.
       if (trendTimeframe === 'year') {
-        dateKey = dateObj.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }); // e.g., "Mar 2026"
+        dateKey = dateObj.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
       } else {
-        dateKey = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); // e.g., "Mar 12"
+        dateKey = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       }
-
       grouped[dateKey] = (grouped[dateKey] || 0) + order.total_amount;
     });
 
-    // Convert object to sorted array
     return Object.keys(grouped)
       .map(date => ({ date, revenue: grouped[date] }))
-      // Ensure the chart reads left-to-right chronologically
       .reverse(); 
   }, [orders, trendTimeframe]);
 
@@ -97,7 +125,6 @@ export default function AdminDashboardOverview() {
     let paystack = 0;
     let offline = 0;
     filteredGlobalOrders.forEach(order => {
-      // Force lowercase to ensure we don't miss capitalized test data
       const method = String(order.payment_method).toLowerCase(); 
       if (method === 'paystack') paystack += order.total_amount;
       else if (method === 'offline') offline += order.total_amount;
@@ -111,7 +138,6 @@ export default function AdminDashboardOverview() {
   // --- 3. LOGISTICS STATUS ---
   const logisticsData = useMemo(() => {
     const grouped: Record<string, number> = {};
-    // Uses the Globally Filtered Orders
     filteredGlobalOrders.forEach(order => {
       const status = order.delivery_status || 'Pending Delivery';
       grouped[status] = (grouped[status] || 0) + 1;
@@ -178,7 +204,6 @@ export default function AdminDashboardOverview() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <h3 className="text-lg font-bold text-gray-900">Revenue Velocity</h3>
           
-          {/* INDEPENDENT TREND FILTER */}
           <div className="flex bg-gray-100 p-1 rounded-lg">
             <button onClick={() => setTrendTimeframe('7d')} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-colors ${trendTimeframe === '7d' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>7 Days</button>
             <button onClick={() => setTrendTimeframe('30d')} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-colors ${trendTimeframe === '30d' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>30 Days</button>
@@ -213,16 +238,13 @@ export default function AdminDashboardOverview() {
       </div>
 
       {/* --- CHART ROW 2: SPLIT METRICS --- */}
-{/* --- CHART ROW 2: SPLIT METRICS --- */}
-<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* PAYMENT METHOD DOUGHNUT CHART */}
-        {/* FIX: Removed 'flex flex-col' from the parent div */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <h3 className="text-lg font-bold text-gray-900 mb-1">Revenue by Payment Method</h3>
           <p className="text-sm text-gray-500 mb-6">Currently showing data for: <span className="font-bold text-gray-700">{globalTimeframe.toUpperCase()}</span></p>
           
-          {/* FIX: Removed 'flex-1' from this container so it strictly obeys h-64 */}
           <div className="h-64 w-full">
             {paymentMethodData.every(d => d.value === 0) ? (
               <div className="w-full h-full flex items-center justify-center text-gray-400 italic bg-gray-50 rounded-lg border border-dashed border-gray-200">No payment data in this timeframe.</div>
@@ -243,12 +265,10 @@ export default function AdminDashboardOverview() {
         </div>
 
         {/* LOGISTICS BAR CHART */}
-        {/* FIX: Removed 'flex flex-col' from the parent div */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <h3 className="text-lg font-bold text-gray-900 mb-1">Fulfillment & Logistics</h3>
           <p className="text-sm text-gray-500 mb-6">Currently showing data for: <span className="font-bold text-gray-700">{globalTimeframe.toUpperCase()}</span></p>
           
-          {/* FIX: Removed 'flex-1' from this container */}
           <div className="h-64 w-full">
              {logisticsData.length === 0 ? (
               <div className="w-full h-full flex items-center justify-center text-gray-400 italic bg-gray-50 rounded-lg border border-dashed border-gray-200">No logistics data in this timeframe.</div>
@@ -271,6 +291,95 @@ export default function AdminDashboardOverview() {
         </div>
 
       </div>
+
+      {/* --- ROW 3: NEW LIVE TRACKERS --- */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* LEFT COL: LIVE ACTIVITY FEED */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-96">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            </span>
+            Live Operations Feed
+          </h3>
+          
+          <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+            {notifications.length === 0 ? (
+              <div className="w-full h-full flex items-center justify-center text-gray-400 italic">No recent activity detected.</div>
+            ) : (
+              notifications.map((notif) => (
+                <div key={notif.id} className="flex gap-4 items-start pb-4 border-b border-gray-50 last:border-0 last:pb-0">
+                  <div className={`p-2 rounded-lg mt-1 ${
+                    notif.type === 'group_complete' ? 'bg-green-100 text-green-600' :
+                    notif.type === 'group_join' ? 'bg-teal-100 text-teal-600' :
+                    notif.type === 'bulk_order' ? 'bg-blue-100 text-blue-600' :
+                    'bg-gray-100 text-gray-600'
+                  }`}>
+                    {notif.type === 'group_complete' ? <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> :
+                     notif.type === 'group_join' ? <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg> :
+                     notif.type === 'bulk_order' ? <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg> :
+                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <p className="text-sm font-bold text-gray-900">{notif.title}</p>
+                      <span className="text-xs font-medium text-gray-400 whitespace-nowrap">{timeAgo(notif.created_at)}</span>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-0.5 leading-relaxed">{notif.message}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT COL: ACTIVE CAMPAIGN RADAR */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-96">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Active Campaign Radar</h3>
+          
+          <div className="flex-1 overflow-y-auto pr-2 space-y-5">
+            {campaigns.length === 0 ? (
+              <div className="w-full h-full flex flex-col items-center justify-center text-center">
+                <span className="text-3xl mb-2">📡</span>
+                <p className="text-gray-400 italic text-sm">No active group buys running right now.</p>
+              </div>
+            ) : (
+              campaigns.map((camp) => {
+                const isComplete = camp.current_group_buyers >= camp.group_threshold;
+                const progress = Math.min(100, (camp.current_group_buyers / camp.group_threshold) * 100);
+                
+                return (
+                  <div key={camp.id} className="relative">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden border border-gray-200 shrink-0">
+                        {camp.image_url ? <img src={camp.image_url} alt={camp.name} className="w-full h-full object-cover" /> : null}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-center mb-1">
+                          <p className="text-sm font-bold text-gray-900 truncate">{camp.name}</p>
+                          <span className={`text-[10px] font-black px-1.5 py-0.5 rounded uppercase ${isComplete ? 'bg-green-100 text-green-700' : 'text-gray-500'}`}>
+                            {isComplete ? 'Target Hit' : `${camp.current_group_buyers}/${camp.group_threshold}`}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                          <div 
+                            className={`h-2 rounded-full transition-all duration-1000 ${isComplete ? 'bg-green-500' : 'bg-teal-500'}`} 
+                            style={{ width: `${progress}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+      </div>
+
     </div>
   );
 }
