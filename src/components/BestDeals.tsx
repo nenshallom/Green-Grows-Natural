@@ -2,6 +2,7 @@
 import { useState, useMemo } from 'react';
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
+import Image from 'next/image'; // <-- NEW: Imported Next.js Image Optimizer
 
 interface Product {
   id: string;
@@ -95,12 +96,16 @@ export default function BestDeals({ products }: BestDealsProps) {
             return (
               <div key={product.id} className="relative rounded-2xl overflow-hidden group h-[220px] md:h-[260px] shadow-sm hover:shadow-lg transition-shadow bg-gray-100">
                 
-                {/* PRODUCT IMAGE */}
-                <img 
-                  src={product.image_url || 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=400&q=80'} 
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                />
+                {/* --- UPGRADED: Next.js Image Component --- */}
+                {product.image_url && (
+                  <Image 
+                    src={product.image_url} 
+                    alt={product.name}
+                    fill
+                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-700"
+                  />
+                )}
 
                 {/* DISCOUNT BADGE */}
                 {discountPercent > 0 && (
@@ -113,14 +118,14 @@ export default function BestDeals({ products }: BestDealsProps) {
                 <div className="absolute bottom-0 left-0 w-full py-4 px-2 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex justify-between items-end">
                   
                   {/* TEXT DETAILS */}
-                  <div className="text-white w-[60%]">
-                    <h3 className="font-bold text-sm md:text-base leading-tight mb-0.5 drop-shadow-md">
+                  <div className="text-white w-[60%] relative z-10">
+                    <h3 className="font-bold text-sm md:text-base leading-tight mb-0.5 drop-shadow-md truncate">
                       {product.name}
                     </h3>
                     
                     {/* DYNAMIC PURCHASE OPTION TEXT */}
                     {(product.is_bulk_buy_enabled || product.is_group_buy_enabled) && (
-                      <p className="text-gray-300 text-[8px] uppercase tracking-wider font-semibold mb-1">
+                      <p className="text-gray-300 text-[8px] uppercase tracking-wider font-semibold mb-1 truncate">
                         {product.is_bulk_buy_enabled && product.is_group_buy_enabled 
                           ? "Bulk & Group Buy Available" 
                           : product.is_bulk_buy_enabled 
@@ -148,7 +153,7 @@ export default function BestDeals({ products }: BestDealsProps) {
                       e.preventDefault(); 
                       handleQuickAdd(product);
                     }}
-                    className="bg-[#286266] hover:bg-[#1A4331] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md transition-colors border border-white/20"
+                    className="bg-[#286266] hover:bg-[#1A4331] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md transition-colors border border-white/20 relative z-10"
                   >
                     Add +
                   </button>

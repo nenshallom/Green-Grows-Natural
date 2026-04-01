@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image'; // <-- NEW: Imported Next.js Image Optimizer
 import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase'; 
@@ -131,10 +132,16 @@ export default function CartPage() {
             {cartItems.map((item) => (
               <div key={`${item.productId}-${item.purchaseType}`} className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 relative group">
                 
-                {/* Product Image */}
-                <div className="w-24 h-24 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden border border-gray-200">
+                {/* --- UPGRADED: Product Image with Next.js Image --- */}
+                <div className="relative w-24 h-24 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden border border-gray-200">
                   {item.image ? (
-                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    <Image 
+                      src={item.image} 
+                      alt={item.name} 
+                      fill
+                      sizes="96px"
+                      className="object-cover" 
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Img</div>
                   )}

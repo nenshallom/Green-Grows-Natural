@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import Image from 'next/image'; // <-- NEW: Imported Next.js Image Optimizer
 
 interface Product {
   id: string;
@@ -51,14 +52,22 @@ export default function BulkDeals({ products }: { products: Product[] }) {
             {/* IMAGE & BADGE */}
             {/* Mobile: Full width image. Desktop: Fixed 28x28 square */}
             <div className="relative w-full md:w-28 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-white shadow-sm">
-              <img 
-                src={product.image_url || 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=200&q=80'} 
-                alt={product.name} 
-                className="w-full h-full object-cover" 
-              />
+              
+              {/* --- UPGRADED: Next.js Image Component --- */}
+              {product.image_url ? (
+                <Image 
+                  src={product.image_url} 
+                  alt={product.name} 
+                  fill
+                  sizes="(max-width: 768px) 50vw, 112px"
+                  className="object-cover" 
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs bg-gray-100">No Img</div>
+              )}
               
               {/* THE FIRE BADGE (Min Threshold) */}
-              <div className="absolute top-1.5 left-1.5 bg-white/90 backdrop-blur-sm text-orange-600 text-[9px] font-black px-1.5 py-0.5 rounded shadow-sm flex items-center gap-1">
+              <div className="absolute top-1.5 left-1.5 bg-white/90 backdrop-blur-sm text-orange-600 text-[9px] font-black px-1.5 py-0.5 rounded shadow-sm flex items-center gap-1 z-10">
                 🔥 Min {product.bulk_threshold}
               </div>
             </div>

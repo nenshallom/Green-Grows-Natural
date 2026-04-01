@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import Image from 'next/image'; // <-- NEW: Imported Next.js Image Optimizer
 import { useCart } from '@/context/CartContext';
 
 interface Product {
@@ -71,12 +72,19 @@ export default function GroupDeals({ products }: { products: Product[] }) {
               
               {/* TOP HALF: IMAGE */}
               <Link href={`/product/${product.id}`} className="relative h-36 md:h-48 w-full overflow-hidden block bg-gray-50">
-                <img 
-                  src={product.image_url || 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=400&q=80'} 
-                  alt={product.name} 
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
-                />
-                <div className="absolute top-3 left-3 bg-[#1A4331] text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm">
+                {/* --- UPGRADED: Next.js Image Component --- */}
+                {product.image_url ? (
+                  <Image 
+                    src={product.image_url} 
+                    alt={product.name} 
+                    fill
+                    sizes="(max-width: 1024px) 50vw, 25vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-700" 
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Img</div>
+                )}
+                <div className="absolute top-3 left-3 bg-[#1A4331] text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm z-10">
                   Group Buy
                 </div>
               </Link>
