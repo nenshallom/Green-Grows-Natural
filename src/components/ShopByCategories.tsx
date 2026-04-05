@@ -47,7 +47,7 @@ export default function ShopByCategories({ activeCategories }: ShopByCategoriesP
         </h2>
         <Link 
           href="/categories" 
-          className="text-xs md:text-sm font-bold text-gray-700 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors flex items-center gap-1"
+          className="hidden text-xs md:text-sm font-bold text-gray-700 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors flex items-center gap-1"
         >
           View All <span className="text-lg leading-none">›</span>
         </Link>

@@ -51,7 +51,7 @@ export default function GroupDeals({ products }: { products: Product[] }) {
       </div>
 
       {/* GRID */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6">
         
         {groupProducts.slice(0, 8).map((product) => {
           const target = product.group_threshold || 1;

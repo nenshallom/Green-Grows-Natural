@@ -39,7 +39,7 @@ export default function BulkDeals({ products }: { products: Product[] }) {
       </div>
 
       {/* 2-COLUMN MOBILE GRID / 3-COLUMN DESKTOP GRID */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 md:gap-6">
         
         {bulkProducts.slice(0, 6).map((product) => (
           <Link 
