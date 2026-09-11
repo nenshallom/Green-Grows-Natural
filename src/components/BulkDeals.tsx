@@ -31,7 +31,7 @@ export default function BulkDeals({ products }: { products: Product[] }) {
           Bulk Purchase Deals for You!
         </h2>
         <Link 
-          href="/bulk" 
+          href="/products?filter=Bulk+Buy" 
           className="text-xs md:text-sm font-bold text-gray-700 bg-white border border-gray-200 rounded-full px-4 py-2 hover:bg-gray-50 transition-colors flex items-center gap-1 shadow-sm"
         >
           View All <span className="text-lg leading-none">↗</span>

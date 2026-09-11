@@ -19,8 +19,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }
 
       // Rule 2: Logged in, but NOT an admin? Kick them to the customer storefront.
-      const role = session.user.user_metadata?.role;
-      if (role !== 'admin') {
+      const appRole = session.user.app_metadata?.role;
+      const userRole = session.user.user_metadata?.role;
+      if (appRole !== 'admin' && userRole !== 'admin') {
         router.push('/');
         return;
       }

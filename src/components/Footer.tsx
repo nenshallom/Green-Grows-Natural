@@ -45,9 +45,9 @@ export default function Footer() {
             <h4 className="text-lg font-bold mb-4 border-b border-white/10 pb-2 inline-block">Quick Links</h4>
             <ul className="space-y-3 text-sm text-gray-300">
               <li><Link href="/products" className="hover:text-white hover:underline transition-colors">Shop All Products</Link></li>
-              <li><Link href="/bulk" className="hover:text-white hover:underline transition-colors">Bulk Purchases</Link></li>
-              <li><Link href="/group-deals" className="hover:text-white hover:underline transition-colors">Active Group Deals</Link></li>
-              <li><Link href="/categories" className="hover:text-white hover:underline transition-colors">Browse Categories</Link></li>
+              <li><Link href="/products?filter=Bulk+Buy" className="hover:text-white hover:underline transition-colors">Bulk Purchases</Link></li>
+              <li><Link href="/products?filter=Group+Buy" className="hover:text-white hover:underline transition-colors">Active Group Deals</Link></li>
+              <li><Link href="/products" className="hover:text-white hover:underline transition-colors">Browse Categories</Link></li>
             </ul>
           </div>
 
@@ -55,10 +55,10 @@ export default function Footer() {
           <div>
             <h4 className="text-lg font-bold mb-4 border-b border-white/10 pb-2 inline-block">Customer Support</h4>
             <ul className="space-y-3 text-sm text-gray-300">
-              <li><Link href="/faq" className="hover:text-white hover:underline transition-colors">Help & FAQs</Link></li>
-              <li><Link href="/shipping" className="hover:text-white hover:underline transition-colors">Shipping & Delivery</Link></li>
-              <li><Link href="/returns" className="hover:text-white hover:underline transition-colors">Returns Policy</Link></li>
-              <li><Link href="/contact" className="hover:text-white hover:underline transition-colors">Contact Us</Link></li>
+              <li><Link href="/#faq" className="hover:text-white hover:underline transition-colors">Help & FAQs</Link></li>
+              <li><Link href="/#faq" className="hover:text-white hover:underline transition-colors">Shipping & Delivery</Link></li>
+              <li><Link href="/#faq" className="hover:text-white hover:underline transition-colors">Returns Policy</Link></li>
+              <li><a href="mailto:greengrowsnatural@gmail.com" className="hover:text-white hover:underline transition-colors">Contact Us</a></li>
             </ul>
           </div>
 
@@ -89,11 +89,11 @@ export default function Footer() {
         {/* BOTTOM SECTION: Copyright & Legal */}
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-gray-400 text-xs text-center md:text-left">
-            &copy; {new Date().getFullYear()} FarmFresh Network. All rights reserved.
+            &copy; {new Date().getFullYear()} Green Grows Natural (GGN). All rights reserved.
           </p>
           <div className="flex gap-4 text-xs text-gray-400">
-            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+            <Link href="/#faq" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link href="/#faq" className="hover:text-white transition-colors">Terms of Service</Link>
           </div>
         </div>
 

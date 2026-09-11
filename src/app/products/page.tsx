@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
 import ProductsClient from './ProductsClient';
 
@@ -14,6 +15,16 @@ export default async function ProductsCatalogPage() {
     console.error("Error fetching products on server:", error);
   }
 
-  // 2. Pass the data to the interactive Client Component
-  return <ProductsClient initialProducts={products || []} />;
+  // 2. Pass the data to the interactive Client Component wrapped in Suspense
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#1A4331]"></div>
+        </div>
+      }
+    >
+      <ProductsClient initialProducts={products || []} />
+    </Suspense>
+  );
 }

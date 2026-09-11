@@ -64,7 +64,7 @@ export default function BestDeals({ products }: BestDealsProps) {
     <section className="w-full mt-12 mb-16">
       {/* HEADER */}
       <h2 className="text-2xl md:text-3xl font-black text-[#1A4331] tracking-tight mb-6">
-        Today's Best Deals for You!
+        Today&apos;s Best Deals for You!
       </h2>
 
       {/* FILTER TABS (Scrollable on mobile) */}
@@ -153,7 +153,7 @@ export default function BestDeals({ products }: BestDealsProps) {
                       e.preventDefault(); 
                       handleQuickAdd(product);
                     }}
-                    className=" bg- hover:bg-[#1A4331] text-white text-[10px] font-bold px-1.5 py-1.5 rounded-md shadow-md transition-colors border border-white/20 relative z-10"
+                    className="bg-white/20 hover:bg-[#1A4331] backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1.5 rounded-md shadow-md transition-colors border border-white/30 relative z-10"
                   >
                     Add +
                   </button>

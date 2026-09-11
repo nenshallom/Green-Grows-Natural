@@ -106,7 +106,7 @@ export default function Hero() {
         <div className="w-1/2 lg:w-full flex flex-col gap-4 lg:gap-6 h-full">
           
           {/* Top Right: Bulk Purchase */}
-          <Link href="/bulk" 
+          <Link href="/products?filter=Bulk+Buy" 
             className="flex-1 rounded-3xl relative overflow-hidden group cursor-pointer shadow-sm block bg-cover bg-center bg-no-repeat"
             style={{ backgroundImage: "url('/images/banner2.jpeg')" }}
           >
@@ -119,7 +119,7 @@ export default function Hero() {
           </Link>
 
           {/* Bottom Right: Group Purchase */}
-          <Link href="/group-deals" 
+          <Link href="/products?filter=Group+Buy" 
             className="flex-1 rounded-3xl relative overflow-hidden group cursor-pointer shadow-sm block bg-cover bg-center bg-no-repeat"
             style={{ backgroundImage: "url('/images/banner3.jpeg')" }}
           >

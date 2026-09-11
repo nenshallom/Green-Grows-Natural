@@ -46,7 +46,7 @@ export default function ShopByCategories({ activeCategories }: ShopByCategoriesP
           Shop by Categories
         </h2>
         <Link 
-          href="/categories" 
+          href="/products" 
           className="hidden text-xs md:text-sm font-bold text-gray-700 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors flex items-center gap-1"
         >
           View All <span className="text-lg leading-none">›</span>
@@ -64,7 +64,7 @@ export default function ShopByCategories({ activeCategories }: ShopByCategoriesP
           return (
             <Link 
               key={index} 
-              href={`/category/${categoryName.toLowerCase().replace(/\s+/g, '-')}`}
+              href={`/products?category=${encodeURIComponent(categoryName)}`}
               // Mobile: w-[85%] so the next card peeks out. Desktop: w-full for the grid.
               className="flex-none w-[85%] sm:w-[45%] md:w-auto snap-center rounded-2xl md:rounded-[24px] p-5 md:p-6 h-[350px] relative overflow-hidden group hover:shadow-md transition-all block bg-cover bg-center"
               style={{ backgroundImage: `url('${style.imgSrc}')` }}

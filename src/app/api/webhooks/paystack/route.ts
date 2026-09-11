@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export async function POST(req: Request) {
   try {
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
       const metadata = data.metadata;
 
       // A. Check if the frontend already saved this order (Idempotency check)
-      const { data: existingOrder } = await supabase
+      const { data: existingOrder } = await supabaseAdmin
         .from('orders')
         .select('id')
         .eq('tracking_number', reference)
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 
       if (existingOrder) {
         // Order exists! Just ensure it's marked as paid.
-        await supabase.from('orders').update({ payment_status: 'paid' }).eq('id', existingOrder.id);
+        await supabaseAdmin.from('orders').update({ payment_status: 'paid' }).eq('id', existingOrder.id);
         return NextResponse.json({ message: "Order already processed by frontend. Status verified." }, { status: 200 });
       }
 
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
         const checkoutData = JSON.parse(metadata.checkout_data);
         const cartPayload = JSON.parse(metadata.cart_payload);
 
-        await supabase.rpc('process_checkout', {
+        await supabaseAdmin.rpc('process_checkout', {
           p_user_id: metadata.user_id,
           p_email: data.customer.email,
           p_first_name: checkoutData.firstName,

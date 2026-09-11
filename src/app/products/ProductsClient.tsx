@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
 import Image from 'next/image'; 
@@ -22,42 +23,49 @@ interface ProductsClientProps {
 
 export default function ProductsClient({ initialProducts }: ProductsClientProps) {
   const { addToCart } = useCart();
-
-  // --- UNIFIED FILTER STATE ---
-  const [activeFilter, setActiveFilter] = useState<string>('All Products');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchInput, setSearchInput] = useState('');
-
-  // Pagination State
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 12;
-
-  // --- MEMORY RESTORATION STATE ---
-  const [isStateRestored, setIsStateRestored] = useState(false);
-
-  // 1. RESTORE MEMORY ON PAGE LOAD
-  useEffect(() => {
-    const savedFilter = sessionStorage.getItem('ggn_catalog_filter');
-    const savedPage = sessionStorage.getItem('ggn_catalog_page');
-    
-    if (savedFilter) setActiveFilter(savedFilter);
-    if (savedPage) setCurrentPage(Number(savedPage));
-    
-    setIsStateRestored(true); 
-  }, []);
-
-  // 2. SAVE TO MEMORY ON CHANGE
-  useEffect(() => {
-    if (isStateRestored) {
-      sessionStorage.setItem('ggn_catalog_filter', activeFilter);
-      sessionStorage.setItem('ggn_catalog_page', currentPage.toString());
-    }
-  }, [activeFilter, currentPage, isStateRestored]);
+  const searchParams = useSearchParams();
 
   const categories = useMemo(() => {
     const uniqueCats = Array.from(new Set(initialProducts.map(p => p.category)));
     return ['All Products', ...uniqueCats];
   }, [initialProducts]);
+
+  const queryParam = searchParams.get('search') || '';
+  const categoryParam = searchParams.get('category');
+  const filterParam = searchParams.get('filter');
+
+  const resolvedUrlFilter = useMemo(() => {
+    if (categoryParam) {
+      const matchedCat = categories.find(c => c.toLowerCase() === categoryParam.toLowerCase());
+      return matchedCat || categoryParam;
+    }
+    if (filterParam) {
+      const lower = filterParam.toLowerCase().replace(/[\s+-]+/g, '');
+      if (lower.includes('group')) return 'Group Buy';
+      if (lower.includes('bulk')) return 'Bulk Buy';
+      if (lower.includes('discount')) return 'Discount Offers';
+      return filterParam;
+    }
+    return null;
+  }, [categoryParam, filterParam, categories]);
+
+  // --- UNIFIED FILTER STATE ---
+  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+  const activeFilter = selectedFilter ?? resolvedUrlFilter ?? 'All Products';
+
+  const [customSearch, setCustomSearch] = useState<string | null>(null);
+  const searchQuery = customSearch ?? queryParam;
+  const [searchInput, setSearchInput] = useState(queryParam);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
+
+  // Save to memory for backward navigation
+  useEffect(() => {
+    sessionStorage.setItem('ggn_catalog_filter', activeFilter);
+    sessionStorage.setItem('ggn_catalog_page', currentPage.toString());
+  }, [activeFilter, currentPage]);
 
   // --- UPGRADED FILTER & SEARCH ENGINE ---
   const filteredProducts = useMemo(() => {
@@ -73,10 +81,10 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
       // Special Offers Logic
       if (activeFilter === 'Group Buy') return product.is_group_buy_enabled;
       if (activeFilter === 'Bulk Buy') return product.is_bulk_buy_enabled;
-      if (activeFilter === 'Discount Offers') return product.original_price && product.original_price > product.price_per_unit;
+      if (activeFilter === 'Discount Offers') return Boolean(product.original_price && product.original_price > product.price_per_unit);
       
       // Standard Category Logic
-      return product.category === activeFilter;
+      return product.category.toLowerCase() === activeFilter.toLowerCase();
     });
   }, [initialProducts, activeFilter, searchQuery]);
 
@@ -85,7 +93,7 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setSearchQuery(searchInput);
+    setCustomSearch(searchInput);
     setCurrentPage(1); 
   };
 
@@ -144,7 +152,7 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
               {categories.map((cat) => (
                 <li key={cat}>
                   <button 
-                    onClick={() => { setActiveFilter(cat); setCurrentPage(1); }}
+                    onClick={() => { setSelectedFilter(cat); setCurrentPage(1); }}
                     className={`flex items-center gap-2 text-sm font-bold w-full text-left transition-colors ${activeFilter === cat ? 'text-black' : 'text-gray-500 hover:text-black'}`}
                   >
                     <span className={`w-1.5 h-1.5 rounded-full ${activeFilter === cat ? 'bg-black' : 'bg-transparent'}`}></span>
@@ -159,7 +167,7 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
               {['Group Buy', 'Bulk Buy', 'Discount Offers'].map((offer) => (
                 <li key={offer}>
                   <button 
-                    onClick={() => { setActiveFilter(offer); setCurrentPage(1); }}
+                    onClick={() => { setSelectedFilter(offer); setCurrentPage(1); }}
                     className={`flex items-center gap-2 text-sm font-bold w-full text-left transition-colors ${activeFilter === offer ? 'text-black' : 'text-gray-500 hover:text-black'}`}
                   >
                     <span className={`w-1.5 h-1.5 rounded-full ${activeFilter === offer ? 'bg-black' : 'bg-transparent'}`}></span>

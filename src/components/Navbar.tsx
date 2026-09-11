@@ -8,9 +8,7 @@ import { supabase } from '@/lib/supabase'; // <-- NEW: Import Supabase
 // --- ICONS IMPORT ---
 import { CiBellOn, CiSearch } from "react-icons/ci";
 import { RiCustomerService2Fill } from "react-icons/ri";
-import { FiMenu, FiX, FiHome, FiShoppingCart, FiHeart, FiChevronDown, FiMail, FiPhone } from "react-icons/fi";
-import { FaFacebook, FaTiktok, FaInstagram, FaXTwitter } from "react-icons/fa6";
-import { SiThreads } from "react-icons/si";
+import { FiMenu, FiX, FiHome, FiShoppingCart, FiMail, FiPhone } from "react-icons/fi";
 import { VscAccount } from "react-icons/vsc";
 
 export default function Navbar() {
@@ -20,9 +18,18 @@ export default function Navbar() {
   
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
+  const [searchQuery, setSearchQuery] = useState('');
   
   // --- NEW: AUTH STATE ---
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      setIsMobileMenuOpen(false);
+      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   // --- NEW: AUTH LISTENER ---
   useEffect(() => {
@@ -121,7 +128,7 @@ export default function Navbar() {
       <nav className="w-full bg-white md:bg-transparent shadow-sm md:shadow-none z-50 sticky top-0">
         
         {/* ==========================================
-            DESKTOP NAVBAR
+            DESKTOP NAVBAR 
         ========================================== */}
         <div className="hidden md:block">
           <div className="bg-[#286266] w-full max-w-[90%] mx-auto mt-2 rounded-lg px-6 lg:px-12 py-3 flex items-center justify-between shadow-sm">
@@ -134,12 +141,18 @@ export default function Navbar() {
               </Link>
             </div>
 
-            <div className="flex-1 max-w-2xl mx-8 relative">
-              <input type="text" placeholder="Search Products..." className="w-full py-2.5 pl-4 pr-10 rounded-md outline-none bg-white text-gray-900 text-sm shadow-inner" />
-              <button className="absolute right-3 top-2.5 text-gray-500 hover:text-[#1A4331] transition-colors">
+            <form onSubmit={handleSearchSubmit} className="flex-1 max-w-2xl mx-8 relative">
+              <input 
+                type="text" 
+                placeholder="Search Products..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full py-2.5 pl-4 pr-10 rounded-md outline-none bg-white text-gray-900 text-sm shadow-inner" 
+              />
+              <button type="submit" aria-label="Search" className="absolute right-3 top-2.5 text-gray-500 hover:text-[#1A4331] transition-colors">
                 <CiSearch className="w-5 h-5 text-gray-800 font-bold" />
               </button>
-            </div>
+            </form>
 
             <div className="flex items-center gap-4 sm:gap-6 text-white text-sm font-medium">
               <Link href="/dashboard" className="hover:text-green-200 transition-colors">My Orders</Link>
@@ -157,7 +170,7 @@ export default function Navbar() {
                 <VscAccount className="w-5 h-5" />
               </Link>
 
-              <Link href="/"><CiBellOn className="w-6 h-6 hover:bg-white/10 rounded-lg transition-colors" /></Link>
+              <Link href="/dashboard" title="Dashboard"><CiBellOn className="w-6 h-6 hover:bg-white/10 rounded-lg transition-colors" /></Link>
             </div>
           </div>
 
@@ -202,14 +215,22 @@ export default function Navbar() {
                 <VscAccount className="text-[22px]" />
               </Link>
 
-              <Link href="/notifications"><CiBellOn className="text-[24px]" /></Link>
+              <Link href="/dashboard" title="Dashboard"><CiBellOn className="text-[24px]" /></Link>
             </div>
           </div>
 
-          <div className="relative w-full">
-            <input type="text" placeholder="Search Products" className="w-full py-2 pl-3 pr-10 rounded bg-white text-gray-900 text-sm outline-none font-medium" />
-            <button className="absolute right-2 top-1.5 text-gray-800"><CiSearch className="text-xl font-bold" /></button>
-          </div>
+          <form onSubmit={handleSearchSubmit} className="relative w-full">
+            <input 
+              type="text" 
+              placeholder="Search Products" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full py-2 pl-3 pr-10 rounded bg-white text-gray-900 text-sm outline-none font-medium" 
+            />
+            <button type="submit" aria-label="Search" className="absolute right-2 top-1.5 text-gray-800">
+              <CiSearch className="text-xl font-bold" />
+            </button>
+          </form>
 
           <div className="flex justify-between items-center text-white text-xs font-medium pt-1">
             <div className="flex gap-4 tracking-wide">
@@ -258,22 +279,22 @@ export default function Navbar() {
               <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="flex justify-between items-center p-4 hover:bg-gray-50">
                 My Order <FiShoppingCart className="text-lg text-gray-600" />
               </Link>
-              <Link href="/wishlist" onClick={() => setIsMobileMenuOpen(false)} className="flex justify-between items-center p-4 border-b border-gray-100 hover:bg-gray-50">
-                Wishlist <FiHeart className="text-lg text-gray-600" />
+              <Link href="/products" onClick={() => setIsMobileMenuOpen(false)} className="flex justify-between items-center p-4 border-b border-gray-100 hover:bg-gray-50">
+                All Products <FiShoppingCart className="text-lg text-gray-600" />
               </Link>
 
               <div className="p-4 border-b border-gray-100 flex flex-col gap-4">
                 <h3 className="font-bold text-black text-base">Top Categories</h3>
-                <Link href="/category/fruits" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 font-medium">Fruits</Link>
-                <Link href="/category/nuts" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 font-medium">Nuts, Grains & Legumes</Link>
-                <Link href="/category/vegetables" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 font-medium">Vegetables</Link>
-                <Link href="/category/herbs" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 font-medium">Herbs & Spices</Link>
+                <Link href="/products?category=Fruits" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 font-medium">Fruits</Link>
+                <Link href="/products?category=Grains" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 font-medium">Nuts, Grains & Legumes</Link>
+                <Link href="/products?category=Vegetables" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 font-medium">Vegetables</Link>
+                <Link href="/products?category=Tubers" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 font-medium">Tubers & Roots</Link>
               </div>
 
               <div className="p-4 border-b border-gray-100 flex flex-col gap-4">
                 <h3 className="font-bold text-black text-base">Best Deals & Offers</h3>
-                <a href="#deals" onClick={(e) => handleNavClick(e, 'deals')} className="text-gray-600 font-medium">Bulk Purchase</a>
-                <a href="#deals" onClick={(e) => handleNavClick(e, 'deals')} className="text-gray-600 font-medium">Group Purchase</a>
+                <Link href="/products?filter=Bulk+Buy" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 font-medium">Bulk Purchase</Link>
+                <Link href="/products?filter=Group+Buy" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 font-medium">Group Purchase</Link>
               </div>
 
               <div className="p-4 flex flex-col gap-4 mb-6">

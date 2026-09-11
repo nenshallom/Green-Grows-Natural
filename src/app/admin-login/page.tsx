@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -25,9 +26,10 @@ export default function AdminLoginPage() {
       if (signInError) throw signInError;
 
       // 2. Double-check they actually have the admin role!
-      const role = data.user?.user_metadata?.role;
+      const appRole = data.user?.app_metadata?.role;
+      const userRole = data.user?.user_metadata?.role;
       
-      if (role !== 'admin') {
+      if (appRole !== 'admin' && userRole !== 'admin') {
         // If they aren't an admin, sign them immediately back out
         await supabase.auth.signOut();
         throw new Error("Access Denied: This account does not have administrator privileges.");
@@ -37,8 +39,8 @@ export default function AdminLoginPage() {
       await supabase.auth.refreshSession();
       router.push('/admin');
 
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred during authentication.');
     } finally {
       setLoading(false);
     }
@@ -92,9 +94,9 @@ export default function AdminLoginPage() {
         </form>
 
         <div className="mt-8 text-center">
-          <a href="/" className="text-sm text-gray-500 hover:text-white transition-colors">
+          <Link href="/" className="text-sm text-gray-500 hover:text-white transition-colors">
             ← Return to Storefront
-          </a>
+          </Link>
         </div>
 
       </div>
