@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/context/ToastContext';
 
 interface Order {
   id: string;
@@ -32,6 +33,7 @@ interface OrderItem {
 }
 
 export default function AdminOrdersPage() {
+  const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -127,7 +129,10 @@ export default function AdminOrdersPage() {
 
   // --- UPGRADED CSV EXPORT (Now includes products list!) ---
   const exportToCSV = () => {
-    if (processedOrders.length === 0) return alert("No orders to export!");
+    if (processedOrders.length === 0) {
+      toast.warning("No orders to export!");
+      return;
+    }
 
     const headers = [
       "Tracking Number", "Date Placed", "Customer First Name", "Customer Last Name", 
@@ -192,8 +197,9 @@ export default function AdminOrdersPage() {
       if (error) throw error;
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, payment_status: newStatus } : o));
       if (selectedOrder?.id === orderId) setSelectedOrder({ ...selectedOrder, payment_status: newStatus });
+      toast.success(`Payment status updated to ${newStatus.toUpperCase()}`);
     } catch (error: any) {
-      alert(`Error updating payment: ${error.message}`);
+      toast.error(`Error updating payment: ${error.message}`);
     } finally {
       setUpdating(false);
     }
@@ -207,8 +213,9 @@ export default function AdminOrdersPage() {
       if (error) throw error;
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, delivery_status: newStatus } : o));
       if (selectedOrder?.id === orderId) setSelectedOrder({ ...selectedOrder, delivery_status: newStatus });
+      toast.success(`Delivery status updated to ${newStatus}`);
     } catch (error: any) {
-      alert(`Error updating delivery: ${error.message}`);
+      toast.error(`Error updating delivery: ${error.message}`);
     } finally {
       setUpdating(false);
     }
@@ -231,11 +238,12 @@ export default function AdminOrdersPage() {
     try {
       const { error } = await supabase.from('orders').update({ delivery_status: newStatus }).in('id', selectedOrders);
       if (error) throw error;
+      const count = selectedOrders.length;
       setOrders(prev => prev.map(o => selectedOrders.includes(o.id) ? { ...o, delivery_status: newStatus } : o));
       setSelectedOrders([]);
-      alert(`Successfully updated ${selectedOrders.length} orders!`);
+      toast.success(`Successfully updated ${count} orders!`);
     } catch (error: any) {
-      alert(`Bulk update error: ${error.message}`);
+      toast.error(`Bulk update error: ${error.message}`);
     } finally {
       setUpdating(false);
     }

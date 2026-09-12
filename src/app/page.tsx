@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useCart } from '@/context/CartContext';
+import { useToast } from '@/context/ToastContext';
 import Hero from '@/components/Hero';
 import ShopByCategories from '@/components/ShopByCategories';
 import BestDeals from '@/components/BestDeals';
@@ -35,6 +36,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   
   const { addToCart } = useCart();
+  const { toast } = useToast();
 
   useEffect(() => {
     async function fetchProducts() {
@@ -73,7 +75,7 @@ export default function Home() {
       purchaseType: type,
       image: product.image_url
     });
-    alert(`Added ${product.name} (${type} purchase) to your cart!`);
+    toast.success(`Added ${product.name} (${type} purchase) to your cart!`);
   };
 
   return (

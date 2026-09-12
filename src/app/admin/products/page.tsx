@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/context/ToastContext';
 
 interface Product {
   id: string;
@@ -35,6 +36,7 @@ interface Participant {
 }
 
 export default function AdminProductsPage() {
+  const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -136,7 +138,7 @@ export default function AdminProductsPage() {
       setParticipants(currentActiveParticipants);
     } catch (error: any) {
       console.error("Error fetching participants:", error.message);
-      alert("Failed to load participants.");
+      toast.error("Failed to load participants.");
     } finally {
       setLoadingParticipants(false);
     }
@@ -235,11 +237,11 @@ export default function AdminProductsPage() {
       if (editingId) {
         const { error } = await supabase.from('products').update(productData).eq('id', editingId);
         if (error) throw error;
-        alert('Product updated successfully!');
+        toast.success('Product updated successfully!');
       } else {
         const { error } = await supabase.from('products').insert([productData]);
         if (error) throw error;
-        alert('Product created successfully!');
+        toast.success('Product created successfully!');
       }
       
       resetForm();
@@ -250,7 +252,7 @@ export default function AdminProductsPage() {
         await supabase.storage.from('product-images').remove(newlyUploadedFiles);
         console.log("Storage rollback complete. Deleted orphaned images.");
       }
-      alert(`Error saving product: ${error.message}`);
+      toast.error(`Error saving product: ${error.message}`);
     } finally {
       setProcessing(false);
     }
@@ -282,9 +284,10 @@ export default function AdminProductsPage() {
         if (storageError) console.error("Error cleaning up storage:", storageError.message);
       }
 
+      toast.success('Product deleted successfully!');
       fetchProducts();
     } catch (error: any) {
-      alert(`Error deleting product: ${error.message}`);
+      toast.error(`Error deleting product: ${error.message}`);
     }
   };
 
@@ -296,10 +299,10 @@ export default function AdminProductsPage() {
         .update({ current_group_buyers: 0, group_buy_deadline: null })
         .eq('id', id);
       if (error) throw error;
-      alert(`New campaign started for ${productName}!`);
+      toast.success(`New campaign started for ${productName}!`);
       fetchProducts();
     } catch (error: any) {
-      alert(`Error restarting campaign: ${error.message}`);
+      toast.error(`Error restarting campaign: ${error.message}`);
     }
   };
 
@@ -644,7 +647,7 @@ export default function AdminProductsPage() {
             </div>
             
             <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end">
-               <button onClick={() => alert("Emailing all participants logic will go here!")} className="bg-gray-900 text-white font-bold py-2 px-6 rounded-lg hover:bg-black transition-colors">
+               <button onClick={() => toast.info("Emailing all participants feature is coming soon!")} className="bg-gray-900 text-white font-bold py-2 px-6 rounded-lg hover:bg-black transition-colors">
                   Contact All Participants
                </button>
             </div>

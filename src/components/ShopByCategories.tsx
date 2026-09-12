@@ -8,16 +8,15 @@ interface ShopByCategoriesProps {
 const categoryStyles: Record<string, { subtitle: string; imgSrc: string }> = {
   "Fruits": {
     subtitle: "Local Yield",
-    // BUG FIX: Added the leading '/' so Next.js doesn't crash!
-    imgSrc: "/images/fruitsCateg.png",
+    imgSrc: "/images/fruitsCateg.webp",
   },
   "Vegetables": {
     subtitle: "Farm Fresh",
-    imgSrc: "/images/vegetableCateg.png",
+    imgSrc: "/images/vegetableCateg.webp",
   },
   "Grains": {
     subtitle: "100% Organic",
-    imgSrc: "/images/grainsCateg.png",
+    imgSrc: "/images/grainsCateg.webp",
   },
   "Tubers": {
     subtitle: "Rich Harvest",
@@ -32,7 +31,7 @@ const categoryStyles: Record<string, { subtitle: string; imgSrc: string }> = {
 // 2. THE FALLBACK
 const fallbackStyle = {
   subtitle: "Premium Quality",
-  imgSrc: "/images/kunuCateg.png", // Added the leading slash here too!
+  imgSrc: "/images/kunuCateg.webp",
 };
 
 export default function ShopByCategories({ activeCategories }: ShopByCategoriesProps) {

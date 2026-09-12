@@ -1,6 +1,7 @@
 'use client';
 import { useState, useMemo } from 'react';
 import { useCart } from '@/context/CartContext';
+import { useToast } from '@/context/ToastContext';
 import Link from 'next/link';
 import Image from 'next/image'; // <-- NEW: Imported Next.js Image Optimizer
 
@@ -23,6 +24,7 @@ interface BestDealsProps {
 
 export default function BestDeals({ products }: BestDealsProps) {
   const { addToCart } = useCart();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>('All Products');
 
   // --- NEW: ONLY KEEP PRODUCTS WITH A DISCOUNT ---
@@ -52,7 +54,7 @@ export default function BestDeals({ products }: BestDealsProps) {
       purchaseType: 'standard',
       image: product.image_url,
     });
-    alert(`Added ${product.name} to your cart!`);
+    toast.success(`Added ${product.name} to your cart!`);
   };
 
   // If there are absolutely no discounted products in the database, we hide the whole section (or show a message)

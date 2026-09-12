@@ -2,6 +2,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
+import { useToast } from '@/context/ToastContext';
 import Link from 'next/link';
 import Image from 'next/image'; 
 
@@ -23,6 +24,7 @@ interface ProductsClientProps {
 
 export default function ProductsClient({ initialProducts }: ProductsClientProps) {
   const { addToCart } = useCart();
+  const { toast } = useToast();
   const searchParams = useSearchParams();
 
   const categories = useMemo(() => {
@@ -106,7 +108,7 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
       purchaseType: 'standard',
       image: product.image_url,
     });
-    alert(`Added ${product.name} to your cart!`);
+    toast.success(`Added ${product.name} to your cart!`);
   };
 
   return (
@@ -114,7 +116,7 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
       
       {/* HERO VIDEO SECTION */}
       <div className="relative w-full h-[300px] md:h-[400px] overflow-hidden">
-        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
+        <video autoPlay loop muted playsInline preload="metadata" className="absolute inset-0 w-full h-full object-cover">
           <source src="/videos/hero-vid.mp4" type="video/mp4" />
         </video>
         <div className="absolute inset-0 bg-black/40"></div>
@@ -283,7 +285,7 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
         {/* NEWSLETTER BANNER */}
         <div 
           className="w-full rounded-3xl mt-20 p-8 md:p-16 flex flex-col md:flex-row items-center justify-between relative overflow-hidden shadow-lg bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('/images/waitlist.png')" }}
+          style={{ backgroundImage: "url('/images/waitlist.webp')" }}
         >
           <div className="absolute inset-0 bg-black/50 pointer-events-none"></div>
           

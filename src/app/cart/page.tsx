@@ -3,11 +3,13 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image'; // <-- NEW: Imported Next.js Image Optimizer
 import { useCart } from '@/context/CartContext';
+import { useToast } from '@/context/ToastContext';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase'; 
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
+  const { toast } = useToast();
   const router = useRouter();
   
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -26,7 +28,7 @@ export default function CartPage() {
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!session?.user) {
-          alert("Please log in to proceed with a Group Buy purchase.");
+          toast.warning("Please log in to proceed with a Group Buy purchase.");
           router.push('/login'); 
           return;
         }
@@ -47,7 +49,7 @@ export default function CartPage() {
             
             // 1. OVER-SUBSCRIPTION DEFENSE
             if (product.current_group_buyers >= (product.group_threshold || 1)) {
-               alert(`Cannot proceed: The campaign for "${product.name}" is already full (${product.group_threshold}/${product.group_threshold}). Please remove it from your cart to continue.`);
+               toast.error(`Cannot proceed: The campaign for "${product.name}" is already full (${product.group_threshold}/${product.group_threshold}). Please remove it from your cart to continue.`);
                setIsCheckingOut(false);
                return; 
             }
@@ -80,7 +82,7 @@ export default function CartPage() {
                   });
 
                   if (userInCurrentCampaign) {
-                      alert(`Cannot proceed: You are already a participant in the current active campaign for "${product.name}". The limit is 1 slot per customer until the campaign completes and restarts.`);
+                      toast.warning(`Cannot proceed: You are already a participant in the current active campaign for "${product.name}". The limit is 1 slot per customer until the campaign completes and restarts.`);
                       setIsCheckingOut(false);
                       return;
                   }
@@ -96,7 +98,7 @@ export default function CartPage() {
 
     } catch (error: any) {
       console.error("Cart verification error:", error);
-      alert(`An error occurred while verifying your cart: ${error.message}`);
+      toast.error(`An error occurred while verifying your cart: ${error.message}`);
     } finally {
       setIsCheckingOut(false); 
     }

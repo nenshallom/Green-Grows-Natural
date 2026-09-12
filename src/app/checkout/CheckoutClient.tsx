@@ -1,12 +1,14 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
+import { useToast } from '@/context/ToastContext';
 import { useRouter } from 'next/navigation';
 import { usePaystackPayment } from 'react-paystack';
 import { supabase } from '@/lib/supabase';
 
 export default function CheckoutPage() {
   const { cartItems, itemCount, cartTotal, clearCart } = useCart(); 
+  const { toast } = useToast();
   const router = useRouter();
 
   const [userId, setUserId] = useState<string | null>(null);
@@ -91,12 +93,12 @@ const saveOrderToDatabase = async (paymentStatus: string, method: string) => {
     if (error && !error.message.includes('unique constraint')) throw error;
 
     clearCart();
-    alert(`Order Successful! Your Tracking Number is: ${checkoutReference}`);
+    toast.success(`Order Successful! Your Tracking Number is: ${checkoutReference}`);
     router.push('/dashboard');
 
   } catch (error: any) {
     console.error("RPC Checkout Error:", error);
-    alert(`Transaction Failed: ${error.message}`);
+    toast.error(`Transaction Failed: ${error.message}`);
   } finally {
     setIsProcessing(false);
   }
@@ -130,7 +132,10 @@ const initializePayment = usePaystackPayment(paystackConfig);
   // --- UPGRADED ASYNC GATEKEEPER FUNCTION ---
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (itemCount === 0) return alert("Your cart is empty!");
+    if (itemCount === 0) {
+      toast.warning("Your cart is empty!");
+      return;
+    }
 
     setIsProcessing(true); // Lock the button while we verify with the DB
 
@@ -158,7 +163,7 @@ const initializePayment = usePaystackPayment(paystackConfig);
             
             // 1. OVER-SUBSCRIPTION DEFENSE
             if (product.current_group_buyers >= (product.group_threshold || 1)) {
-               alert(`Payment Blocked: The campaign for "${product.name}" is already full (${product.group_threshold}/${product.group_threshold}). Please remove it from your cart to continue.`);
+               toast.error(`Payment Blocked: The campaign for "${product.name}" is already full (${product.group_threshold}/${product.group_threshold}). Please remove it from your cart to continue.`);
                setIsProcessing(false);
                return; 
             }
@@ -191,7 +196,7 @@ const initializePayment = usePaystackPayment(paystackConfig);
                   });
 
                   if (userInCurrentCampaign) {
-                      alert(`Payment Blocked: You are already a participant in the active campaign for "${product.name}". The limit is 1 slot per customer until the campaign is completed and restarted.`);
+                      toast.warning(`Payment Blocked: You are already a participant in the active campaign for "${product.name}". The limit is 1 slot per customer until the campaign is completed and restarted.`);
                       setIsProcessing(false);
                       return;
                   }
@@ -207,14 +212,14 @@ const initializePayment = usePaystackPayment(paystackConfig);
         setIsProcessing(false); // Let Paystack's UI take over loading state
         initializePayment({ 
           onSuccess: () => saveOrderToDatabase('paid', 'paystack'), 
-          onClose: () => alert("Payment window closed.") 
+          onClose: () => toast.info("Payment window closed.") 
         });
       } else {
         saveOrderToDatabase('pending', 'offline');
       }
 
     } catch (error: any) {
-      alert(`Checkout Verification Error: ${error.message}`);
+      toast.error(`Checkout Verification Error: ${error.message}`);
       setIsProcessing(false);
     }
   };

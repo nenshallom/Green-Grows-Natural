@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useToast } from '@/context/ToastContext';
 
 // --- NEW: Icons for a premium feel ---
 import { FiPackage, FiUser, FiShield, FiLogOut, FiClock, FiCheckCircle } from 'react-icons/fi';
@@ -12,6 +13,7 @@ interface Order { id: string; tracking_number: string; total_amount: number; pay
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { toast } = useToast();
   
   // Tab State
   const [activeTab, setActiveTab] = useState<'orders' | 'profile' | 'security'>('orders');
@@ -125,7 +127,7 @@ export default function DashboardPage() {
     if (confirmed) {
       await supabase.auth.updateUser({ data: { is_deleted: true } });
       await supabase.auth.signOut();
-      alert("Your account has been deactivated.");
+      toast.info("Your account has been deactivated.");
       router.push('/');
     }
   };

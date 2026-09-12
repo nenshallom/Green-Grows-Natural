@@ -1,6 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useCart } from '@/context/CartContext';
+import { useToast } from '@/context/ToastContext';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -31,25 +32,25 @@ interface ProductClientProps {
 
 export default function ProductClient({ product, relatedProducts }: ProductClientProps) {
   const { addToCart } = useCart();
+  const { toast } = useToast();
   
   // Initialize state directly from the instantly available props
   const [activeImage, setActiveImage] = useState<string>(product.image_url);
   const [quantity, setQuantity] = useState(1);
   const [purchaseMode, setPurchaseMode] = useState<'standard' | 'group'>('standard');
-  const [computedPriceType, setComputedPriceType] = useState<'standard' | 'bulk' | 'group'>('standard');
 
-  useEffect(() => {
-    if (purchaseMode === 'group') {
-      setComputedPriceType('group');
-      setQuantity(1); 
-    } else {
-      if (product.is_bulk_buy_enabled && quantity >= product.bulk_threshold) {
-        setComputedPriceType('bulk');
-      } else {
-        setComputedPriceType('standard');
-      }
+  const computedPriceType: 'standard' | 'bulk' | 'group' = useMemo(() => {
+    if (purchaseMode === 'group') return 'group';
+    if (product.is_bulk_buy_enabled && quantity >= product.bulk_threshold) return 'bulk';
+    return 'standard';
+  }, [purchaseMode, product.is_bulk_buy_enabled, product.bulk_threshold, quantity]);
+
+  const handleModeSelect = (mode: 'standard' | 'group') => {
+    setPurchaseMode(mode);
+    if (mode === 'group') {
+      setQuantity(1);
     }
-  }, [quantity, purchaseMode, product]);
+  };
 
   const handleQuantityChange = (newQty: number) => {
     if (purchaseMode === 'group') return; 
@@ -68,7 +69,7 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
       purchaseType: computedPriceType,
       priceAtAddition: price
     });
-    alert(`Added to Cart! ${quantity}x ${product.name} ready for checkout.`);
+    toast.success(`Added to Cart! ${quantity}x ${product.name} ready for checkout.`);
   };
 
   const allImages = [product.image_url, ...(product.additional_images || [])].filter(Boolean);
@@ -119,7 +120,7 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
 
             <div className="flex gap-2 mb-6">
               <button 
-                onClick={() => setPurchaseMode('standard')} 
+                onClick={() => handleModeSelect('standard')} 
                 className={`flex-1 py-2.5 px-2 rounded-md font-bold text-xs transition-colors ${purchaseMode === 'standard' ? 'bg-[#872022] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
               >
                 Standard & Bulk Buy
@@ -127,7 +128,7 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
               
               {product.is_group_buy_enabled && (
                 <button 
-                  onClick={() => !isGroupFull && setPurchaseMode('group')} 
+                  onClick={() => !isGroupFull && handleModeSelect('group')} 
                   disabled={isGroupFull}
                   className={`flex-1 py-2.5 px-2 rounded-md font-bold text-xs transition-colors 
                     ${purchaseMode === 'group' ? 'bg-[#7BA69D] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'} 

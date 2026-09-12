@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/context/ToastContext';
 
 interface Order {
   id: string;
@@ -36,6 +37,7 @@ interface CustomerProfile {
 }
 
 export default function AdminCustomersPage() {
+  const { toast } = useToast();
   const [customers, setCustomers] = useState<CustomerProfile[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -214,7 +216,10 @@ export default function AdminCustomersPage() {
 
   // --- NEW: THE SPREADSHEET EXPORT ENGINE ---
   const exportToCSV = () => {
-    if (processedCustomers.length === 0) return alert("No data to export!");
+    if (processedCustomers.length === 0) {
+      toast.warning("No data to export!");
+      return;
+    }
 
     // 1. Create the Column Headers
     const headers = [

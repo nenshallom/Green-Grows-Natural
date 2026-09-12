@@ -2,9 +2,11 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/context/ToastContext';
 
 export default function UpdatePasswordPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,12 +17,12 @@ export default function UpdatePasswordPage() {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        alert('Invalid or expired reset link. Please request a new one.');
+        toast.error('Invalid or expired reset link. Please request a new one.');
         router.push('/login');
       }
     };
     checkSession();
-  }, [router]);
+  }, [router, toast]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
