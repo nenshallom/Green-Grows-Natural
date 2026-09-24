@@ -5,18 +5,8 @@ import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import Link from 'next/link';
 import Image from 'next/image'; 
-
-interface Product {
-  id: string;
-  name: string;
-  category: string;
-  price_per_unit: number;
-  original_price?: number;
-  unit: string;
-  image_url: string;
-  is_bulk_buy_enabled: boolean;
-  is_group_buy_enabled: boolean;
-}
+import { Product } from '@/types';
+import { formatNaira } from '@/utils/format';
 
 interface ProductsClientProps {
   initialProducts: Product[];
@@ -106,7 +96,7 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
       priceAtAddition: product.price_per_unit,
       quantity: 1,
       purchaseType: 'standard',
-      image: product.image_url,
+      image: product.image_url || '',
     });
     toast.success(`Added ${product.name} to your cart!`);
   };
@@ -223,7 +213,7 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
                               Farm Fresh
                             </p>
                             <span className="font-black text-sm md:text-base text-white drop-shadow-md">
-                              ₦{product.price_per_unit.toLocaleString()}<span className="text-[10px] font-medium text-gray-300">/{product.unit || 'kg'}</span>
+                              {formatNaira(product.price_per_unit)}<span className="text-[10px] font-medium text-gray-300">/{product.unit || 'kg'}</span>
                             </span>
                           </div>
 

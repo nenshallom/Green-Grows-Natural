@@ -2,7 +2,7 @@
 
 :root {
   color-scheme: light;
-  --background: #ffffff;
+  --background: #e6ffe6;
   --foreground: #171717;
 }
 
@@ -24,6 +24,110 @@
   }
   100% {
     transform: translateX(0);
+  }
+}
+
+/* Playful Bouncing Cart Modal Animations */
+.animate-cart-spawn {
+  transform-origin: top right;
+  animation: cartSpawn 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-cart-despawn {
+  transform-origin: top right;
+  animation: cartDespawn 0.24s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-cart-overlay-in {
+  animation: cartOverlayIn 0.25s ease-out forwards;
+}
+
+.animate-cart-overlay-out {
+  animation: cartOverlayOut 0.22s ease-in forwards;
+}
+
+.animate-basket-bounce {
+  animation: emptyBasketBounce 2.4s ease-in-out infinite;
+}
+
+.animate-float-produce {
+  animation: floatProduce 2.8s ease-in-out infinite;
+}
+
+@keyframes cartSpawn {
+  0% {
+    opacity: 0;
+    transform: scale(0.08) translate(40px, -30px);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.06) translate(0, 4px);
+  }
+  78% {
+    transform: scale(0.97) translate(0, -2px);
+  }
+  90% {
+    transform: scale(1.015) translate(0, 1px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translate(0, 0);
+  }
+}
+
+@keyframes cartDespawn {
+  0% {
+    opacity: 1;
+    transform: scale(1) translate(0, 0);
+  }
+  25% {
+    transform: scale(1.04) translate(0, -3px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.08) translate(40px, -30px);
+  }
+}
+
+@keyframes cartOverlayIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes cartOverlayOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes emptyBasketBounce {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-8px) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(0) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-4px) rotate(3deg);
+  }
+}
+
+@keyframes floatProduce {
+  0%, 100% {
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) scale(1.12) rotate(8deg);
   }
 }
 

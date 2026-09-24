@@ -2,35 +2,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/context/ToastContext';
-
-interface Order {
-  id: string;
-  created_at: string;
-  tracking_number: string;
-  total_amount: number;
-  payment_method: string;
-  payment_status: string;
-  delivery_status: string; 
-  first_name: string;
-  last_name: string;
-  email: string | null;
-  contact_phone: string;
-  additional_phone: string | null;
-  shipping_address: string;
-  landmark: string | null;
-  state: string;
-  lga: string;
-  // --- NEW: Added order_items to the main interface for filtering ---
-  order_items?: { product_name: string; purchase_type: string }[];
-}
-
-interface OrderItem {
-  id: string;
-  product_name: string;
-  quantity: number;
-  price_at_purchase: number;
-  purchase_type: string;
-}
+import { Order, OrderItem } from '@/types';
+import { formatNaira, getErrorMessage } from '@/utils/format';
 
 export default function AdminOrdersPage() {
   const { toast } = useToast();
@@ -64,8 +37,8 @@ export default function AdminOrdersPage() {
       const { data, error } = await supabase.from('orders').select('*, order_items(product_name, purchase_type)');
       if (error) throw error;
       setOrders(data || []);
-    } catch (error: any) {
-      console.error("Error fetching orders:", error.message);
+    } catch (error) {
+      console.error("Error fetching orders:", getErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -78,16 +51,16 @@ export default function AdminOrdersPage() {
 
   // --- UPGRADED DATA PIPELINE ---
   const processedOrders = useMemo(() => {
-    let result = orders.filter(order => {
+    const result = orders.filter(order => {
       // 1. Upgraded Text Search (Now searches inside the products purchased!)
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch = 
         order.tracking_number.toLowerCase().includes(searchLower) ||
-        order.first_name.toLowerCase().includes(searchLower) ||
-        order.last_name.toLowerCase().includes(searchLower) ||
-        order.contact_phone.includes(searchTerm) ||
-        (order.email && order.email.toLowerCase().includes(searchLower)) ||
-        order.order_items?.some(item => item.product_name.toLowerCase().includes(searchLower));
+        (order.first_name?.toLowerCase().includes(searchLower) ?? false) ||
+        (order.last_name?.toLowerCase().includes(searchLower) ?? false) ||
+        (order.contact_phone?.includes(searchTerm) ?? false) ||
+        (order.email?.toLowerCase().includes(searchLower) ?? false) ||
+        (order.order_items?.some(item => item.product_name.toLowerCase().includes(searchLower)) ?? false);
 
       // 2. Exact Match Filters
       const matchesPayment = paymentFilter === 'all' || order.payment_method === paymentFilter;
@@ -182,8 +155,8 @@ export default function AdminOrdersPage() {
       const { data, error } = await supabase.from('order_items').select('*').eq('order_id', order.id);
       if (error) throw error;
       setOrderItems(data || []);
-    } catch (error: any) {
-      console.error("Error fetching items:", error.message);
+    } catch (error) {
+      console.error("Error fetching items:", getErrorMessage(error));
     } finally {
       setLoadingItems(false);
     }
@@ -198,8 +171,8 @@ export default function AdminOrdersPage() {
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, payment_status: newStatus } : o));
       if (selectedOrder?.id === orderId) setSelectedOrder({ ...selectedOrder, payment_status: newStatus });
       toast.success(`Payment status updated to ${newStatus.toUpperCase()}`);
-    } catch (error: any) {
-      toast.error(`Error updating payment: ${error.message}`);
+    } catch (error) {
+      toast.error(`Error updating payment: ${getErrorMessage(error)}`);
     } finally {
       setUpdating(false);
     }
@@ -214,8 +187,8 @@ export default function AdminOrdersPage() {
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, delivery_status: newStatus } : o));
       if (selectedOrder?.id === orderId) setSelectedOrder({ ...selectedOrder, delivery_status: newStatus });
       toast.success(`Delivery status updated to ${newStatus}`);
-    } catch (error: any) {
-      toast.error(`Error updating delivery: ${error.message}`);
+    } catch (error) {
+      toast.error(`Error updating delivery: ${getErrorMessage(error)}`);
     } finally {
       setUpdating(false);
     }
@@ -242,8 +215,8 @@ export default function AdminOrdersPage() {
       setOrders(prev => prev.map(o => selectedOrders.includes(o.id) ? { ...o, delivery_status: newStatus } : o));
       setSelectedOrders([]);
       toast.success(`Successfully updated ${count} orders!`);
-    } catch (error: any) {
-      toast.error(`Bulk update error: ${error.message}`);
+    } catch (error) {
+      toast.error(`Bulk update error: ${getErrorMessage(error)}`);
     } finally {
       setUpdating(false);
     }
@@ -282,7 +255,7 @@ export default function AdminOrdersPage() {
             {/* --- NEW: PURCHASE TYPE FILTER --- */}
             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-500 font-medium">Type:</label>
-              <select value={purchaseFilter} onChange={(e) => setPurchaseFilter(e.target.value as any)} className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white font-medium">
+              <select value={purchaseFilter} onChange={(e) => setPurchaseFilter(e.target.value as typeof purchaseFilter)} className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white font-medium">
                 <option value="all">All Orders</option>
                 <option value="group">🤝 Group Buys</option>
                 <option value="bulk">📦 Bulk Buys</option>
@@ -292,7 +265,7 @@ export default function AdminOrdersPage() {
 
             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-500 font-medium">Payment:</label>
-              <select value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value as any)} className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white">
+              <select value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value as typeof paymentFilter)} className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white">
                 <option value="all">All</option>
                 <option value="paystack">Paystack</option>
                 <option value="offline">Offline</option>
@@ -301,7 +274,7 @@ export default function AdminOrdersPage() {
             
             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-500 font-medium">Delivery:</label>
-              <select value={deliveryFilter} onChange={(e) => setDeliveryFilter(e.target.value as any)} className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white">
+              <select value={deliveryFilter} onChange={(e) => setDeliveryFilter(e.target.value as typeof deliveryFilter)} className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white">
                 <option value="all">All Statuses</option>
                 <option value="Pending Delivery">Pending</option>
                 <option value="Processing">Processing</option>
@@ -309,11 +282,23 @@ export default function AdminOrdersPage() {
                 <option value="Delivered">Delivered</option>
               </select>
             </div>
+
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-500 font-medium">Date:</label>
+              <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value as typeof dateFilter)} className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white">
+                <option value="all">All Dates</option>
+                <option value="today">Today</option>
+                <option value="week">Past Week</option>
+                <option value="month">Past Month</option>
+                <option value="6-months">Past 6 Months</option>
+                <option value="year">Past Year</option>
+              </select>
+            </div>
           </div>
           
           <div className="flex items-center gap-2 w-full xl:w-auto mt-2 xl:mt-0">
             <label className="text-sm text-gray-500 font-medium">Sort:</label>
-            <select value={sortConfig} onChange={(e) => setSortConfig(e.target.value as any)} className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white w-full md:w-auto">
+            <select value={sortConfig} onChange={(e) => setSortConfig(e.target.value as typeof sortConfig)} className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white w-full md:w-auto">
               <option value="date-desc">Newest First</option>
               <option value="date-asc">Oldest First</option>
               <option value="amount-desc">Highest Value</option>
@@ -375,7 +360,7 @@ export default function AdminOrdersPage() {
                       <p className="text-xs text-blue-600">{order.email || 'No email'}</p>
                     </td>
                     <td className="p-4">
-                      <p className="font-bold text-gray-900 mb-1">₦{order.total_amount.toLocaleString()}</p>
+                      <p className="font-bold text-gray-900 mb-1">{formatNaira(order.total_amount)}</p>
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${order.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                         {order.payment_status}
                       </span>
@@ -499,18 +484,18 @@ export default function AdminOrdersPage() {
                           <div>
                             <p className="font-bold text-gray-900">{item.product_name}</p>
                             <div className="flex items-center gap-2 mt-1">
-                              <span className="text-sm text-gray-500">{item.quantity}x @ ₦{item.price_at_purchase.toLocaleString()}</span>
+                              <span className="text-sm text-gray-500">{item.quantity}x @ {formatNaira(item.price_at_purchase)}</span>
                               <span className="text-[10px] font-bold uppercase bg-gray-100 px-1.5 py-0.5 rounded text-gray-600 border border-gray-200">{item.purchase_type}</span>
                             </div>
                           </div>
-                          <p className="font-black text-gray-900">₦{(item.quantity * item.price_at_purchase).toLocaleString()}</p>
+                          <p className="font-black text-gray-900">{formatNaira(item.quantity * item.price_at_purchase)}</p>
                         </div>
                       ))}
                     </div>
                   )}
                   <div className="bg-gray-900 p-4 flex justify-between items-center text-white border-t border-gray-800">
                     <span className="font-medium text-gray-300">Total Value</span>
-                    <span className="text-2xl font-black text-green-400">₦{selectedOrder.total_amount.toLocaleString()}</span>
+                    <span className="text-2xl font-black text-green-400">{formatNaira(selectedOrder.total_amount)}</span>
                   </div>
                 </div>
               </div>

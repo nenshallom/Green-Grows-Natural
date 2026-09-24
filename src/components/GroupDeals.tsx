@@ -1,18 +1,8 @@
-'use client';
 import Link from 'next/link';
 import Image from 'next/image'; // <-- NEW: Imported Next.js Image Optimizer
 import { useCart } from '@/context/CartContext';
-
-interface Product {
-  id: string;
-  name: string;
-  image_url: string;
-  price_per_unit: number;
-  is_group_buy_enabled: boolean;
-  group_buy_price: number | null;
-  group_threshold: number | null;
-  current_group_buyers?: number; 
-}
+import { Product } from '@/types';
+import { formatNaira } from '@/utils/format';
 
 export default function GroupDeals({ products }: { products: Product[] }) {
   // 1. Extract BOTH addToCart and removeFromCart from the global context
@@ -35,7 +25,7 @@ export default function GroupDeals({ products }: { products: Product[] }) {
         priceAtAddition: product.group_buy_price || product.price_per_unit,
         quantity: 1, 
         purchaseType: 'group',
-        image: product.image_url,
+        image: product.image_url || '',
       });
     }
   };
@@ -100,7 +90,7 @@ export default function GroupDeals({ products }: { products: Product[] }) {
                   {/* PRICING */}
                   <div className="flex items-center gap-2 mb-3">
                     <span className="font-black text-[#D93F3F] text-lg md:text-xl">
-                      ₦{product.group_buy_price?.toLocaleString()}
+                      {formatNaira(product.group_buy_price)}
                       <span className="text-[10px] text-gray-500 font-bold ml-1 uppercase">/ Slot</span>
                     </span>
                   </div>

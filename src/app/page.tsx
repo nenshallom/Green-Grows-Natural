@@ -1,8 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useCart } from '@/context/CartContext';
-import { useToast } from '@/context/ToastContext';
 import Hero from '@/components/Hero';
 import ShopByCategories from '@/components/ShopByCategories';
 import BestDeals from '@/components/BestDeals';
@@ -10,46 +8,25 @@ import BulkDeals from '@/components/BulkDeals';
 import GroupDeals from '@/components/GroupDeals';
 import FAQ from '@/components/FAQ';
 import Testimonials from '@/components/Testimonials';
-
-// ... (keep your Product interface here)
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  price_per_unit: number;
-  original_price?: number;
-  unit: string;
-  is_group_buy_enabled: boolean;
-  group_buy_price: number;
-  group_threshold: number;
-  is_bulk_buy_enabled: boolean;
-  bulk_buy_price: number;
-  bulk_threshold: number;
-  stock_quantity: number;
-  image_url: string;
-}
+import { Product } from '@/types';
+import { getErrorMessage } from '@/utils/format';
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  const { addToCart } = useCart();
-  const { toast } = useToast();
 
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const { data, error } = await supabase
+        const { data, error: fetchError } = await supabase
           .from('products')
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (fetchError) throw fetchError;
         if (data) setProducts(data as Product[]);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err) {
+        console.error('Failed to load products:', getErrorMessage(err));
       } finally {
         setLoading(false);
       }
@@ -57,29 +34,8 @@ export default function Home() {
     fetchProducts();
   }, []);
 
-  const handleAddToCart = (product: Product, type: 'standard' | 'bulk' | 'group') => {
-    let price = product.price_per_unit;
-    let quantity = 1;
-    if (type === 'bulk') {
-      price = product.bulk_buy_price;
-      quantity = product.bulk_threshold;
-    } else if (type === 'group') {
-      price = product.group_buy_price;
-    }
-
-    addToCart({
-      productId: product.id,
-      name: product.name,
-      priceAtAddition: price, 
-      quantity: quantity,
-      purchaseType: type,
-      image: product.image_url
-    });
-    toast.success(`Added ${product.name} (${type} purchase) to your cart!`);
-  };
-
   return (
-    <div className="min-h-screen bg-[#FDFDFD]">
+    <div className="min-h-screen bg-[#fafffa]">
 
       <main className="max-w-[90%] mx-auto py-8 space-y-16">
       

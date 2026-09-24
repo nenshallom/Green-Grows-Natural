@@ -5,6 +5,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   PieChart, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
+import { formatNaira } from '@/utils/format';
 
 // Helper function for the Activity Feed
 const timeAgo = (dateString: string) => {
@@ -20,10 +21,33 @@ const timeAgo = (dateString: string) => {
   return `${diffDays}d ago`;
 };
 
+interface DashboardOrder {
+  created_at: string;
+  total_amount: number;
+  payment_method: string;
+  delivery_status: string | null;
+}
+
+interface DashboardCampaign {
+  id: string;
+  name: string;
+  current_group_buyers: number;
+  group_threshold: number;
+  image_url: string | null;
+}
+
+interface AdminNotification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  created_at: string;
+}
+
 interface AdminDashboardClientProps {
-  initialOrders: any[];
-  initialCampaigns: any[];
-  initialNotifications: any[];
+  initialOrders: DashboardOrder[];
+  initialCampaigns: DashboardCampaign[];
+  initialNotifications: AdminNotification[];
 }
 
 export default function AdminDashboardClient({ 
@@ -134,7 +158,7 @@ export default function AdminDashboardClient({
           <span className="text-sm font-bold text-gray-500 px-2 uppercase tracking-wider">Metrics:</span>
           <select 
             value={globalTimeframe} 
-            onChange={(e) => setGlobalTimeframe(e.target.value as any)}
+            onChange={(e) => setGlobalTimeframe(e.target.value as typeof globalTimeframe)}
             className="bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block p-2.5 outline-none font-bold cursor-pointer"
           >
             <option value="today">Today</option>
@@ -151,7 +175,7 @@ export default function AdminDashboardClient({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-green-500 transition-transform hover:-translate-y-1">
           <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">Verified Revenue</p>
-          <p className="text-3xl font-black text-gray-900">₦{totalRevenue.toLocaleString()}</p>
+          <p className="text-3xl font-black text-gray-900">{formatNaira(totalRevenue)}</p>
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-blue-500 transition-transform hover:-translate-y-1">
           <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">Paid Orders</p>
@@ -159,7 +183,7 @@ export default function AdminDashboardClient({
         </div>
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-purple-500 transition-transform hover:-translate-y-1">
           <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">Average Order Value</p>
-          <p className="text-3xl font-black text-gray-900">₦{Math.round(averageOrderValue).toLocaleString()}</p>
+          <p className="text-3xl font-black text-gray-900">{formatNaira(Math.round(averageOrderValue))}</p>
         </div>
       </div>
 
@@ -191,7 +215,7 @@ export default function AdminDashboardClient({
                 <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} dy={10} minTickGap={20} />
                 <YAxis axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} tickFormatter={(value) => `₦${(value/1000).toFixed(0)}k`} />
                 <RechartsTooltip 
-                  formatter={(value: any) => [`₦${Number(value || 0).toLocaleString()}`, 'Revenue']}
+                  formatter={(value: unknown) => [formatNaira(Number(value || 0)), 'Revenue']}
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 />
                 <Area type="monotone" dataKey="revenue" stroke="#16a34a" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" activeDot={{ r: 6, fill: '#16a34a', stroke: '#fff', strokeWidth: 2 }} />
@@ -220,7 +244,7 @@ export default function AdminDashboardClient({
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <RechartsTooltip formatter={(value: any) => `₦${Number(value || 0).toLocaleString()}`} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                  <RechartsTooltip formatter={(value: unknown) => formatNaira(Number(value || 0))} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                   <Legend verticalAlign="bottom" height={36} iconType="circle" />
                 </PieChart>
               </ResponsiveContainer>

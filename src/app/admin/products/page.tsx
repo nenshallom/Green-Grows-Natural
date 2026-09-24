@@ -2,38 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/context/ToastContext';
-
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  price_per_unit: number;
-  original_price?: number | null; 
-  unit: string;
-  stock_quantity: number;
-  image_url: string | null;
-  additional_images: string[];
-  is_bulk_buy_enabled: boolean;
-  bulk_buy_price: number | null;
-  bulk_threshold: number | null;
-  is_group_buy_enabled: boolean;
-  group_buy_price: number | null;
-  group_threshold: number | null;
-  current_group_buyers: number;
-  group_buy_deadline: string | null;
-}
-
-interface Participant {
-  order_id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  quantity: number;
-  payment_status: string;
-  date_joined: string;
-}
+import { Product, Participant } from '@/types';
+import { formatNaira, getErrorMessage } from '@/utils/format';
 
 export default function AdminProductsPage() {
   const { toast } = useToast();
@@ -77,8 +47,8 @@ export default function AdminProductsPage() {
       const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       setProducts(data || []);
-    } catch (error: any) {
-      console.error("Error fetching products:", error.message);
+    } catch (error) {
+      console.error("Error fetching products:", getErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -136,8 +106,8 @@ export default function AdminProductsPage() {
       const currentActiveParticipants = sortedData.slice(0, product.current_group_buyers);
 
       setParticipants(currentActiveParticipants);
-    } catch (error: any) {
-      console.error("Error fetching participants:", error.message);
+    } catch (error) {
+      console.error("Error fetching participants:", getErrorMessage(error));
       toast.error("Failed to load participants.");
     } finally {
       setLoadingParticipants(false);
@@ -200,7 +170,7 @@ export default function AdminProductsPage() {
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     setProcessing(true);
-    let newlyUploadedFiles: string[] = []; // Used for cleanup if DB fails!
+    const newlyUploadedFiles: string[] = []; // Used for cleanup if DB fails!
 
     try {
       let finalMainImageUrl = tempMainImageUrl; 
@@ -246,13 +216,13 @@ export default function AdminProductsPage() {
       
       resetForm();
       fetchProducts();
-    } catch (error: any) {
+    } catch (error) {
       // 🚨 ROLLBACK TRIGGERED: Clean up storage if database insert fails
       if (newlyUploadedFiles.length > 0) {
         await supabase.storage.from('product-images').remove(newlyUploadedFiles);
         console.log("Storage rollback complete. Deleted orphaned images.");
       }
-      toast.error(`Error saving product: ${error.message}`);
+      toast.error(`Error saving product: ${getErrorMessage(error)}`);
     } finally {
       setProcessing(false);
     }
@@ -286,8 +256,8 @@ export default function AdminProductsPage() {
 
       toast.success('Product deleted successfully!');
       fetchProducts();
-    } catch (error: any) {
-      toast.error(`Error deleting product: ${error.message}`);
+    } catch (error) {
+      toast.error(`Error deleting product: ${getErrorMessage(error)}`);
     }
   };
 
@@ -301,8 +271,8 @@ export default function AdminProductsPage() {
       if (error) throw error;
       toast.success(`New campaign started for ${productName}!`);
       fetchProducts();
-    } catch (error: any) {
-      toast.error(`Error restarting campaign: ${error.message}`);
+    } catch (error) {
+      toast.error(`Error restarting campaign: ${getErrorMessage(error)}`);
     }
   };
 
@@ -316,7 +286,7 @@ export default function AdminProductsPage() {
     setIsGroup(false); setGroupPrice(''); setGroupThreshold(''); setGroupDeadline('');
   };
 
-  const InteractiveImagePreview = ({ url, onRemove, type }: {url:string; onRemove:()=>void; type: 'main'|'gallery'}) => (
+  const InteractiveImagePreview = ({ url, onRemove }: { url: string; onRemove: () => void }) => (
     <div className="relative group w-20 h-20 border-2 border-gray-200 rounded-lg overflow-hidden shadow-inner bg-gray-100">
       <img src={url} alt="Preview" className="w-full h-full object-cover" />
       <button type="button" onClick={onRemove} className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
@@ -402,7 +372,7 @@ export default function AdminProductsPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Main Product Image</label>
                   {tempMainImageUrl && (
                     <div className="mb-3 flex items-center gap-3 bg-white p-2 rounded-lg border">
-                      <InteractiveImagePreview url={tempMainImageUrl} type="main" onRemove={() => setTempMainImageUrl(null)} />
+                      <InteractiveImagePreview url={tempMainImageUrl} onRemove={() => setTempMainImageUrl(null)} />
                       <p className="text-xs text-gray-500">Current main image. Click X to replace.</p>
                     </div>
                   )}
@@ -414,7 +384,7 @@ export default function AdminProductsPage() {
                     <div className="mb-3 bg-white p-3 rounded-lg border">
                       <div className="flex gap-2.5 overflow-x-auto pb-1">
                         {tempAdditionalUrls.map((url, idx) => (
-                          <InteractiveImagePreview key={idx} url={url} type="gallery" onRemove={() => removeExistingGalleryImage(url)} />
+                          <InteractiveImagePreview key={idx} url={url} onRemove={() => removeExistingGalleryImage(url)} />
                         ))}
                       </div>
                     </div>
@@ -518,7 +488,7 @@ export default function AdminProductsPage() {
                             <span className="bg-red-100 text-red-700 text-[10px] font-black px-1.5 rounded">SALE</span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">₦{product.price_per_unit.toLocaleString()} | {product.category}</p>
+                        <p className="text-sm text-gray-600 mt-1">{formatNaira(product.price_per_unit)} | {product.category}</p>
                       </td>
                       
                       <td className="p-4 text-sm whitespace-nowrap">
@@ -597,8 +567,8 @@ export default function AdminProductsPage() {
                 <p className="text-sm font-bold text-green-600 uppercase tracking-wider mb-1">Live Campaign CRM</p>
                 <h2 className="text-2xl font-black text-gray-900">{selectedCampaign.name}</h2>
                 <p className="text-gray-500 text-sm mt-1">
-                  Target: {selectedCampaign.group_threshold} | Current: {selectedCampaign.current_group_buyers} 
-                  {selectedCampaign.current_group_buyers >= (selectedCampaign.group_threshold || 1) && <span className="text-green-600 font-bold ml-2">✅ Target Reached!</span>}
+                  Target: {selectedCampaign.group_threshold} | Current: {selectedCampaign.current_group_buyers ?? 0} 
+                  {(selectedCampaign.current_group_buyers ?? 0) >= (selectedCampaign.group_threshold || 1) && <span className="text-green-600 font-bold ml-2">✅ Target Reached!</span>}
                 </p>
               </div>
               <button onClick={() => setSelectedCampaign(null)} className="text-gray-400 hover:text-gray-700 bg-white p-2 rounded-full shadow-sm">

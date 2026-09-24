@@ -7,6 +7,7 @@ import Footer from '@/components/Footer';
 
 import { CartProvider } from "@/context/CartContext";
 import { ToastProvider } from "@/context/ToastContext";
+import CartModal from "@/components/CartModal";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,6 +27,7 @@ export default function RootLayout({
         <ToastProvider>
           <CartProvider>
             <Navbar /> 
+            <CartModal />
             {children}
             <Footer />
           </CartProvider>

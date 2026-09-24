@@ -4,19 +4,8 @@ import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import Link from 'next/link';
 import Image from 'next/image'; // <-- NEW: Imported Next.js Image Optimizer
-
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  price_per_unit: number;
-  original_price?: number; 
-  unit: string;
-  image_url: string;
-  is_bulk_buy_enabled: boolean;
-  is_group_buy_enabled: boolean;
-}
+import { Product } from '@/types';
+import { formatNaira } from '@/utils/format';
 
 interface BestDealsProps {
   products: Product[];
@@ -52,7 +41,7 @@ export default function BestDeals({ products }: BestDealsProps) {
       priceAtAddition: product.price_per_unit,
       quantity: 1,
       purchaseType: 'standard',
-      image: product.image_url,
+      image: product.image_url || '',
     });
     toast.success(`Added ${product.name} to your cart!`);
   };
@@ -138,12 +127,12 @@ export default function BestDeals({ products }: BestDealsProps) {
 
                     <div className="flex flex-col w-fit">
                       <span className="font-black text-sm md:text-base text-white drop-shadow-md">
-                        ₦{product.price_per_unit.toLocaleString()}
+                        {formatNaira(product.price_per_unit)}
                         <span className="text-[10px] font-medium text-gray-300">/{product.unit || 'kg'}</span>
                       </span>
                       {product.original_price && (
                          <span className="text-[10px] text-gray-400 line-through">
-                           ₦{product.original_price.toLocaleString()}
+                           {formatNaira(product.original_price)}
                          </span>
                       )}
                     </div>

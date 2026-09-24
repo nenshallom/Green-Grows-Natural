@@ -2,39 +2,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/context/ToastContext';
-
-interface Order {
-  id: string;
-  created_at: string;
-  tracking_number: string;
-  total_amount: number;
-  payment_status: string;
-  payment_method: string;
-}
-
-interface OrderItem {
-  id: string;
-  product_name: string;
-  quantity: number;
-  price_at_purchase: number;
-  purchase_type: string;
-}
-
-interface CustomerProfile {
-  is_registered: boolean;
-  account_created_at: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  phone: string;
-  shipping_address: string;
-  state: string;
-  lga: string;
-  total_orders: number;
-  lifetime_value: number;
-  last_active_date: string;
-  order_history: Order[];
-}
+import { CustomerProfile, Order, OrderItem } from '@/types';
+import { formatNaira, getErrorMessage } from '@/utils/format';
 
 export default function AdminCustomersPage() {
   const { toast } = useToast();
@@ -76,7 +45,19 @@ export default function AdminCustomersPage() {
 
       const profileMap = new Map<string, CustomerProfile>();
 
-      (authUsers || []).forEach((u: any) => {
+      interface AuthUserMeta {
+        first_name?: string;
+        last_name?: string;
+        full_name?: string;
+        phone_number?: string;
+      }
+      interface AuthUserRecord {
+        email: string;
+        created_at: string;
+        raw_meta?: AuthUserMeta;
+      }
+
+      ((authUsers as AuthUserRecord[]) || []).forEach((u) => {
         const meta = u.raw_meta || {};
         profileMap.set(u.email, {
           is_registered: true,
@@ -95,7 +76,7 @@ export default function AdminCustomersPage() {
         });
       });
 
-      (allOrders || []).forEach((order: any) => {
+      ((allOrders as Order[]) || []).forEach((order) => {
         const email = order.email || `guest-${order.id}`;
 
         if (profileMap.has(email)) {
@@ -133,8 +114,8 @@ export default function AdminCustomersPage() {
       });
 
       setCustomers(Array.from(profileMap.values()));
-    } catch (error: any) {
-      console.error("Error processing CRM:", error.message);
+    } catch (error) {
+      console.error("Error processing CRM:", getErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -144,7 +125,7 @@ export default function AdminCustomersPage() {
 
   // --- DATA PIPELINE ---
   const processedCustomers = useMemo(() => {
-    let result = customers.filter(cust => {
+    const result = customers.filter(cust => {
       // 1. Search
       const searchLower = searchTerm.toLowerCase();
       const fName = String(cust.first_name).toLowerCase();
@@ -203,8 +184,8 @@ export default function AdminCustomersPage() {
       const { data, error } = await supabase.from('order_items').select('*').eq('order_id', orderId);
       if (error) throw error;
       setExpandedOrderItems(data || []);
-    } catch (error: any) {
-      console.error("Error fetching items:", error.message);
+    } catch (error) {
+      console.error("Error fetching items:", getErrorMessage(error));
     } finally {
       setLoadingItems(false);
     }
@@ -292,7 +273,7 @@ export default function AdminCustomersPage() {
           <div className="flex flex-wrap gap-4">
             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-500 font-medium">Joined:</label>
-              <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value as any)} className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white">
+              <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value as typeof dateFilter)} className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white">
                 <option value="all">All Time</option>
                 <option value="today">Last 24 Hours</option>
                 <option value="week">Last 7 Days</option>
@@ -304,7 +285,7 @@ export default function AdminCustomersPage() {
             {/* NEW: AUDIENCE SEGMENTATION FILTER */}
             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-500 font-medium">Audience:</label>
-              <select value={orderFilter} onChange={(e) => setOrderFilter(e.target.value as any)} className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-blue-50 text-blue-900 font-medium border-blue-200">
+              <select value={orderFilter} onChange={(e) => setOrderFilter(e.target.value as typeof orderFilter)} className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-blue-50 text-blue-900 font-medium border-blue-200">
                 <option value="all">Everyone</option>
                 <option value="leads">Leads (0 Orders)</option>
                 <option value="first-timers">First Timers (1 Order)</option>
@@ -316,7 +297,7 @@ export default function AdminCustomersPage() {
 
           <div className="flex items-center gap-2">
             <label className="text-sm text-gray-500 font-medium">Sort Strategy:</label>
-            <select value={sortConfig} onChange={(e) => setSortConfig(e.target.value as any)} className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white">
+            <select value={sortConfig} onChange={(e) => setSortConfig(e.target.value as typeof sortConfig)} className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white">
               <option value="newest-account">Newest Accounts First</option>
               <option value="recent-active">Most Recently Active</option>
               <option value="ltv-desc">Highest Lifetime Value</option>
@@ -373,7 +354,7 @@ export default function AdminCustomersPage() {
                       )}
                     </td>
                     <td className="p-4 font-black text-green-700">
-                      ₦{cust.lifetime_value.toLocaleString()}
+                      {formatNaira(cust.lifetime_value)}
                     </td>
                     <td className="p-4 text-right">
                       <button onClick={() => setSelectedCustomer(cust)} className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-black transition-colors shadow-sm">
@@ -424,7 +405,7 @@ export default function AdminCustomersPage() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                 <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                   <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Lifetime Value</p>
-                  <p className="text-2xl font-black text-green-700 mt-1">₦{selectedCustomer.lifetime_value.toLocaleString()}</p>
+                  <p className="text-2xl font-black text-green-700 mt-1">{formatNaira(selectedCustomer.lifetime_value)}</p>
                 </div>
                 <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                   <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Total Orders</p>
@@ -444,7 +425,7 @@ export default function AdminCustomersPage() {
                   <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Complete Order History</h3>
                   <div className="flex items-center gap-2">
                     <label className="text-xs text-gray-500 font-bold uppercase tracking-wider">Filter Payment:</label>
-                    <select value={historyFilter} onChange={(e) => setHistoryFilter(e.target.value as any)} className="border rounded-md px-2 py-1 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-gray-50 text-gray-700 font-medium">
+                    <select value={historyFilter} onChange={(e) => setHistoryFilter(e.target.value as typeof historyFilter)} className="border rounded-md px-2 py-1 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-gray-50 text-gray-700 font-medium">
                       <option value="all">All Methods</option>
                       <option value="paystack">Paystack Online</option>
                       <option value="offline">Offline Transfer</option>
@@ -478,7 +459,7 @@ export default function AdminCustomersPage() {
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${order.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>{order.payment_status}</span>
                               </div>
                             </td>
-                            <td className="p-4 font-black text-gray-900 text-right">₦{order.total_amount.toLocaleString()}</td>
+                            <td className="p-4 font-black text-gray-900 text-right">{formatNaira(order.total_amount)}</td>
                             <td className="p-4 text-right">
                               <button onClick={() => handleToggleOrderDetails(order.id)} className="text-green-600 font-bold text-xs hover:bg-green-50 px-3 py-2 rounded-lg transition-colors border border-green-200">
                                 {expandedOrderId === order.id ? 'Hide Items ↑' : 'View Items ↓'}
@@ -502,11 +483,11 @@ export default function AdminCustomersPage() {
                                             <div>
                                               <p className="font-bold text-gray-900">{item.product_name}</p>
                                               <div className="flex items-center gap-2 mt-1">
-                                                <span className="text-gray-500">{item.quantity} units @ ₦{item.price_at_purchase.toLocaleString()}/ea</span>
+                                                <span className="text-gray-500">{item.quantity} units @ {formatNaira(item.price_at_purchase)}/ea</span>
                                                 <span className="text-[10px] font-bold uppercase bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">{item.purchase_type}</span>
                                               </div>
                                             </div>
-                                            <p className="font-bold text-gray-900">₦{(item.quantity * item.price_at_purchase).toLocaleString()}</p>
+                                            <p className="font-bold text-gray-900">{formatNaira(item.quantity * item.price_at_purchase)}</p>
                                           </li>
                                         ))}
                                       </ul>

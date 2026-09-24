@@ -5,6 +5,8 @@ import { useToast } from '@/context/ToastContext';
 import { useRouter } from 'next/navigation';
 import { usePaystackPayment } from 'react-paystack';
 import { supabase } from '@/lib/supabase';
+import { validateGroupBuyCart } from '@/lib/campaign';
+import { formatNaira, getErrorMessage } from '@/utils/format';
 
 export default function CheckoutPage() {
   const { cartItems, itemCount, cartTotal, clearCart } = useCart(); 
@@ -96,9 +98,9 @@ const saveOrderToDatabase = async (paymentStatus: string, method: string) => {
     toast.success(`Order Successful! Your Tracking Number is: ${checkoutReference}`);
     router.push('/dashboard');
 
-  } catch (error: any) {
+  } catch (error) {
     console.error("RPC Checkout Error:", error);
-    toast.error(`Transaction Failed: ${error.message}`);
+    toast.error(`Transaction Failed: ${getErrorMessage(error)}`);
   } finally {
     setIsProcessing(false);
   }
@@ -140,72 +142,12 @@ const initializePayment = usePaystackPayment(paystackConfig);
     setIsProcessing(true); // Lock the button while we verify with the DB
 
     try {
-      // ====================================================================
-      // 🚨 UI PRE-FLIGHT CHECK (Over-Subscription & Active Batch Defense) 🚨
-      // ====================================================================
-      const groupBuyItems = cartItems.filter(item => item.purchaseType === 'group');
-      
-      if (groupBuyItems.length > 0) {
-        if (!userId) throw new Error("Authentication error. Please log in again.");
-
-        const groupProductIds = groupBuyItems.map(item => item.productId);
-        
-        // Fetch live product data for the group buys
-        const { data: productsData, error: productsError } = await supabase
-          .from('products')
-          .select('id, name, current_group_buyers, group_threshold')
-          .in('id', groupProductIds);
-
-        if (productsError) throw productsError;
-          
-        if (productsData) {
-          for (const product of productsData) {
-            
-            // 1. OVER-SUBSCRIPTION DEFENSE
-            if (product.current_group_buyers >= (product.group_threshold || 1)) {
-               toast.error(`Payment Blocked: The campaign for "${product.name}" is already full (${product.group_threshold}/${product.group_threshold}). Please remove it from your cart to continue.`);
-               setIsProcessing(false);
-               return; 
-            }
-
-            // 2. THE CURRENT CAMPAIGN BATCH DEFENSE 
-            if (product.current_group_buyers > 0) {
-               const { data: allGroupItems, error: itemsError } = await supabase
-                  .from('order_items')
-                  .select('order_id, product_name, orders(user_id, created_at)')
-                  .eq('product_id', product.id)
-                  .eq('purchase_type', 'group');
-
-               if (itemsError) throw itemsError;
-
-               if (allGroupItems && allGroupItems.length > 0) {
-                  // Sort them all by Date Descending
-                  const sortedItems = allGroupItems.sort((a, b) => {
-                      const dateA = a.orders ? (Array.isArray(a.orders) ? new Date(a.orders[0]?.created_at).getTime() : new Date((a.orders as any).created_at).getTime()) : 0;
-                      const dateB = b.orders ? (Array.isArray(b.orders) ? new Date(b.orders[0]?.created_at).getTime() : new Date((b.orders as any).created_at).getTime()) : 0;
-                      return dateB - dateA; 
-                  });
-
-                  // Slice precisely to the size of the CURRENT active campaign
-                  const currentCampaignItems = sortedItems.slice(0, product.current_group_buyers);
-                  
-                  // Check if this user owns one of these recent slots
-                  const userInCurrentCampaign = currentCampaignItems.some(item => {
-                      const itemUserId = item.orders ? (Array.isArray(item.orders) ? item.orders[0]?.user_id : (item.orders as any).user_id) : null;
-                      return itemUserId === userId;
-                  });
-
-                  if (userInCurrentCampaign) {
-                      toast.warning(`Payment Blocked: You are already a participant in the active campaign for "${product.name}". The limit is 1 slot per customer until the campaign is completed and restarted.`);
-                      setIsProcessing(false);
-                      return;
-                  }
-               }
-            }
-          }
-        }
+      const validation = await validateGroupBuyCart(cartItems, userId);
+      if (!validation.valid) {
+        toast.error(`Payment Blocked: ${validation.error}`);
+        setIsProcessing(false);
+        return;
       }
-      // ====================================================================
 
       // If we pass the UI check, allow the checkout to proceed!
       if (paymentMethod === 'paystack') {
@@ -218,8 +160,8 @@ const initializePayment = usePaystackPayment(paystackConfig);
         saveOrderToDatabase('pending', 'offline');
       }
 
-    } catch (error: any) {
-      toast.error(`Checkout Verification Error: ${error.message}`);
+    } catch (error) {
+      toast.error(`Checkout Verification Error: ${getErrorMessage(error)}`);
       setIsProcessing(false);
     }
   };
@@ -330,7 +272,7 @@ const initializePayment = usePaystackPayment(paystackConfig);
                       {item.purchaseType}
                     </span>
                   </span>
-                  <span className="font-medium text-gray-900 whitespace-nowrap">₦{(item.priceAtAddition * item.quantity).toLocaleString()}</span>
+                  <span className="font-medium text-gray-900 whitespace-nowrap">{formatNaira(item.priceAtAddition * item.quantity)}</span>
                 </div>
               ))}
             </div>
@@ -338,11 +280,11 @@ const initializePayment = usePaystackPayment(paystackConfig);
             <div className="border-t border-gray-200 pt-4 mb-6 space-y-2">
               <div className="flex justify-between text-sm text-gray-500">
                 <span>Subtotal</span>
-                <span>₦{cartTotal.toLocaleString()}</span>
+                <span>{formatNaira(cartTotal)}</span>
               </div>
               <div className="flex justify-between items-center pt-2">
                 <span className="text-lg font-bold text-gray-900">Total</span>
-                <span className="text-2xl font-bold text-green-700">₦{cartTotal.toLocaleString()}</span>
+                <span className="text-2xl font-bold text-green-700">{formatNaira(cartTotal)}</span>
               </div>
             </div>
 

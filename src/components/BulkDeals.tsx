@@ -1,19 +1,7 @@
-'use client';
 import Link from 'next/link';
 import Image from 'next/image'; // <-- NEW: Imported Next.js Image Optimizer
-
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  price_per_unit: number;
-  unit: string;
-  image_url: string;
-  is_bulk_buy_enabled: boolean;
-  bulk_buy_price: number | null;
-  bulk_threshold: number | null;
-}
+import { Product } from '@/types';
+import { formatNaira } from '@/utils/format';
 
 export default function BulkDeals({ products }: { products: Product[] }) {
   // 1. ONLY fetch products that have Bulk Buying turned on in your Admin Panel
@@ -84,13 +72,13 @@ export default function BulkDeals({ products }: { products: Product[] }) {
               
               {/* BOLD RED BULK PRICE */}
               <p className="font-black text-[#D93F3F] text-lg md:text-2xl leading-none">
-                ₦{product.bulk_buy_price?.toLocaleString()}
+                {formatNaira(product.bulk_buy_price)}
                 <span className="text-[10px] md:text-xs text-[#D93F3F]/70 font-bold ml-0.5">/{product.unit || 'kg'}</span>
               </p>
               
               {/* Original Price Crossout */}
               <p className="text-[9px] md:text-[10px] text-gray-400 line-through mt-1 font-medium">
-                Standard: ₦{product.price_per_unit.toLocaleString()}
+                Standard: {formatNaira(product.price_per_unit)}
               </p>
             </div>
             

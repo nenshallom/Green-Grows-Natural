@@ -4,26 +4,8 @@ import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import Link from 'next/link';
 import Image from 'next/image';
-
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  price_per_unit: number;
-  unit: string; 
-  stock_quantity: number;
-  image_url: string;
-  additional_images: string[];
-  is_bulk_buy_enabled: boolean;
-  bulk_buy_price: number;
-  bulk_threshold: number;
-  is_group_buy_enabled: boolean;
-  group_buy_price: number;
-  group_threshold: number;
-  current_group_buyers: number;
-  group_buy_deadline: string;
-}
+import { Product } from '@/types';
+import { formatNaira } from '@/utils/format';
 
 interface ProductClientProps {
   product: Product;
@@ -35,13 +17,13 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
   const { toast } = useToast();
   
   // Initialize state directly from the instantly available props
-  const [activeImage, setActiveImage] = useState<string>(product.image_url);
+  const [activeImage, setActiveImage] = useState<string | null>(product.image_url);
   const [quantity, setQuantity] = useState(1);
   const [purchaseMode, setPurchaseMode] = useState<'standard' | 'group'>('standard');
 
   const computedPriceType: 'standard' | 'bulk' | 'group' = useMemo(() => {
     if (purchaseMode === 'group') return 'group';
-    if (product.is_bulk_buy_enabled && quantity >= product.bulk_threshold) return 'bulk';
+    if (product.is_bulk_buy_enabled && product.bulk_threshold && quantity >= product.bulk_threshold) return 'bulk';
     return 'standard';
   }, [purchaseMode, product.is_bulk_buy_enabled, product.bulk_threshold, quantity]);
 
@@ -60,7 +42,7 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
   };
 
   const handleAddToCart = () => {
-    const price = computedPriceType === 'bulk' ? product.bulk_buy_price : computedPriceType === 'group' ? product.group_buy_price : product.price_per_unit;
+    const price = (computedPriceType === 'bulk' ? product.bulk_buy_price : computedPriceType === 'group' ? product.group_buy_price : product.price_per_unit) ?? product.price_per_unit;
     addToCart({
       productId: product.id,
       name: product.name,
@@ -72,8 +54,8 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
     toast.success(`Added to Cart! ${quantity}x ${product.name} ready for checkout.`);
   };
 
-  const allImages = [product.image_url, ...(product.additional_images || [])].filter(Boolean);
-  const isGroupFull = product.current_group_buyers >= (product.group_threshold || 1);
+  const allImages: string[] = [product.image_url, ...(product.additional_images || [])].filter((img): img is string => Boolean(img));
+  const isGroupFull = (product.current_group_buyers ?? 0) >= (product.group_threshold || 1);
 
   return (
     <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-12">
@@ -143,7 +125,13 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
             <div className="mb-6">
               <div className="flex items-end gap-1 mb-1">
                 <span className="text-2xl font-black text-gray-900">
-                  {computedPriceType === 'bulk' ? product.bulk_buy_price?.toLocaleString() : computedPriceType === 'group' ? product.group_buy_price?.toLocaleString() : product.price_per_unit.toLocaleString()}
+                  {formatNaira(
+                    computedPriceType === 'bulk'
+                      ? product.bulk_buy_price
+                      : computedPriceType === 'group'
+                      ? product.group_buy_price
+                      : product.price_per_unit
+                  )}
                 </span>
                 <span className="text-sm font-bold text-gray-900 mb-1">
                   / {product.unit || 'kg'}
@@ -161,19 +149,19 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
               </div>
             </div>
 
-            {purchaseMode === 'standard' && product.is_bulk_buy_enabled && quantity < product.bulk_threshold && (
+            {purchaseMode === 'standard' && product.is_bulk_buy_enabled && product.bulk_threshold && quantity < product.bulk_threshold && (
               <p className="text-xs font-bold text-blue-600 mb-6">
-                Add {product.bulk_threshold - quantity} more items to unlock bulk price at ₦{product.bulk_buy_price.toLocaleString()}
+                Add {product.bulk_threshold - quantity} more items to unlock bulk price at {formatNaira(product.bulk_buy_price)}
               </p>
             )}
             {purchaseMode === 'group' && (
               <div className="mb-6 bg-[#7BA69D]/10 p-3 rounded-lg border border-[#7BA69D]/30">
                 <p className="text-xs font-bold text-[#7BA69D] flex justify-between">
                   <span>Campaign Progress</span>
-                  <span>{product.current_group_buyers} / {product.group_threshold} Joined</span>
+                  <span>{product.current_group_buyers ?? 0} / {product.group_threshold || 1} Joined</span>
                 </p>
                 <div className="w-full bg-white rounded-full h-1.5 mt-2 overflow-hidden">
-                  <div className="bg-[#7BA69D] h-1.5 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (product.current_group_buyers / product.group_threshold) * 100)}%` }}></div>
+                  <div className="bg-[#7BA69D] h-1.5 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (((product.current_group_buyers ?? 0) / (product.group_threshold || 1))) * 100)}%` }}></div>
                 </div>
               </div>
             )}
@@ -208,7 +196,7 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                     )}
                     <div className="absolute bottom-0 left-0 w-full p-3 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end">
                        <p className="text-white font-bold text-xs truncate drop-shadow-md">{related.name}</p>
-                       <p className="text-white font-black text-sm drop-shadow-md">₦{related.price_per_unit.toLocaleString()}</p>
+                       <p className="text-white font-black text-sm drop-shadow-md">{formatNaira(related.price_per_unit)}</p>
                     </div>
                   </div>
                 </Link>

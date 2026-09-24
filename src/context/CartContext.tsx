@@ -1,91 +1,108 @@
 'use client';
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { CartItem, CartContextType, PurchaseType } from '@/types';
 
-// 1. Define what a single item in the cart looks like
-export interface CartItem {
-  productId: string;
-  name: string;
-  image: string;
-  quantity: number;
-  purchaseType: 'standard' | 'bulk' | 'group';
-  priceAtAddition: number;
-}
+// Re-export for backward-compatibility with existing imports
+export type { CartItem, CartContextType };
 
-// 2. Define the remote control buttons for the cart
-interface CartContextType {
-  cartItems: CartItem[];
-  addToCart: (item: CartItem) => void;
-  removeFromCart: (productId: string, purchaseType: string) => void;
-  updateQuantity: (productId: string, purchaseType: string, quantity: number) => void;
-  clearCart: () => void;
-  cartTotal: number;
-  itemCount: number;
-}
-
-// 3. Create the empty broadcasting station
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-// 4. Build the actual station
+function isValidCartItem(item: unknown): item is CartItem {
+  if (typeof item !== 'object' || item === null) return false;
+  const candidate = item as Record<string, unknown>;
+  const validPurchaseTypes: PurchaseType[] = ['standard', 'bulk', 'group'];
+
+  return (
+    typeof candidate.productId === 'string' &&
+    candidate.productId.trim().length > 0 &&
+    typeof candidate.name === 'string' &&
+    typeof candidate.quantity === 'number' &&
+    candidate.quantity > 0 &&
+    typeof candidate.priceAtAddition === 'number' &&
+    candidate.priceAtAddition >= 0 &&
+    typeof candidate.purchaseType === 'string' &&
+    validPurchaseTypes.includes(candidate.purchaseType as PurchaseType)
+  );
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false); // Prevents hydration errors in Next.js
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isCartModalOpen, setIsCartModalOpen] = useState(false);
 
-  // WHEN APP LOADS: Check browser memory (localStorage) for an old cart
+  const openCartModal = () => setIsCartModalOpen(true);
+  const closeCartModal = () => setIsCartModalOpen(false);
+
+  // WHEN APP LOADS: Check browser memory (localStorage) for saved cart with schema validation
   useEffect(() => {
-    const savedCart = localStorage.getItem('ggn_cart');
-    if (savedCart) {
-      try {
-        setCartItems(JSON.parse(savedCart));
-      } catch (e) {
-        console.error("Failed to parse cart from memory.");
+    try {
+      const savedCart = localStorage.getItem('ggn_cart');
+      if (savedCart) {
+        const parsed = JSON.parse(savedCart);
+        if (Array.isArray(parsed)) {
+          const validatedItems = parsed.filter(isValidCartItem);
+          setCartItems(validatedItems);
+        }
       }
+    } catch (e) {
+      console.error('Failed to parse cart from memory:', e);
+    } finally {
+      setIsLoaded(true);
     }
-    setIsLoaded(true);
   }, []);
 
   // WHENEVER CART CHANGES: Save it to browser memory
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem('ggn_cart', JSON.stringify(cartItems));
+      try {
+        localStorage.setItem('ggn_cart', JSON.stringify(cartItems));
+      } catch (e) {
+        console.error('Failed to persist cart to storage:', e);
+      }
     }
   }, [cartItems, isLoaded]);
 
   // --- CART CONTROLS ---
 
   const addToCart = (newItem: CartItem) => {
+    const sanitizedItem: CartItem = {
+      ...newItem,
+      quantity: Math.max(1, Math.floor(newItem.quantity || 1)),
+      priceAtAddition: Math.max(0, newItem.priceAtAddition || 0),
+    };
+
     setCartItems((prevItems) => {
-      // Check if they already have this exact product AND purchase type in the cart
       const existingItemIndex = prevItems.findIndex(
-        (item) => item.productId === newItem.productId && item.purchaseType === newItem.purchaseType
+        (item) => item.productId === sanitizedItem.productId && item.purchaseType === sanitizedItem.purchaseType
       );
 
       if (existingItemIndex > -1) {
-        // If yes, just increase the quantity
         const updatedItems = [...prevItems];
-        // Note: Group buys stay strictly at 1. We don't increase it.
-        if (newItem.purchaseType !== 'group') {
-          updatedItems[existingItemIndex].quantity += newItem.quantity;
+        // Note: Group buys stay strictly at 1 slot.
+        if (sanitizedItem.purchaseType !== 'group') {
+          updatedItems[existingItemIndex].quantity += sanitizedItem.quantity;
         }
         return updatedItems;
       } else {
-        // If no, add it as a brand new line item
-        return [...prevItems, newItem];
+        return [...prevItems, sanitizedItem];
       }
     });
   };
 
   const removeFromCart = (productId: string, purchaseType: string) => {
-    setCartItems((prev) => prev.filter(item => !(item.productId === productId && item.purchaseType === purchaseType)));
+    setCartItems((prev) =>
+      prev.filter((item) => !(item.productId === productId && item.purchaseType === purchaseType))
+    );
   };
 
   const updateQuantity = (productId: string, purchaseType: string, quantity: number) => {
-    if (quantity < 1) return;
-    if (purchaseType === 'group') return; // Enforce group buy restriction globally
+    const targetQty = Math.max(1, Math.floor(quantity));
+    if (purchaseType === 'group') return; // Enforce group buy single-slot restriction
 
     setCartItems((prev) =>
       prev.map((item) =>
         item.productId === productId && item.purchaseType === purchaseType
-          ? { ...item, quantity }
+          ? { ...item, quantity: targetQty }
           : item
       )
     );
@@ -95,18 +112,34 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCartItems([]);
   };
 
-  // --- CART MATH ---
-  const cartTotal = cartItems.reduce((total, item) => total + (item.priceAtAddition * item.quantity), 0);
-  const itemCount = cartItems.reduce((count, item) => count + item.quantity, 0);
+  // --- SAFE CART MATH ---
+  const cartTotal = cartItems.reduce((total, item) => {
+    const itemSubtotal = (Number(item.priceAtAddition) || 0) * (Number(item.quantity) || 0);
+    return total + Math.max(0, itemSubtotal);
+  }, 0);
+
+  const itemCount = cartItems.reduce((count, item) => count + Math.max(0, Number(item.quantity) || 0), 0);
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQuantity, clearCart, cartTotal, itemCount }}>
+    <CartContext.Provider
+      value={{
+        cartItems,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+        cartTotal,
+        itemCount,
+        isCartModalOpen,
+        openCartModal,
+        closeCartModal,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
 }
 
-// 5. The custom hook you will use in your pages!
 export function useCart() {
   const context = useContext(CartContext);
   if (context === undefined) {

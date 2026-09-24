@@ -4,12 +4,11 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useToast } from '@/context/ToastContext';
+import { Order } from '@/types';
+import { formatNaira, getErrorMessage } from '@/utils/format';
 
 // --- NEW: Icons for a premium feel ---
 import { FiPackage, FiUser, FiShield, FiLogOut, FiClock, FiCheckCircle } from 'react-icons/fi';
-
-interface OrderItem { id: string; product_name: string; quantity: number; price_at_purchase: number; purchase_type: string; }
-interface Order { id: string; tracking_number: string; total_amount: number; payment_method: string; payment_status: string; order_status: string; created_at: string; order_items: OrderItem[]; delivery_status?: string; }
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -65,9 +64,9 @@ export default function DashboardPage() {
           .order('created_at', { ascending: false });
 
         if (ordersError) throw ordersError;
-        setOrders(ordersData as Order[]);
-      } catch (error: any) {
-        console.error("Error:", error.message);
+        setOrders((ordersData || []) as unknown as Order[]);
+      } catch (error) {
+        console.error("Error fetching orders:", getErrorMessage(error));
       } finally {
         setLoading(false);
       }
@@ -94,8 +93,8 @@ export default function DashboardPage() {
       });
       if (error) throw error;
       setProfileMessage({ type: 'success', text: 'Profile and default address updated successfully!' });
-    } catch (error: any) {
-      setProfileMessage({ type: 'error', text: error.message });
+    } catch (error) {
+      setProfileMessage({ type: 'error', text: getErrorMessage(error) });
     } finally {
       setUpdatingProfile(false);
     }
@@ -115,8 +114,8 @@ export default function DashboardPage() {
       if (error) throw error;
       setSecurityMessage({ type: 'success', text: 'Password updated successfully!' });
       setNewPassword(''); setConfirmPassword('');
-    } catch (error: any) {
-      setSecurityMessage({ type: 'error', text: error.message });
+    } catch (error) {
+      setSecurityMessage({ type: 'error', text: getErrorMessage(error) });
     } finally {
       setUpdatingSecurity(false);
     }
@@ -149,7 +148,7 @@ export default function DashboardPage() {
         {/* --- UPGRADED HEADER & LOGOUT --- */}
         <header className="mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl md:text-4xl font-black text-[#1A4331] tracking-tight">Welcome back, {firstName || 'User'}!</h1>
+            <h1 className="text-xl md:text-2xl font-black text-[#1A4331] tracking-tight">Hello, {firstName || 'User'}!</h1>
             <p className="text-gray-500 mt-2 font-medium">Manage your orders, tracking, and account settings.</p>
           </div>
           
@@ -207,7 +206,7 @@ export default function DashboardPage() {
                   <FiPackage className="w-10 h-10" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">No orders yet</h3>
-                <p className="text-gray-500 mb-6">Looks like you haven't placed any orders. Let's get some fresh produce!</p>
+                <p className="text-gray-500 mb-6">Looks like you haven&apos;t placed any orders. Let&apos;s get some fresh produce!</p>
                 <Link href="/products" className="bg-[#1A4331] text-white font-bold py-3 px-8 rounded-lg hover:bg-[#123122] transition-colors shadow-md">
                   Start Shopping
                 </Link>
@@ -236,7 +235,7 @@ export default function DashboardPage() {
                       {/* Order Items */}
                       <div className="p-5 md:p-6">
                         <div className="flex flex-col gap-3">
-                          {order.order_items.map((item) => (
+                          {(order.order_items || []).map((item) => (
                             <div key={item.id} className="flex justify-between items-center text-sm py-2 border-b border-gray-50 last:border-0 last:pb-0">
                               <div className="flex items-center gap-3">
                                 <span className="bg-gray-100 text-gray-600 font-bold px-2 py-1 rounded text-xs">{item.quantity}x</span>
@@ -245,7 +244,7 @@ export default function DashboardPage() {
                                   {item.purchase_type}
                                 </span>
                               </div>
-                              <span className="font-bold text-gray-900">₦{(item.price_at_purchase * item.quantity).toLocaleString()}</span>
+                              <span className="font-bold text-gray-900">{formatNaira(item.price_at_purchase * item.quantity)}</span>
                             </div>
                           ))}
                         </div>
@@ -268,7 +267,7 @@ export default function DashboardPage() {
                         </div>
                         <div className="w-full sm:w-auto text-right flex justify-between sm:block items-center">
                           <span className="text-gray-500 text-sm font-medium sm:hidden">Total</span>
-                          <span className="text-xl font-black text-gray-900">₦{order.total_amount.toLocaleString()}</span>
+                          <span className="text-xl font-black text-gray-900">{formatNaira(order.total_amount)}</span>
                         </div>
                       </div>
 

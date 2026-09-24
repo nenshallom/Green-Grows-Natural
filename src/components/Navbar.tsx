@@ -12,7 +12,7 @@ import { FiMenu, FiX, FiHome, FiShoppingCart, FiMail, FiPhone } from "react-icon
 import { VscAccount } from "react-icons/vsc";
 
 export default function Navbar() {
-  const { itemCount } = useCart();
+  const { itemCount, openCartModal, isCartModalOpen } = useCart();
   const pathname = usePathname();
   const router = useRouter();
   
@@ -49,7 +49,6 @@ export default function Navbar() {
   // --- SCROLL SPY LISTENER ---
   useEffect(() => {
     const handleScroll = () => {
-      const homeSection = document.getElementById('home');
       const categoriesSection = document.getElementById('categories');
       const dealsSection = document.getElementById('deals');
       const faqSection = document.getElementById('faq');
@@ -156,14 +155,21 @@ export default function Navbar() {
 
             <div className="flex items-center gap-4 sm:gap-6 text-white text-sm font-medium">
               <Link href="/dashboard" className="hover:text-green-200 transition-colors">My Orders</Link>
-              <Link href="/cart" className="relative p-2 hover:bg-white/10 rounded-lg transition-colors flex items-center gap-2">
+              <button
+                type="button"
+                onClick={openCartModal}
+                aria-label="Open shopping cart"
+                className={`relative p-2 hover:bg-white/10 rounded-lg transition-all flex items-center gap-2 ${
+                  isCartModalOpen ? 'scale-110 bg-white/20' : ''
+                }`}
+              >
                 <FiShoppingCart className="w-5 h-5" />
                 {itemCount > 0 && (
                   <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-[#872022] rounded-full border border-white">
                     {itemCount}
                   </span>
                 )}
-              </Link>
+              </button>
               
               {/* --- UPDATED: Dynamic Account Link --- */}
               <Link href={isLoggedIn ? '/dashboard' : '/login'} className="hover:bg-white/10 p-2 rounded-lg transition-colors">
@@ -177,7 +183,7 @@ export default function Navbar() {
           <div className="flex max-w-[90%] mx-auto px-6 lg:px-12 py-3 border-b border-gray-100 justify-between items-center text-sm font-bold text-gray-700 bg-white shadow-sm rounded-b-lg">
             <nav className="flex gap-8">
               <a href="#home" onClick={(e) => handleNavClick(e, 'home')} className={getNavClass('home')}>Home</a>
-              <a href="#categories" onClick={(e) => handleNavClick(e, 'categories')} className={getNavClass('categories')}>Categories</a>
+              {/* <a href="#categories" onClick={(e) => handleNavClick(e, 'categories')} className={getNavClass('categories')}>Categories</a> */}
               <a href="#deals" onClick={(e) => handleNavClick(e, 'deals')} className={getNavClass('deals')}>Offers & Deals</a>
             </nav>
             <nav className="flex gap-8 items-center">
@@ -203,12 +209,19 @@ export default function Navbar() {
               </Link>
             </div>
             <div className="flex items-center gap-4">
-              <Link href="/cart" className="relative">
+              <button
+                type="button"
+                onClick={openCartModal}
+                aria-label="Open shopping cart"
+                className={`relative p-1 transition-transform active:scale-90 ${
+                  isCartModalOpen ? 'scale-110' : ''
+                }`}
+              >
                 <FiShoppingCart className="text-[22px]" />
                 {itemCount > 0 && (
                   <span className="absolute -top-1.5 -right-2 inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold text-white bg-[#872022] rounded-full">{itemCount}</span>
                 )}
-              </Link>
+              </button>
               
               {/* --- UPDATED: Dynamic Account Link --- */}
               <Link href={isLoggedIn ? '/dashboard' : '/login'}>
@@ -231,10 +244,10 @@ export default function Navbar() {
               <CiSearch className="text-xl font-bold" />
             </button>
           </form>
-
+          {/*  */}
           <div className="flex justify-between items-center text-white text-xs font-medium pt-1">
             <div className="flex gap-4 tracking-wide">
-              <a href="#home" onClick={(e) => handleNavClick(e, 'home')} className={getMobileNavClass('home')}>Home</a>
+              {/* <a href="#home" onClick={(e) => handleNavClick(e, 'home')} className={getMobileNavClass('home')}>Home</a> */}
               <a href="#categories" onClick={(e) => handleNavClick(e, 'categories')} className={getMobileNavClass('categories')}>Categories</a>
               <a href="#deals" onClick={(e) => handleNavClick(e, 'deals')} className={getMobileNavClass('deals')}>Offers & Deals</a>
             </div>
