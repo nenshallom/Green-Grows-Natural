@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { CartItem } from '@/types/cart';
+import { FEATURES } from '@/config/features';
 
 export interface CampaignValidationResult {
   valid: boolean;
@@ -48,6 +49,14 @@ export async function validateGroupBuyCart(
 
   if (groupBuyItems.length === 0) {
     return { valid: true };
+  }
+
+  // If group buy is globally disabled, block legacy or cached cart items
+  if (!FEATURES.ENABLE_GROUP_BUY) {
+    return {
+      valid: false,
+      error: 'Group buying is temporarily on hold. Please remove group items from your cart to continue.',
+    };
   }
 
   if (!userId) {

@@ -3,8 +3,12 @@ import Image from 'next/image'; // <-- NEW: Imported Next.js Image Optimizer
 import { useCart } from '@/context/CartContext';
 import { Product } from '@/types';
 import { formatNaira } from '@/utils/format';
+import { FEATURES } from '@/config/features';
 
 export default function GroupDeals({ products }: { products: Product[] }) {
+  // If group buy feature is globally disabled, hide section completely
+  if (!FEATURES.ENABLE_GROUP_BUY) return null;
+
   // 1. Extract BOTH addToCart and removeFromCart from the global context
   const { addToCart, removeFromCart, cartItems } = useCart();
 

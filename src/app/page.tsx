@@ -1,8 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import Hero from '@/components/Hero';
-import ShopByCategories from '@/components/ShopByCategories';
+// import Hero from '@/components/Hero';
 import BestDeals from '@/components/BestDeals';
 import BulkDeals from '@/components/BulkDeals';
 import GroupDeals from '@/components/GroupDeals';
@@ -10,6 +9,7 @@ import FAQ from '@/components/FAQ';
 import Testimonials from '@/components/Testimonials';
 import { Product } from '@/types';
 import { getErrorMessage } from '@/utils/format';
+import { FEATURES } from '@/config/features';
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -18,14 +18,14 @@ export default function Home() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const { data, error: fetchError } = await supabase
+        const { data, error } = await supabase
           .from('products')
           .select('*')
-          .order('created_at', { ascending: false });
-
-        if (fetchError) throw fetchError;
-        if (data) setProducts(data as Product[]);
-      } catch (err) {
+          .order('name');
+        
+        if (error) throw error;
+        setProducts(data || []);
+      } catch (err: unknown) {
         console.error('Failed to load products:', getErrorMessage(err));
       } finally {
         setLoading(false);
@@ -35,28 +35,25 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#fafffa]">
-
-      <main className="max-w-[90%] mx-auto py-8 space-y-16">
-      
+    <div className="min-h-screen">
+      <main className="max-w-[95%] mx-auto py-8 space-y-16">
         {/* --- HERO SECTION --- */}
-        <div id="home">
+        {/* <div id="home">
           <Hero />
-        </div>
-        <div id="categories">
-          <ShopByCategories 
-            activeCategories={Array.from(new Set(products.map(p => p.category))).slice(0, 4)} 
-          />
-        </div>
+        </div> */}
 
-        <div id="deals">
+        {/* --- UNIFIED DEALS & CATEGORY DISCOVERY FEED --- */}
+        <div id="categories" className="scroll-mt-24" />
+        <div id="deals" className="scroll-mt-24">
           {loading ? (
-            <div className="py-12 flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1A4331]"></div></div>
+            <div className="py-12 flex justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1A4331]"></div>
+            </div>
           ) : (
             <>
               <BestDeals products={products} />
               <BulkDeals products={products} />
-              <GroupDeals products={products} />
+              {FEATURES.ENABLE_GROUP_BUY && <GroupDeals products={products} />}
             </>
           )}
         </div>
@@ -65,8 +62,6 @@ export default function Home() {
           <FAQ />
         </div>
         <Testimonials />
-
-
       </main>
     </div>
   );

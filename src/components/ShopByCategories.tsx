@@ -1,88 +1,77 @@
+'use client';
 import Link from 'next/link';
+import { useRef } from 'react';
+import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
 interface ShopByCategoriesProps {
   activeCategories: string[];
 }
 
-// 1. THE DICTIONARY
-const categoryStyles: Record<string, { subtitle: string; imgSrc: string }> = {
-  "Fruits": {
-    subtitle: "Local Yield",
-    imgSrc: "/images/fruitsCateg.webp",
-  },
-  "Vegetables": {
-    subtitle: "Farm Fresh",
-    imgSrc: "/images/vegetableCateg.webp",
-  },
-  "Grains": {
-    subtitle: "100% Organic",
-    imgSrc: "/images/grainsCateg.webp",
-  },
-  "Tubers": {
-    subtitle: "Rich Harvest",
-    imgSrc: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=600&q=80", 
-  },
-  "Livestock": {
-    subtitle: "Healthy Breeds",
-    imgSrc: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&w=600&q=80",
-  }
-};
-
-// 2. THE FALLBACK
-const fallbackStyle = {
-  subtitle: "Premium Quality",
-  imgSrc: "/images/kunuCateg.webp",
-};
-
 export default function ShopByCategories({ activeCategories }: ShopByCategoriesProps) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   if (!activeCategories || activeCategories.length === 0) return null;
 
+  // Smooth scroll left/right for desktop users
+  const handleScroll = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const scrollOffset = direction === 'left' ? -260 : 260;
+      scrollContainerRef.current.scrollBy({ left: scrollOffset, behavior: 'smooth' });
+    }
+  };
+
   return (
-    <section className="w-full mt-12 mb-8">
-      {/* HEADER */}
-      <div className="flex justify-between items-end mb-6">
-        <h2 className="text-2xl md:text-3xl font-black text-[#1A4331] tracking-tight">
+    <section className="w-full mb-6">
+      {/* SECTION HEADER WITH OPTIONAL ARROW CONTROLS */}
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl md:text-2xl font-black text-[#1A4331] tracking-tight">
           Shop by Categories
         </h2>
-        <Link 
-          href="/products" 
-          className="hidden text-xs md:text-sm font-bold text-gray-700 border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors flex items-center gap-1"
-        >
-          View All <span className="text-lg leading-none">›</span>
-        </Link>
+
+        {/* Desktop Arrow Controls */}
+        <div className="hidden md:flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => handleScroll('left')}
+            aria-label="Scroll categories left"
+            className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:border-[#1A4331] hover:text-[#1A4331] hover:bg-gray-50 transition-colors shadow-xs"
+          >
+            <FiChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleScroll('right')}
+            aria-label="Scroll categories right"
+            className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:border-[#1A4331] hover:text-[#1A4331] hover:bg-gray-50 transition-colors shadow-xs"
+          >
+            <FiChevronRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
-      {/* PREMIUM DYNAMIC GRID / SLIDER
-        Mobile: Flexbox horizontal scroll, hides scrollbars, snaps children to center.
-        Desktop (md+): Standard 4-column grid.
-      */}
-      <div className="flex overflow-x-auto md:grid md:grid-cols-4 gap-4 md:gap-6 pb-4 md:pb-0 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {activeCategories.map((categoryName, index) => {
-          const style = categoryStyles[categoryName] || fallbackStyle;
+      {/* HORIZONTAL SCROLLABLE ROW OF BORDERED PILLS */}
+      <div
+        ref={scrollContainerRef}
+        className="flex items-center gap-2.5 overflow-x-auto pb-2 scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {/* "All Categories" Default Pill */}
+        <Link
+          href="/products"
+          className="flex-shrink-0 px-5 py-2.5 rounded-full border border-gray-300 bg-white text-sm font-bold text-gray-700 hover:border-[#1A4331] hover:text-[#1A4331] hover:bg-[#1A4331]/5 transition-all shadow-sm active:scale-95 whitespace-nowrap"
+        >
+          All Categories
+        </Link>
 
-          return (
-            <Link 
-              key={index} 
-              href={`/products?category=${encodeURIComponent(categoryName)}`}
-              // Mobile: w-[85%] so the next card peeks out. Desktop: w-full for the grid.
-              className="flex-none w-[85%] sm:w-[45%] md:w-auto snap-center rounded-2xl md:rounded-[24px] p-5 md:p-6 h-[350px] relative overflow-hidden group hover:shadow-md transition-all block bg-cover bg-center"
-              style={{ backgroundImage: `url('${style.imgSrc}')` }}
-            >
-              {/* Added a very subtle dark gradient at the top just to ensure the white text always pops, even on bright images */}
-              <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-black/40 to-transparent pointer-events-none"></div>
-
-              {/* TEXT CONTENT */}
-              <div className="relative z-10 max-w-[90%] pt-2">
-                <h3 className="text-white font-black text-xl md:text-2xl leading-tight mb-1 drop-shadow-md">
-                  {categoryName === 'Fruits' || categoryName === 'Vegetables' ? `Fresh ${categoryName}` : categoryName}
-                </h3>
-                <p className="text-white/90 text-[10px] md:text-xs font-bold tracking-wide uppercase drop-shadow-md">
-                  {style.subtitle}
-                </p>
-              </div>
-            </Link>
-          );
-        })}
+        {/* All Active Categories */}
+        {activeCategories.map((categoryName, index) => (
+          <Link
+            key={index}
+            href={`/products?category=${encodeURIComponent(categoryName)}`}
+            className="flex-shrink-0 px-5 py-2.5 rounded-full border border-gray-200 bg-white text-sm font-bold text-gray-700 hover:border-[#1A4331] hover:text-[#1A4331] hover:bg-[#1A4331]/5 transition-all shadow-sm active:scale-95 whitespace-nowrap"
+          >
+            {categoryName}
+          </Link>
+        ))}
       </div>
     </section>
   );

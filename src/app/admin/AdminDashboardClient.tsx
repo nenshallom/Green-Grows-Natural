@@ -6,6 +6,7 @@ import {
   PieChart, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
 import { formatNaira } from '@/utils/format';
+import { FEATURES } from '@/config/features';
 
 // Helper function for the Activity Feed
 const timeAgo = (dateString: string) => {
@@ -281,10 +282,10 @@ export default function AdminDashboardClient({
       </div>
 
       {/* --- ROW 3: LIVE TRACKERS --- */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className={`grid grid-cols-1 ${FEATURES.ENABLE_GROUP_BUY ? 'lg:grid-cols-3' : 'lg:grid-cols-1'} gap-6`}>
         
         {/* LEFT COL: LIVE ACTIVITY FEED */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-96">
+        <div className={`${FEATURES.ENABLE_GROUP_BUY ? 'lg:col-span-2' : 'lg:col-span-1'} bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-96`}>
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <span className="relative flex h-3 w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -324,55 +325,57 @@ export default function AdminDashboardClient({
         </div>
 
         {/* RIGHT COL: ACTIVE CAMPAIGN RADAR */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-96">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Active Campaign Radar</h3>
-          
-          <div className="flex-1 overflow-y-auto pr-2 space-y-5">
-            {initialCampaigns.length === 0 ? (
-              <div className="w-full h-full flex flex-col items-center justify-center text-center">
-                <span className="text-3xl mb-2">📡</span>
-                <p className="text-gray-400 italic text-sm">No active group buys running right now.</p>
-              </div>
-            ) : (
-              initialCampaigns.map((camp) => {
-                const isComplete = camp.current_group_buyers >= camp.group_threshold;
-                const progress = Math.min(100, (camp.current_group_buyers / camp.group_threshold) * 100);
-                
-                return (
-                  <div key={camp.id} className="relative">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="relative w-10 h-10 rounded-lg bg-gray-100 overflow-hidden border border-gray-200 shrink-0">
-                        {camp.image_url ? (
-                          <Image 
-                            src={camp.image_url} 
-                            alt={camp.name} 
-                            fill
-                            sizes="40px"
-                            className="object-cover" 
-                          />
-                        ) : null}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-center mb-1">
-                          <p className="text-sm font-bold text-gray-900 truncate">{camp.name}</p>
-                          <span className={`text-[10px] font-black px-1.5 py-0.5 rounded uppercase ${isComplete ? 'bg-green-100 text-green-700' : 'text-gray-500'}`}>
-                            {isComplete ? 'Target Hit' : `${camp.current_group_buyers}/${camp.group_threshold}`}
-                          </span>
+        {FEATURES.ENABLE_GROUP_BUY && (
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-96">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Active Campaign Radar</h3>
+            
+            <div className="flex-1 overflow-y-auto pr-2 space-y-5">
+              {initialCampaigns.length === 0 ? (
+                <div className="w-full h-full flex flex-col items-center justify-center text-center">
+                  <span className="text-3xl mb-2">📡</span>
+                  <p className="text-gray-400 italic text-sm">No active group buys running right now.</p>
+                </div>
+              ) : (
+                initialCampaigns.map((camp) => {
+                  const isComplete = camp.current_group_buyers >= camp.group_threshold;
+                  const progress = Math.min(100, (camp.current_group_buyers / camp.group_threshold) * 100);
+                  
+                  return (
+                    <div key={camp.id} className="relative">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="relative w-10 h-10 rounded-lg bg-gray-100 overflow-hidden border border-gray-200 shrink-0">
+                          {camp.image_url ? (
+                            <Image 
+                              src={camp.image_url} 
+                              alt={camp.name} 
+                              fill
+                              sizes="40px"
+                              className="object-cover" 
+                            />
+                          ) : null}
                         </div>
-                        <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                          <div 
-                            className={`h-2 rounded-full transition-all duration-1000 ${isComplete ? 'bg-green-500' : 'bg-teal-500'}`} 
-                            style={{ width: `${progress}%` }}
-                          ></div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-center mb-1">
+                            <p className="text-sm font-bold text-gray-900 truncate">{camp.name}</p>
+                            <span className={`text-[10px] font-black px-1.5 py-0.5 rounded uppercase ${isComplete ? 'bg-green-100 text-green-700' : 'text-gray-500'}`}>
+                              {isComplete ? 'Target Hit' : `${camp.current_group_buyers}/${camp.group_threshold}`}
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                            <div 
+                              className={`h-2 rounded-full transition-all duration-1000 ${isComplete ? 'bg-green-500' : 'bg-teal-500'}`} 
+                              style={{ width: `${progress}%` }}
+                            ></div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })
-            )}
+                  );
+                })
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
       </div>
 

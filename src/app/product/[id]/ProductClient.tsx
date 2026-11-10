@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Product } from '@/types';
 import { formatNaira } from '@/utils/format';
+import { FEATURES } from '@/config/features';
 
 interface ProductClientProps {
   product: Product;
@@ -22,7 +23,7 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
   const [purchaseMode, setPurchaseMode] = useState<'standard' | 'group'>('standard');
 
   const computedPriceType: 'standard' | 'bulk' | 'group' = useMemo(() => {
-    if (purchaseMode === 'group') return 'group';
+    if (FEATURES.ENABLE_GROUP_BUY && purchaseMode === 'group') return 'group';
     if (product.is_bulk_buy_enabled && product.bulk_threshold && quantity >= product.bulk_threshold) return 'bulk';
     return 'standard';
   }, [purchaseMode, product.is_bulk_buy_enabled, product.bulk_threshold, quantity]);
@@ -100,15 +101,15 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
               {product.description || "Fresh and highly nutritious."}
             </p>
 
-            <div className="flex gap-2 mb-6">
-              <button 
-                onClick={() => handleModeSelect('standard')} 
-                className={`flex-1 py-2.5 px-2 rounded-md font-bold text-xs transition-colors ${purchaseMode === 'standard' ? 'bg-[#872022] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
-              >
-                Standard & Bulk Buy
-              </button>
-              
-              {product.is_group_buy_enabled && (
+            {FEATURES.ENABLE_GROUP_BUY && product.is_group_buy_enabled && (
+              <div className="flex gap-2 mb-6">
+                <button 
+                  onClick={() => handleModeSelect('standard')} 
+                  className={`flex-1 py-2.5 px-2 rounded-md font-bold text-xs transition-colors ${purchaseMode === 'standard' ? 'bg-[#872022] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                >
+                  Standard & Bulk Buy
+                </button>
+                
                 <button 
                   onClick={() => !isGroupFull && handleModeSelect('group')} 
                   disabled={isGroupFull}
@@ -119,8 +120,8 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                 >
                   {isGroupFull ? 'Campaign Full' : 'Join Group Buy'}
                 </button>
-              )}
-            </div>
+              </div>
+            )}
 
             <div className="mb-6">
               <div className="flex items-end gap-1 mb-1">
@@ -154,7 +155,7 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                 Add {product.bulk_threshold - quantity} more items to unlock bulk price at {formatNaira(product.bulk_buy_price)}
               </p>
             )}
-            {purchaseMode === 'group' && (
+            {purchaseMode === 'group' && FEATURES.ENABLE_GROUP_BUY && (
               <div className="mb-6 bg-[#7BA69D]/10 p-3 rounded-lg border border-[#7BA69D]/30">
                 <p className="text-xs font-bold text-[#7BA69D] flex justify-between">
                   <span>Campaign Progress</span>

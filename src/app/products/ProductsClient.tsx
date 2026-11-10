@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image'; 
 import { Product } from '@/types';
 import { formatNaira } from '@/utils/format';
+import { FEATURES } from '@/config/features';
 
 interface ProductsClientProps {
   initialProducts: Product[];
@@ -33,7 +34,7 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
     }
     if (filterParam) {
       const lower = filterParam.toLowerCase().replace(/[\s+-]+/g, '');
-      if (lower.includes('group')) return 'Group Buy';
+      if (lower.includes('group') && FEATURES.ENABLE_GROUP_BUY) return 'Group Buy';
       if (lower.includes('bulk')) return 'Bulk Buy';
       if (lower.includes('discount')) return 'Discount Offers';
       return filterParam;
@@ -71,7 +72,7 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
       if (activeFilter === 'All Products') return true;
       
       // Special Offers Logic
-      if (activeFilter === 'Group Buy') return product.is_group_buy_enabled;
+      if (activeFilter === 'Group Buy') return FEATURES.ENABLE_GROUP_BUY && product.is_group_buy_enabled;
       if (activeFilter === 'Bulk Buy') return product.is_bulk_buy_enabled;
       if (activeFilter === 'Discount Offers') return Boolean(product.original_price && product.original_price > product.price_per_unit);
       
@@ -156,7 +157,7 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
 
             <h3 className="font-black text-gray-900 text-lg mb-4">Special Offers</h3>
             <ul className="space-y-3">
-              {['Group Buy', 'Bulk Buy', 'Discount Offers'].map((offer) => (
+              {(FEATURES.ENABLE_GROUP_BUY ? ['Group Buy', 'Bulk Buy', 'Discount Offers'] : ['Bulk Buy', 'Discount Offers']).map((offer) => (
                 <li key={offer}>
                   <button 
                     onClick={() => { setSelectedFilter(offer); setCurrentPage(1); }}

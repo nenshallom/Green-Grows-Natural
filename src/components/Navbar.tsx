@@ -1,9 +1,11 @@
 'use client';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase'; // <-- NEW: Import Supabase
+import { FEATURES } from '@/config/features';
 
 // --- ICONS IMPORT ---
 import { CiBellOn, CiSearch } from "react-icons/ci";
@@ -20,16 +22,28 @@ export default function Navbar() {
   const [activeSection, setActiveSection] = useState('home');
   const [searchQuery, setSearchQuery] = useState('');
   
-  // --- NEW: AUTH STATE ---
+  // --- MOBILE SEARCH STATE ---
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
+  
+  // --- AUTH STATE ---
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       setIsMobileMenuOpen(false);
+      setIsMobileSearchOpen(false);
       router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
+
+  // Focus mobile input when opened
+  useEffect(() => {
+    if (isMobileSearchOpen && mobileSearchInputRef.current) {
+      mobileSearchInputRef.current.focus();
+    }
+  }, [isMobileSearchOpen]);
 
   // --- NEW: AUTH LISTENER ---
   useEffect(() => {
@@ -130,40 +144,78 @@ export default function Navbar() {
             DESKTOP NAVBAR 
         ========================================== */}
         <div className="hidden md:block">
-          <div className="bg-[#286266] w-full max-w-[90%] mx-auto mt-2 rounded-lg px-6 lg:px-12 py-3 flex items-center justify-between shadow-sm">
+          {/* change bg to white */}
+          <div className="bg-white w-full mx-auto pt-9 px-6 lg:px-12 py-3 flex items-center justify-between relative border-gray-100 border-b-1">
+            {/* BRAND LOGO & TEXT */}
             <div className="flex-shrink-0 flex items-center">
-              <Link href="/" className="text-white font-black text-3xl tracking-tighter flex flex-col leading-none">
-                GGN
-                <span className="text-[9px] font-medium tracking-[0.2em] uppercase text-green-200 mt-1">
-                  Green Grows Natural
-                </span>
+              <Link href="/" className="flex items-center gap-3 group">
+                <div className="relative w-10 h-10 lg:w-11 lg:h-11 flex-shrink-0 transition-transform duration-300 group-hover:scale-105">
+                  <Image 
+                    src="/images/ggnlogo-mark.webp" 
+                    alt="Green Grows Natural Logo" 
+                    fill 
+                    sizes="(max-width: 768px) 36px, 44px"
+                    priority
+                    className="object-contain drop-shadow-sm" 
+                  />
+                </div>
+                <div className="flex flex-col whitespace-nowrap">
+                  <span className="text-[#286266] font-black text-2xl tracking-tight leading-none">
+                    GGN
+                  </span>
+                  <span className="text-[10px] font-semibold tracking-wider uppercase text-[#286266] mt-0.5">
+                    Green Grows Natural
+                  </span>
+                </div>
               </Link>
             </div>
 
-            <form onSubmit={handleSearchSubmit} className="flex-1 max-w-2xl mx-8 relative">
-              <input 
-                type="text" 
-                placeholder="Search Products..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full py-2.5 pl-4 pr-10 rounded-md outline-none bg-white text-gray-900 text-sm shadow-inner" 
-              />
-              <button type="submit" aria-label="Search" className="absolute right-3 top-2.5 text-gray-500 hover:text-[#1A4331] transition-colors">
-                <CiSearch className="w-5 h-5 text-gray-800 font-bold" />
-              </button>
-            </form>
+            {/* CENTER: PERMANENT STAGNANT SEARCH BAR */}
+            <div className="flex-1 max-w-lg mx-6 lg:mx-10">
+              <form 
+                onSubmit={handleSearchSubmit} 
+                className="w-full flex items-center pl-4 pr-1.5 py-1.5 bg-gray-50 border border-gray-200 rounded-full focus-within:border-[#286266] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#286266]/15 transition-all shadow-sm"
+              >
+                <CiSearch className="w-5 h-5 text-gray-400 mr-2.5 flex-shrink-0 font-bold" />
+                <input 
+                  type="text" 
+                  placeholder="Search produce, fruits, grains..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full py-1 bg-transparent text-gray-900 text-sm outline-none placeholder-gray-400 font-medium" 
+                />
+                {searchQuery && (
+                  <button 
+                    type="button" 
+                    onClick={() => setSearchQuery('')}
+                    aria-label="Clear search"
+                    className="text-gray-400 hover:text-gray-600 p-1 mr-1"
+                  >
+                    <FiX className="w-4 h-4" />
+                  </button>
+                )}
+                <button 
+                  type="submit" 
+                  aria-label="Submit search"
+                  className="bg-[#286266] text-white px-4 py-1.5 rounded-full text-xs font-bold hover:bg-[#1f4e51] transition-colors flex-shrink-0 ml-1"
+                >
+                  Search
+                </button>
+              </form>
+            </div>
 
-            <div className="flex items-center gap-4 sm:gap-6 text-white text-sm font-medium">
-              <Link href="/dashboard" className="hover:text-green-200 transition-colors">My Orders</Link>
+            {/* RIGHT ACTION CLUSTER: CART + ACCOUNT */}
+            <div className="flex items-center gap-3 sm:gap-4 text-[#286266] text-sm font-medium">
+              {/* CART TRIGGER BUTTON */}
               <button
                 type="button"
                 onClick={openCartModal}
                 aria-label="Open shopping cart"
-                className={`relative p-2 hover:bg-white/10 rounded-lg transition-all flex items-center gap-2 ${
-                  isCartModalOpen ? 'scale-110 bg-white/20' : ''
+                className={`relative p-2 hover:bg-gray-100 rounded-lg transition-all flex items-center gap-2 ${
+                  isCartModalOpen ? 'scale-110 bg-gray-100' : ''
                 }`}
               >
-                <FiShoppingCart className="w-5 h-5" />
+                <FiShoppingCart className="w-5 h-5 text-[#286266]" />
                 {itemCount > 0 && (
                   <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-[#872022] rounded-full border border-white">
                     {itemCount}
@@ -171,19 +223,17 @@ export default function Navbar() {
                 )}
               </button>
               
-              {/* --- UPDATED: Dynamic Account Link --- */}
-              <Link href={isLoggedIn ? '/dashboard' : '/login'} className="hover:bg-white/10 p-2 rounded-lg transition-colors">
+              {/* ACCOUNT LINK */}
+              <Link href={isLoggedIn ? '/dashboard' : '/login'} className="hover:bg-gray-100 p-2 rounded-lg transition-colors text-[#286266]" aria-label="Account">
                 <VscAccount className="w-5 h-5" />
               </Link>
-
-              <Link href="/dashboard" title="Dashboard"><CiBellOn className="w-6 h-6 hover:bg-white/10 rounded-lg transition-colors" /></Link>
             </div>
           </div>
-
-          <div className="flex max-w-[90%] mx-auto px-6 lg:px-12 py-3 border-b border-gray-100 justify-between items-center text-sm font-bold text-gray-700 bg-white shadow-sm rounded-b-lg">
+          
+          {/* bottom navigation  */}
+          <div className="flex  mx-auto px-6 lg:px-12 py-3  justify-between items-center text-sm font-bold text-gray-700 bg-white rounded-b-lg">
             <nav className="flex gap-8">
               <a href="#home" onClick={(e) => handleNavClick(e, 'home')} className={getNavClass('home')}>Home</a>
-              {/* <a href="#categories" onClick={(e) => handleNavClick(e, 'categories')} className={getNavClass('categories')}>Categories</a> */}
               <a href="#deals" onClick={(e) => handleNavClick(e, 'deals')} className={getNavClass('deals')}>Offers & Deals</a>
             </nav>
             <nav className="flex gap-8 items-center">
@@ -198,17 +248,44 @@ export default function Navbar() {
         {/* ==========================================
             MOBILE NAVBAR 
         ========================================== */}
-        <div className="md:hidden bg-[#286266] w-full px-4 py-3 flex flex-col gap-3 shadow-md">
+        <div className="md:hidden bg-[#286266] w-full px-4 py-3 flex flex-col gap-2.5 shadow-md">
           <div className="flex justify-between items-center text-white">
-            <div className="flex items-center gap-3">
-              <button onClick={() => setIsMobileMenuOpen(true)}>
+            <div className="flex items-center gap-2.5">
+              <button onClick={() => setIsMobileMenuOpen(true)} aria-label="Open mobile menu">
                 <FiMenu className="text-2xl hover:text-green-200 transition-colors" />
               </button>
-              <Link href="/" className="font-black text-[22px] leading-none flex flex-col pt-1">
-                GGN <span className="text-[6px] font-medium tracking-[0.2em] uppercase text-green-100 mt-0.5">Green Grows Natural</span>
+              <Link href="/" className="flex items-center gap-2">
+                <div className="relative w-8 h-8 flex-shrink-0">
+                  <Image
+                    src="/images/ggnlogo-mark.webp"
+                    alt="Green Grows Natural Logo"
+                    fill
+                    sizes="32px"
+                    priority
+                    className="object-contain"
+                  />
+                </div>
+                <div className="leading-tight">
+                  <span className="font-black text-lg tracking-tight block">GGN</span>
+                  <span className="text-[7px] font-semibold tracking-wider uppercase text-green-200 block -mt-0.5">Green Grows Natural</span>
+                </div>
               </Link>
             </div>
-            <div className="flex items-center gap-4">
+            
+            <div className="flex items-center gap-3">
+              {/* MOBILE SEARCH TOGGLE */}
+              <button
+                type="button"
+                onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
+                aria-label="Toggle search"
+                className={`p-1.5 rounded-full transition-colors ${
+                  isMobileSearchOpen ? 'bg-white/20 text-green-200' : 'hover:bg-white/10 text-white'
+                }`}
+              >
+                <CiSearch className="text-[22px] font-bold" />
+              </button>
+
+              {/* MOBILE CART BUTTON */}
               <button
                 type="button"
                 onClick={openCartModal}
@@ -219,39 +296,60 @@ export default function Navbar() {
               >
                 <FiShoppingCart className="text-[22px]" />
                 {itemCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold text-white bg-[#872022] rounded-full">{itemCount}</span>
+                  <span className="absolute -top-1.5 -right-2 inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold text-white bg-[#872022] rounded-full border border-white">
+                    {itemCount}
+                  </span>
                 )}
               </button>
               
-              {/* --- UPDATED: Dynamic Account Link --- */}
-              <Link href={isLoggedIn ? '/dashboard' : '/login'}>
+              {/* MOBILE ACCOUNT LINK */}
+              <Link href={isLoggedIn ? '/dashboard' : '/login'} aria-label="Account">
                 <VscAccount className="text-[22px]" />
               </Link>
 
-              <Link href="/dashboard" title="Dashboard"><CiBellOn className="text-[24px]" /></Link>
+              <Link href="/dashboard" title="Dashboard" aria-label="Notifications">
+                <CiBellOn className="text-[24px]" />
+              </Link>
             </div>
           </div>
 
-          <form onSubmit={handleSearchSubmit} className="relative w-full">
-            <input 
-              type="text" 
-              placeholder="Search Products" 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full py-2 pl-3 pr-10 rounded bg-white text-gray-900 text-sm outline-none font-medium" 
-            />
-            <button type="submit" aria-label="Search" className="absolute right-2 top-1.5 text-gray-800">
-              <CiSearch className="text-xl font-bold" />
-            </button>
-          </form>
-          {/*  */}
-          <div className="flex justify-between items-center text-white text-xs font-medium pt-1">
-            <div className="flex gap-4 tracking-wide">
-              {/* <a href="#home" onClick={(e) => handleNavClick(e, 'home')} className={getMobileNavClass('home')}>Home</a> */}
+          {/* EXPANDABLE MOBILE SEARCH BAR */}
+          {isMobileSearchOpen && (
+            <div className="w-full pt-1 pb-1 animate-fade-in">
+              <form onSubmit={handleSearchSubmit} className="relative w-full flex items-center">
+                <input 
+                  ref={mobileSearchInputRef}
+                  type="text" 
+                  placeholder="Search produce, fruits, grains..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full py-2 pl-3.5 pr-16 rounded-full bg-white text-gray-900 text-sm outline-none font-medium shadow-md" 
+                />
+                <div className="absolute right-2 flex items-center gap-1">
+                  {searchQuery && (
+                    <button 
+                      type="button"
+                      onClick={() => { setSearchQuery(''); mobileSearchInputRef.current?.focus(); }}
+                      aria-label="Clear search"
+                      className="text-gray-400 hover:text-gray-600 p-1"
+                    >
+                      <FiX className="w-4 h-4" />
+                    </button>
+                  )}
+                  <button type="submit" aria-label="Search" className="bg-[#286266] text-white p-1.5 rounded-full">
+                    <CiSearch className="text-base font-bold" />
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          <div className="flex justify-between items-center text-white text-xs font-medium pt-0.5 border-t border-white/10">
+            <div className="flex gap-4 tracking-wide pt-1">
               <a href="#categories" onClick={(e) => handleNavClick(e, 'categories')} className={getMobileNavClass('categories')}>Categories</a>
               <a href="#deals" onClick={(e) => handleNavClick(e, 'deals')} className={getMobileNavClass('deals')}>Offers & Deals</a>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 pt-1">
               <a href="#faq" onClick={(e) => handleNavClick(e, 'faq')} className={`opacity-90 hover:opacity-100 ${activeSection === 'faq' ? 'border-b border-white' : ''}`}>
                 FAQs
               </a>
@@ -279,9 +377,20 @@ export default function Navbar() {
                 </Link>
               </div>
 
-              <div className="leading-tight">
-                <p className="text-xs font-bold tracking-wide">Browse</p>
-                <h2 className="text-[32px] font-light tracking-wide mt-0.5">GGN</h2>
+              <div className="flex items-center gap-3">
+                <div className="relative w-10 h-10 flex-shrink-0">
+                  <Image
+                    src="/images/ggnlogo-mark.webp"
+                    alt="Green Grows Natural Logo"
+                    fill
+                    sizes="40px"
+                    className="object-contain"
+                  />
+                </div>
+                <div className="leading-tight">
+                  <p className="text-[10px] font-bold tracking-wider uppercase text-green-200">Browse Catalog</p>
+                  <h2 className="text-base font-black tracking-tight text-white leading-tight">Green Grows Natural</h2>
+                </div>
               </div>
             </div>
 
@@ -307,7 +416,9 @@ export default function Navbar() {
               <div className="p-4 border-b border-gray-100 flex flex-col gap-4">
                 <h3 className="font-bold text-black text-base">Best Deals & Offers</h3>
                 <Link href="/products?filter=Bulk+Buy" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 font-medium">Bulk Purchase</Link>
-                <Link href="/products?filter=Group+Buy" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 font-medium">Group Purchase</Link>
+                {FEATURES.ENABLE_GROUP_BUY && (
+                  <Link href="/products?filter=Group+Buy" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 font-medium">Group Purchase</Link>
+                )}
               </div>
 
               <div className="p-4 flex flex-col gap-4 mb-6">

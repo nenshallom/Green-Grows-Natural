@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { useToast } from '@/context/ToastContext';
 import { Product, Participant } from '@/types';
 import { formatNaira, getErrorMessage } from '@/utils/format';
+import { FEATURES } from '@/config/features';
 
 export default function AdminProductsPage() {
   const { toast } = useToast();
@@ -414,28 +415,30 @@ export default function AdminProductsPage() {
               )}
             </div>
 
-            <div className="bg-green-50 p-4 rounded-lg border border-green-100">
-              <label className="flex items-center gap-2 cursor-pointer mb-4">
-                <input type="checkbox" checked={isGroup} onChange={(e)=>setIsGroup(e.target.checked)} className="w-4 h-4 text-green-600 rounded" />
-                <span className="font-bold text-green-900">Enable Group Campaign</span>
-              </label>
-              {isGroup && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-green-800 mb-1">Group Share Price (₦)</label>
-                    <input type="number" required={isGroup} min={0} value={groupPrice} onChange={(e)=>setGroupPrice(e.target.value)} className="w-full px-4 py-2 border rounded-lg outline-none text-black" />
+            {FEATURES.ENABLE_GROUP_BUY && (
+              <div className="bg-green-50 p-4 rounded-lg border border-green-100">
+                <label className="flex items-center gap-2 cursor-pointer mb-4">
+                  <input type="checkbox" checked={isGroup} onChange={(e)=>setIsGroup(e.target.checked)} className="w-4 h-4 text-green-600 rounded" />
+                  <span className="font-bold text-green-900">Enable Group Campaign</span>
+                </label>
+                {isGroup && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-green-800 mb-1">Group Share Price (₦)</label>
+                      <input type="number" required={isGroup} min={0} value={groupPrice} onChange={(e)=>setGroupPrice(e.target.value)} className="w-full px-4 py-2 border rounded-lg outline-none text-black" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-green-800 mb-1">Target Buyers Needed</label>
+                      <input type="number" required={isGroup} min={2} value={groupThreshold} onChange={(e)=>setGroupThreshold(e.target.value)} className="w-full px-4 py-2 border rounded-lg outline-none text-black" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-green-800 mb-1">Campaign Deadline</label>
+                      <input type="datetime-local" required={isGroup} value={groupDeadline} onChange={(e)=>setGroupDeadline(e.target.value)} className="w-full px-4 py-2 border rounded-lg outline-none text-black" />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-green-800 mb-1">Target Buyers Needed</label>
-                    <input type="number" required={isGroup} min={2} value={groupThreshold} onChange={(e)=>setGroupThreshold(e.target.value)} className="w-full px-4 py-2 border rounded-lg outline-none text-black" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-green-800 mb-1">Campaign Deadline</label>
-                    <input type="datetime-local" required={isGroup} value={groupDeadline} onChange={(e)=>setGroupDeadline(e.target.value)} className="w-full px-4 py-2 border rounded-lg outline-none text-black" />
-                  </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             <button type="submit" disabled={processing} className="w-full bg-gray-900 text-white font-bold py-4 rounded-xl hover:bg-black transition-colors disabled:bg-gray-500 shadow-md">
               {processing ? 'Saving Changes...' : editingId ? 'Update Product' : 'Publish New Product'}
@@ -507,7 +510,7 @@ export default function AdminProductsPage() {
                             </span>
                           )}
                           
-                          {isGroupActive && (
+                          {FEATURES.ENABLE_GROUP_BUY && isGroupActive && (
                             <div className="w-full bg-gray-50 p-2 rounded-lg border border-gray-200">
                               <div className="flex justify-between items-center mb-1">
                                 <span className="text-xs font-bold text-gray-700">Group Buy</span>
@@ -539,7 +542,14 @@ export default function AdminProductsPage() {
                               )}
                             </div>
                           )}
-                          {!product.is_bulk_buy_enabled && !product.is_group_buy_enabled && <span className="text-gray-400 text-xs font-medium">Standard Only</span>}
+                          {!FEATURES.ENABLE_GROUP_BUY && isGroupActive && (
+                            <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded text-[10px] font-bold">
+                              Group Buy (Paused)
+                            </span>
+                          )}
+                          {!product.is_bulk_buy_enabled && (!FEATURES.ENABLE_GROUP_BUY || !product.is_group_buy_enabled) && !isGroupActive && (
+                            <span className="text-gray-400 text-xs font-medium">Standard Only</span>
+                          )}
                         </div>
                       </td>
 

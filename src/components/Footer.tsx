@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -20,8 +21,19 @@ export default function Footer() {
           
           {/* 1. Brand & About */}
           <div className="flex flex-col gap-4">
-            <Link href="/" className="text-2xl font-black tracking-tighter text-white">
-              Green <span className="text-green-500">Grows Natural</span>
+            <Link href="/" className="flex items-center gap-2.5 text-2xl font-black tracking-tighter text-white group">
+              <div className="relative w-8 h-8 flex-shrink-0">
+                <Image
+                  src="/images/ggnlogo-mark.webp"
+                  alt="Green Grows Natural"
+                  fill
+                  sizes="32px"
+                  className="object-contain"
+                />
+              </div>
+              <span>
+                Green <span className="text-green-400">Grows Natural</span>
+              </span>
             </Link>
             <p className="text-gray-300 text-sm leading-relaxed pr-4">
               Your trusted bridge between local farmers and your kitchen. We deliver 100% organic, farm-fresh produce directly to your doorstep with unbeatable bulk and group-buy discounts.
