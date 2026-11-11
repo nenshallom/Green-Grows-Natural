@@ -28,6 +28,42 @@ export default function CartModal() {
   const [isClosing, setIsClosing] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
+  // Dynamic fallback cache for items missing discount data
+  const [cachedDiscounts, setCachedDiscounts] = useState<
+    Record<string, { originalPrice: number; discountPercent: number }>
+  >({});
+
+  useEffect(() => {
+    if (!isCartModalOpen || cartItems.length === 0) return;
+
+    const missingIds = cartItems
+      .filter((item) => item.discountPercent === undefined && item.originalPrice === undefined)
+      .map((item) => item.productId);
+
+    if (missingIds.length === 0) return;
+
+    supabase
+      .from('products')
+      .select('id, price_per_unit, original_price')
+      .in('id', missingIds)
+      .then(({ data }) => {
+        if (data) {
+          const map: Record<string, { originalPrice: number; discountPercent: number }> = {};
+          data.forEach((p) => {
+            if (p.original_price && p.original_price > p.price_per_unit) {
+              map[p.id] = {
+                originalPrice: p.original_price,
+                discountPercent: Math.round(
+                  ((p.original_price - p.price_per_unit) / p.original_price) * 100
+                ),
+              };
+            }
+          });
+          setCachedDiscounts((prev) => ({ ...prev, ...map }));
+        }
+      });
+  }, [isCartModalOpen, cartItems]);
+
   // Playful despawn animation handler before unmounting
   const handleDismiss = useCallback(() => {
     if (isClosing) return;
@@ -263,9 +299,36 @@ export default function CartModal() {
                     )}
                   </div>
 
-                  <p className="text-xs text-gray-500 font-medium mt-0.5">
-                    {formatNaira(item.priceAtAddition)}
-                  </p>
+                  {/* Item Unit Price & Percentage Discount Tag */}
+                  {(() => {
+                    const fallback = cachedDiscounts[item.productId];
+                    const originalPrice = item.originalPrice ?? fallback?.originalPrice;
+                    const discountPercent =
+                      item.discountPercent ??
+                      (originalPrice && originalPrice > item.priceAtAddition
+                        ? Math.round(((originalPrice - item.priceAtAddition) / originalPrice) * 100)
+                        : fallback?.discountPercent ?? 0);
+
+                    return (
+                      <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                        <span className="text-xs font-bold text-gray-900">
+                          {formatNaira(item.priceAtAddition)}
+                        </span>
+
+                        {originalPrice && originalPrice > item.priceAtAddition && (
+                          <span className="text-[10px] text-gray-400 line-through">
+                            {formatNaira(originalPrice)}
+                          </span>
+                        )}
+
+                        {discountPercent > 0 && (
+                          <span className="text-[9px] font-black text-[#FA5400] bg-[#FFF4EB] border border-[#FFE0CC] px-1.5 py-0.5 rounded shadow-2xs">
+                            -{discountPercent}%
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {/* Quantity Controls */}
                   <div className="flex items-center gap-2 mt-1.5">

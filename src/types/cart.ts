@@ -7,6 +7,8 @@ export interface CartItem {
   quantity: number;
   purchaseType: PurchaseType;
   priceAtAddition: number;
+  originalPrice?: number | null;
+  discountPercent?: number | null;
 }
 
 export interface CartContextType {
@@ -21,4 +23,3 @@ export interface CartContextType {
   openCartModal: () => void;
   closeCartModal: () => void;
 }
-

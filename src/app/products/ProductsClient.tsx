@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { Product } from '@/types';
 import { formatNaira } from '@/utils/format';
 import { FEATURES } from '@/config/features';
+import QuickAddModal from '@/components/QuickAddModal';
 
 interface ProductsClientProps {
   initialProducts: Product[];
@@ -54,6 +55,10 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
+  // Quick Add Modal State
+  const [modalProduct, setModalProduct] = useState<Product | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   // Save to memory for backward navigation
   useEffect(() => {
     sessionStorage.setItem('ggn_catalog_filter', activeFilter);
@@ -90,16 +95,9 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
     setCurrentPage(1); 
   };
 
-  const handleQuickAdd = (product: Product) => {
-    addToCart({
-      productId: product.id,
-      name: product.name,
-      priceAtAddition: product.price_per_unit,
-      quantity: 1,
-      purchaseType: 'standard',
-      image: product.image_url || '',
-    });
-    toast.success(`Added ${product.name} to your cart!`);
+  const handleOpenQuickAdd = (product: Product) => {
+    setModalProduct(product);
+    setIsModalOpen(true);
   };
 
   return (
@@ -219,8 +217,13 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
                           </div>
 
                           <button 
-                            onClick={(e) => { e.preventDefault(); handleQuickAdd(product); }}
-                            className="bg-[#286266] hover:bg-[#1A4331] text-white text-xs font-bold px-4 py-2 rounded shadow-md transition-colors relative z-10"
+                            type="button"
+                            onClick={(e) => { 
+                              e.preventDefault(); 
+                              e.stopPropagation();
+                              handleOpenQuickAdd(product); 
+                            }}
+                            className="bg-[#286266] hover:bg-[#1A4331] text-white text-xs font-bold px-4 py-2 rounded shadow-md transition-colors relative z-10 cursor-pointer"
                           >
                             Add to Cart
                           </button>
@@ -299,6 +302,16 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
         </div>
 
       </main>
+
+      {/* TEMU-STYLE QUICK ADD MODAL */}
+      <QuickAddModal
+        product={modalProduct}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setModalProduct(null);
+        }}
+      />
     </div>
   );
 }

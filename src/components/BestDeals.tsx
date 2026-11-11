@@ -1,13 +1,12 @@
 'use client';
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { useCart } from '@/context/CartContext';
-import { useToast } from '@/context/ToastContext';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Product } from '@/types';
 import { formatNaira } from '@/utils/format';
 import { FEATURES } from '@/config/features';
-import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiShoppingCart } from 'react-icons/fi';
+import QuickAddModal from '@/components/QuickAddModal';
 
 interface BestDealsProps {
   products: Product[];
@@ -16,10 +15,12 @@ interface BestDealsProps {
 const BATCH_SIZE = 12;
 
 export default function BestDeals({ products }: BestDealsProps) {
-  const { addToCart } = useCart();
-  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>('Best Deals');
   const [visibleCount, setVisibleCount] = useState<number>(BATCH_SIZE);
+
+  // Quick Add Modal State
+  const [modalProduct, setModalProduct] = useState<Product | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -100,17 +101,15 @@ export default function BestDeals({ products }: BestDealsProps) {
     }
   };
 
-  // 8. QUICK ADD TO CART
-  const handleQuickAdd = (product: Product) => {
-    addToCart({
-      productId: product.id,
-      name: product.name,
-      priceAtAddition: product.price_per_unit,
-      quantity: 1,
-      purchaseType: 'standard',
-      image: product.image_url || '',
-    });
-    toast.success(`Added ${product.name} to your cart!`);
+  // 8. OPEN MODAL FOR PRODUCT
+  const handleOpenQuickAdd = (product: Product) => {
+    setModalProduct(product);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseQuickAdd = () => {
+    setIsModalOpen(false);
+    setModalProduct(null);
   };
 
   return (
@@ -207,9 +206,9 @@ export default function BestDeals({ products }: BestDealsProps) {
                 )}
 
                 {/* BOTTOM OVERLAY */}
-                <div className="absolute bottom-0 left-0 w-full py-4 px-2.5 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex justify-between items-end">
+                <div className="absolute bottom-0 left-0 w-full py-3.5 px-2.5 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex justify-between items-end">
                   {/* TEXT DETAILS */}
-                  <div className="text-white w-[65%] relative z-10">
+                  <div className="text-white w-[68%] relative z-10">
                     <h3 className="font-bold text-sm md:text-base leading-tight mb-0.5 drop-shadow-md truncate">
                       {product.name}
                     </h3>
@@ -243,17 +242,18 @@ export default function BestDeals({ products }: BestDealsProps) {
                     </div>
                   </div>
 
-                  {/* QUICK ADD BUTTON */}
+                  {/* CART ICON BUTTON (OPENS QUICK ADD MODAL) */}
                   <button
                     type="button"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      handleQuickAdd(product);
+                      handleOpenQuickAdd(product);
                     }}
-                    className="bg-white/20 hover:bg-[#1A4331] backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1.5 rounded-md shadow-md transition-colors border border-white/30 relative z-10 active:scale-95"
+                    aria-label={`Select quantity and options for ${product.name}`}
+                    className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white text-[#1A4331] hover:bg-[#1A4331] hover:text-white shadow-md flex items-center justify-center transition-all duration-200 border border-white/50 active:scale-90 relative z-10 cursor-pointer"
                   >
-                    Add +
+                    <FiShoppingCart className="w-3.5 h-3.5 md:w-4 md:h-4" />
                   </button>
                 </div>
               </Link>
@@ -280,6 +280,15 @@ export default function BestDeals({ products }: BestDealsProps) {
           Showing all {sortedAndFilteredProducts.length} items
         </div>
       )}
+
+      {/* =========================================================
+          TEMU-STYLE QUICK ADD MODAL (POPUP ON CART CLICK)
+      ========================================================= */}
+      <QuickAddModal
+        product={modalProduct}
+        isOpen={isModalOpen}
+        onClose={handleCloseQuickAdd}
+      />
     </section>
   );
 }

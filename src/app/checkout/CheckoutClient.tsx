@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/context/ToastContext';
 import { useRouter } from 'next/navigation';
@@ -9,12 +9,50 @@ import { validateGroupBuyCart } from '@/lib/campaign';
 import { formatNaira, getErrorMessage } from '@/utils/format';
 
 export default function CheckoutPage() {
-  const { cartItems, itemCount, cartTotal, clearCart } = useCart(); 
+  const { cartItems, itemCount, cartTotal, clearCart, removeFromCart } = useCart(); 
   const { toast } = useToast();
   const router = useRouter();
 
   const [userId, setUserId] = useState<string | null>(null);
   
+  // Selected items from Cart page
+  const [selectedKeys, setSelectedKeys] = useState<string[] | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('ggn_selected_cart_keys');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setSelectedKeys(parsed);
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+  }, []);
+
+  const activeCartItems = useMemo(() => {
+    if (!selectedKeys) return cartItems;
+    const filtered = cartItems.filter((item) =>
+      selectedKeys.includes(`${item.productId}-${item.purchaseType}`)
+    );
+    return filtered.length > 0 ? filtered : cartItems;
+  }, [cartItems, selectedKeys]);
+
+  const activeCartTotal = useMemo(() => {
+    return activeCartItems.reduce(
+      (acc, item) => acc + item.priceAtAddition * item.quantity,
+      0
+    );
+  }, [activeCartItems]);
+
+  const activeItemCount = useMemo(() => {
+    return activeCartItems.reduce((acc, item) => acc + item.quantity, 0);
+  }, [activeCartItems]);
+
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -30,7 +68,7 @@ export default function CheckoutPage() {
   // --- NEW: Authentication Loading State ---
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   // --- NEW: PAYSTACK ENFORCEMENT STATE ---
-  const hasGroupBuy = cartItems.some(item => item.purchaseType === 'group');
+  const hasGroupBuy = activeCartItems.some((item) => item.purchaseType === 'group');
 
   useEffect(() => {
     // If cart has a group buy, strictly force Paystack online payment
@@ -64,7 +102,7 @@ export default function CheckoutPage() {
 const [checkoutReference, setCheckoutReference] = useState('');
 useEffect(() => {
   if (userId) setCheckoutReference(`GGN-${new Date().getTime().toString().slice(-8)}`);
-}, [userId, cartTotal]);
+}, [userId, activeCartTotal]);
 
 // ====================================================================
 // 🚨 THE ENTERPRISE DATABASE ENGINE (Uses Supabase RPC Transaction) 🚨
@@ -74,7 +112,7 @@ const saveOrderToDatabase = async (paymentStatus: string, method: string) => {
   try {
     if (!userId) throw new Error("Authentication error. Please log in again.");
 
-    const rpcCartItems = cartItems.map(item => ({
+    const rpcCartItems = activeCartItems.map(item => ({
       product_id: item.productId, 
       quantity: item.quantity, 
       purchase_type: item.purchaseType
@@ -94,7 +132,17 @@ const saveOrderToDatabase = async (paymentStatus: string, method: string) => {
     // We can safely ignore that specific error because it means the order is already safe!
     if (error && !error.message.includes('unique constraint')) throw error;
 
-    clearCart();
+    if (selectedKeys && selectedKeys.length < cartItems.length) {
+      selectedKeys.forEach(key => {
+        const [productId, purchaseType] = key.split('-');
+        removeFromCart(productId, purchaseType);
+      });
+      sessionStorage.removeItem('ggn_selected_cart_keys');
+    } else {
+      clearCart();
+      sessionStorage.removeItem('ggn_selected_cart_keys');
+    }
+
     toast.success(`Order Successful! Your Tracking Number is: ${checkoutReference}`);
     router.push('/dashboard');
 
@@ -109,7 +157,7 @@ const saveOrderToDatabase = async (paymentStatus: string, method: string) => {
 const paystackConfig = {
   reference: checkoutReference, // Synchronized reference!
   email: email,
-  amount: cartTotal * 100, 
+  amount: activeCartTotal * 100, 
   publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY as string,
   // --- NEW: Embed the cart data into the payment so the Webhook can read it ---
   metadata: {
@@ -123,7 +171,7 @@ const paystackConfig = {
       { 
         display_name: "Cart Payload", 
         variable_name: "cart_payload", 
-        value: JSON.stringify(cartItems.map(item => ({ product_id: item.productId, quantity: item.quantity, purchase_type: item.purchaseType }))) 
+        value: JSON.stringify(activeCartItems.map(item => ({ product_id: item.productId, quantity: item.quantity, purchase_type: item.purchaseType }))) 
       }
     ]
   }
@@ -134,7 +182,7 @@ const initializePayment = usePaystackPayment(paystackConfig);
   // --- UPGRADED ASYNC GATEKEEPER FUNCTION ---
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (itemCount === 0) {
+    if (activeItemCount === 0) {
       toast.warning("Your cart is empty!");
       return;
     }
@@ -142,7 +190,7 @@ const initializePayment = usePaystackPayment(paystackConfig);
     setIsProcessing(true); // Lock the button while we verify with the DB
 
     try {
-      const validation = await validateGroupBuyCart(cartItems, userId);
+      const validation = await validateGroupBuyCart(activeCartItems, userId);
       if (!validation.valid) {
         toast.error(`Payment Blocked: ${validation.error}`);
         setIsProcessing(false);
@@ -264,7 +312,7 @@ const initializePayment = usePaystackPayment(paystackConfig);
             <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
             
             <div className="space-y-3 mb-6 max-h-64 overflow-y-auto pr-2">
-              {cartItems.map((item) => (
+              {activeCartItems.map((item) => (
                 <div key={`${item.productId}-${item.purchaseType}`} className="flex justify-between text-sm text-gray-600 pb-2 border-b border-gray-50 last:border-0">
                   <span className="flex-1 pr-2">
                     <span className="font-medium text-gray-800">{item.quantity}x</span> {item.name} 
@@ -280,11 +328,11 @@ const initializePayment = usePaystackPayment(paystackConfig);
             <div className="border-t border-gray-200 pt-4 mb-6 space-y-2">
               <div className="flex justify-between text-sm text-gray-500">
                 <span>Subtotal</span>
-                <span>{formatNaira(cartTotal)}</span>
+                <span>{formatNaira(activeCartTotal)}</span>
               </div>
               <div className="flex justify-between items-center pt-2">
                 <span className="text-lg font-bold text-gray-900">Total</span>
-                <span className="text-2xl font-bold text-green-700">{formatNaira(cartTotal)}</span>
+                <span className="text-2xl font-bold text-green-700">{formatNaira(activeCartTotal)}</span>
               </div>
             </div>
 
