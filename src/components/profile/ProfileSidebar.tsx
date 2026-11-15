@@ -47,7 +47,7 @@ export default function ProfileSidebar({
   const [isSecurityExpanded, setIsSecurityExpanded] = useState(false);
 
   return (
-    <aside className="w-full lg:w-60 flex-shrink-0 bg-white rounded-2xl border border-gray-100 p-3 shadow-2xs">
+    <aside className="w-full lg:w-60 flex-shrink-0 bg-white rounded-2xl border border-gray-100 p-3 shadow-2xs lg:sticky lg:top-24 self-start max-h-[calc(100vh-7rem)] overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <nav className="space-y-1 text-sm font-medium">
         {/* =========================================================
             1. YOUR ORDERS (EXPANDABLE)
