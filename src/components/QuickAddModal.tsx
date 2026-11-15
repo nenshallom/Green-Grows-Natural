@@ -13,9 +13,15 @@ interface QuickAddModalProps {
   product: Product | null;
   isOpen: boolean;
   onClose: () => void;
+  initialMode?: 'standard' | 'bulk';
 }
 
-export default function QuickAddModal({ product, isOpen, onClose }: QuickAddModalProps) {
+export default function QuickAddModal({
+  product,
+  isOpen,
+  onClose,
+  initialMode = 'standard',
+}: QuickAddModalProps) {
   const { addToCart } = useCart();
   const { toast } = useToast();
 
@@ -27,10 +33,13 @@ export default function QuickAddModal({ product, isOpen, onClose }: QuickAddModa
   useEffect(() => {
     if (product) {
       setActiveImage(product.image_url || null);
-      setQuantity(1);
-      setSelectedMode('standard');
+      const isBulkStart =
+        initialMode === 'bulk' &&
+        Boolean(product.is_bulk_buy_enabled && product.bulk_threshold);
+      setSelectedMode(isBulkStart ? 'bulk' : 'standard');
+      setQuantity(isBulkStart ? (product.bulk_threshold || 2) : 1);
     }
-  }, [product, isOpen]);
+  }, [product, isOpen, initialMode]);
 
   // Prevent background scrolling when modal is open
   useEffect(() => {

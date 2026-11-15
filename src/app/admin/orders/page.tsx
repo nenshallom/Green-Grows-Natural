@@ -21,7 +21,7 @@ export default function AdminOrdersPage() {
   const [sortConfig, setSortConfig] = useState<'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'>('date-desc');
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'paystack' | 'offline'>('all');
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month' | '6-months' | 'year'>('all');
-  const [deliveryFilter, setDeliveryFilter] = useState<'all' | 'Pending Delivery' | 'Processing' | 'Delayed' | 'Delivered' | 'Cancelled'>('all');
+  const [deliveryFilter, setDeliveryFilter] = useState<'all' | 'Pending Delivery' | 'Processing' | 'In Transit' | 'Delayed' | 'Delivered' | 'Cancelled'>('all');
   
   // --- NEW: PURCHASE TYPE FILTER & BULK SELECTION STATE ---
   const [purchaseFilter, setPurchaseFilter] = useState<'all' | 'standard' | 'bulk' | 'group'>('all');
@@ -225,6 +225,7 @@ export default function AdminOrdersPage() {
   const getDeliveryBadgeStyle = (status: string) => {
     switch (status) {
       case 'Delivered': return 'bg-green-100 text-green-800 border-green-200';
+      case 'In Transit': return 'bg-indigo-100 text-indigo-800 border-indigo-200';
       case 'Delayed': return 'bg-red-100 text-red-800 border-red-200 animate-pulse';
       case 'Cancelled': return 'bg-gray-100 text-gray-500 border-gray-300 line-through';
       default: return 'bg-blue-50 text-blue-800 border-blue-200'; 
@@ -274,12 +275,14 @@ export default function AdminOrdersPage() {
             
             <div className="flex items-center gap-2">
               <label className="text-sm text-gray-500 font-medium">Delivery:</label>
-              <select value={deliveryFilter} onChange={(e) => setDeliveryFilter(e.target.value as typeof deliveryFilter)} className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white">
+              <select value={deliveryFilter} onChange={(e) => setDeliveryFilter(e.target.value as typeof deliveryFilter)} className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none bg-white font-medium">
                 <option value="all">All Statuses</option>
                 <option value="Pending Delivery">Pending</option>
                 <option value="Processing">Processing</option>
-                <option value="Delayed">Delayed</option>
-                <option value="Delivered">Delivered</option>
+                <option value="In Transit">🚚 In Transit</option>
+                <option value="Delayed">⚠️ Delayed</option>
+                <option value="Delivered">Delivered ✓</option>
+                <option value="Cancelled">Cancelled</option>
               </select>
             </div>
 
@@ -315,8 +318,10 @@ export default function AdminOrdersPage() {
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm text-green-200 mr-2">Bulk Delivery Update:</span>
             <button onClick={() => handleBulkUpdateDelivery('Processing')} disabled={updating} className="bg-blue-600 hover:bg-blue-700 text-xs font-bold px-3 py-2 rounded transition-colors shadow-sm disabled:opacity-50">Processing</button>
+            <button onClick={() => handleBulkUpdateDelivery('In Transit')} disabled={updating} className="bg-indigo-600 hover:bg-indigo-700 text-xs font-bold px-3 py-2 rounded transition-colors shadow-sm disabled:opacity-50 flex items-center gap-1"><span>🚚</span> In Transit</button>
             <button onClick={() => handleBulkUpdateDelivery('Delivered')} disabled={updating} className="bg-green-500 hover:bg-green-600 text-xs font-bold px-3 py-2 rounded transition-colors shadow-sm disabled:opacity-50">Mark Delivered</button>
-            <button onClick={() => handleBulkUpdateDelivery('Cancelled')} disabled={updating} className="bg-red-500 hover:bg-red-600 text-xs font-bold px-3 py-2 rounded transition-colors shadow-sm disabled:opacity-50">Cancel</button>
+            <button onClick={() => handleBulkUpdateDelivery('Delayed')} disabled={updating} className="bg-red-500 hover:bg-red-600 text-xs font-bold px-3 py-2 rounded transition-colors shadow-sm disabled:opacity-50">Mark Delayed</button>
+            <button onClick={() => handleBulkUpdateDelivery('Cancelled')} disabled={updating} className="bg-gray-600 hover:bg-gray-700 text-xs font-bold px-3 py-2 rounded transition-colors shadow-sm disabled:opacity-50">Cancel</button>
           </div>
         </div>
       )}
@@ -439,19 +444,33 @@ export default function AdminOrdersPage() {
                   <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
                      <p className="text-sm text-gray-600 mb-3">Current Status: <span className={`font-bold px-2 py-0.5 rounded-full text-xs ${getDeliveryBadgeStyle(selectedOrder.delivery_status || 'Pending Delivery')}`}>{selectedOrder.delivery_status || 'Pending Delivery'}</span></p>
                      
-                     <div className="grid grid-cols-2 gap-2">
-                       <button onClick={() => handleUpdateDeliveryStatus(selectedOrder.id, 'Processing')} disabled={updating || selectedOrder.delivery_status === 'Processing'} className="px-2 py-2 text-xs font-bold rounded-lg border border-blue-300 text-blue-700 hover:bg-blue-50 disabled:opacity-50 transition-colors">
-                         Processing
-                       </button>
-                       <button onClick={() => handleUpdateDeliveryStatus(selectedOrder.id, 'Delivered')} disabled={updating || selectedOrder.delivery_status === 'Delivered'} className="px-2 py-2 text-xs font-bold rounded-lg border border-green-300 text-green-700 hover:bg-green-50 disabled:opacity-50 transition-colors">
-                         Delivered ✓
-                       </button>
-                       <button onClick={() => handleUpdateDeliveryStatus(selectedOrder.id, 'Delayed')} disabled={updating || selectedOrder.delivery_status === 'Delayed'} className="px-2 py-2 text-xs font-bold rounded-lg border border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50 transition-colors">
-                         Mark Delayed
-                       </button>
-                       <button onClick={() => handleUpdateDeliveryStatus(selectedOrder.id, 'Cancelled')} disabled={updating || selectedOrder.delivery_status === 'Cancelled'} className="px-2 py-2 text-xs font-bold rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">
-                         Cancel Order
-                       </button>
+                     <div className="space-y-3">
+                       <div>
+                         <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Fulfillment Pipeline:</p>
+                         <div className="grid grid-cols-3 gap-2">
+                           <button onClick={() => handleUpdateDeliveryStatus(selectedOrder.id, 'Processing')} disabled={updating || selectedOrder.delivery_status === 'Processing'} className="px-2 py-2 text-xs font-bold rounded-lg border border-blue-300 text-blue-700 hover:bg-blue-50 disabled:opacity-50 transition-colors">
+                             Processing
+                           </button>
+                           <button onClick={() => handleUpdateDeliveryStatus(selectedOrder.id, 'In Transit')} disabled={updating || selectedOrder.delivery_status === 'In Transit'} className="px-2 py-2 text-xs font-bold rounded-lg border border-indigo-300 text-indigo-700 hover:bg-indigo-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-1">
+                             <span>🚚</span> In Transit
+                           </button>
+                           <button onClick={() => handleUpdateDeliveryStatus(selectedOrder.id, 'Delivered')} disabled={updating || selectedOrder.delivery_status === 'Delivered'} className="px-2 py-2 text-xs font-bold rounded-lg border border-green-300 text-green-700 hover:bg-green-50 disabled:opacity-50 transition-colors">
+                             Delivered ✓
+                           </button>
+                         </div>
+                       </div>
+
+                       <div className="pt-2 border-t border-gray-100">
+                         <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Exceptions & Alerts:</p>
+                         <div className="grid grid-cols-2 gap-2">
+                           <button onClick={() => handleUpdateDeliveryStatus(selectedOrder.id, 'Delayed')} disabled={updating || selectedOrder.delivery_status === 'Delayed'} className="px-2 py-2 text-xs font-bold rounded-lg border border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50 transition-colors">
+                             ⚠️ Mark Delayed
+                           </button>
+                           <button onClick={() => handleUpdateDeliveryStatus(selectedOrder.id, 'Cancelled')} disabled={updating || selectedOrder.delivery_status === 'Cancelled'} className="px-2 py-2 text-xs font-bold rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">
+                             ✕ Cancel Order
+                           </button>
+                         </div>
+                       </div>
                      </div>
                   </div>
                 </div>

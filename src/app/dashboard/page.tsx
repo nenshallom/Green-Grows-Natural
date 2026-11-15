@@ -1,28 +1,52 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useToast } from '@/context/ToastContext';
-import { Order } from '@/types';
-import { formatNaira, getErrorMessage } from '@/utils/format';
 
-// --- NEW: Icons for a premium feel ---
-import { FiPackage, FiUser, FiShield, FiLogOut, FiClock, FiCheckCircle } from 'react-icons/fi';
+import React, { useEffect, useState, useMemo } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
+import { useCart } from '@/context/CartContext';
+import { useToast } from '@/context/ToastContext';
+import { Order, Product, PurchaseType } from '@/types';
+import { getErrorMessage } from '@/utils/format';
+
+// --- TEMU PROFILE COMPONENTS ---
+import ProfileSidebar, {
+  ProfileSection,
+  OrderStatusFilter,
+} from '@/components/profile/ProfileSidebar';
+import TemuOrderCard from '@/components/profile/TemuOrderCard';
+import OrderTrackingModal from '@/components/profile/OrderTrackingModal';
+import OrderDetailsModal from '@/components/profile/OrderDetailsModal';
+import ProduceReviewModal from '@/components/profile/ProduceReviewModal';
+import ReturnRefundModal from '@/components/profile/ReturnRefundModal';
+import FarmGuaranteeModal from '@/components/profile/FarmGuaranteeModal';
+import AddressesView from '@/components/profile/AddressesView';
+import ReviewsView from '@/components/profile/ReviewsView';
+import CountryLanguageView from '@/components/profile/CountryLanguageView';
+import NotificationsView from '@/components/profile/NotificationsView';
+import ProfileInfoView from '@/components/profile/ProfileInfoView';
+import SecurityView from '@/components/profile/SecurityView';
+
+// --- ICONS ---
+import { FiSearch, FiShield, FiPackage, FiMessageCircle, FiPhoneCall, FiChevronRight } from 'react-icons/fi';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { toast } = useToast();
-  
-  // Tab State
-  const [activeTab, setActiveTab] = useState<'orders' | 'profile' | 'security'>('orders');
-  
+  const { addToCart } = useCart();
+
+  // Navigation State
+  const [activeSection, setActiveSection] = useState<ProfileSection>('orders');
+  const [activeOrderFilter, setActiveOrderFilter] = useState<OrderStatusFilter>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+
   // Data State
   const [orders, setOrders] = useState<Order[]>([]);
+  const [productsMap, setProductsMap] = useState<Map<string, Product>>(new Map());
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState('');
-  
-  // Profile Form State
+
+  // Profile Form Fields
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
@@ -30,24 +54,30 @@ export default function DashboardPage() {
   const [stateName, setStateName] = useState('');
   const [lga, setLga] = useState('');
   const [landmark, setLandmark] = useState('');
-  const [profileMessage, setProfileMessage] = useState<{type: 'success'|'error', text: string} | null>(null);
-  const [updatingProfile, setUpdatingProfile] = useState(false);
 
-  // Security Form State
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [securityMessage, setSecurityMessage] = useState<{type: 'success'|'error', text: string} | null>(null);
-  const [updatingSecurity, setUpdatingSecurity] = useState(false);
+  // Modal Control State
+  const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
+  const [detailsOrder, setDetailsOrder] = useState<Order | null>(null);
+  const [reviewOrder, setReviewOrder] = useState<Order | null>(null);
+  const [refundOrder, setRefundOrder] = useState<Order | null>(null);
+  const [isGuaranteeOpen, setIsGuaranteeOpen] = useState(false);
 
+  // 1. FETCH USER SESSION, METADATA, PRODUCTS, AND ORDERS
   useEffect(() => {
-    const fetchUserDataAndOrders = async () => {
+    const fetchData = async () => {
       try {
-        const { data: { session }, error: authError } = await supabase.auth.getSession();
-        if (authError || !session?.user) { router.push('/login'); return; }
+        const {
+          data: { session },
+          error: authError,
+        } = await supabase.auth.getSession();
+        if (authError || !session?.user) {
+          router.push('/login');
+          return;
+        }
 
         const user = session.user;
         const meta = user.user_metadata;
-        
+
         setUserEmail(user.email || '');
         setFirstName(meta?.first_name || meta?.full_name?.split(' ')[0] || '');
         setLastName(meta?.last_name || meta?.full_name?.split(' ')[1] || '');
@@ -57,6 +87,7 @@ export default function DashboardPage() {
         setLga(meta?.default_lga || '');
         setLandmark(meta?.default_landmark || '');
 
+        // Fetch user orders with order_items
         const { data: ordersData, error: ordersError } = await supabase
           .from('orders')
           .select(`*, order_items (*)`)
@@ -65,336 +96,494 @@ export default function DashboardPage() {
 
         if (ordersError) throw ordersError;
         setOrders((ordersData || []) as unknown as Order[]);
+
+        // Fetch products catalog to link actual images to order items
+        const { data: productsData } = await supabase.from('products').select('*');
+        if (productsData) {
+          const map = new Map<string, Product>();
+          productsData.forEach((p) => map.set(p.id, p as Product));
+          setProductsMap(map);
+        }
       } catch (error) {
-        console.error("Error fetching orders:", getErrorMessage(error));
+        console.error('Error fetching dashboard data:', getErrorMessage(error));
       } finally {
         setLoading(false);
       }
     };
-    fetchUserDataAndOrders();
+
+    fetchData();
   }, [router]);
 
-  // --- HANDLERS ---
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setUpdatingProfile(true);
-    setProfileMessage(null);
-    try {
-      const { error } = await supabase.auth.updateUser({
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          phone_number: phone,
-          default_address: address,
-          default_state: stateName,
-          default_lga: lga,
-          default_landmark: landmark,
-        }
-      });
-      if (error) throw error;
-      setProfileMessage({ type: 'success', text: 'Profile and default address updated successfully!' });
-    } catch (error) {
-      setProfileMessage({ type: 'error', text: getErrorMessage(error) });
-    } finally {
-      setUpdatingProfile(false);
-    }
-  };
+  // 2. ORDER COUNTS BY STATUS
+  const orderCounts = useMemo(() => {
+    const counts: Record<OrderStatusFilter, number> = {
+      all: orders.length,
+      processing: 0,
+      in_transit: 0,
+      delayed: 0,
+      delivered: 0,
+      cancelled: 0,
+    };
 
-  const handleUpdatePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setUpdatingSecurity(true);
-    setSecurityMessage(null);
-    if (newPassword !== confirmPassword) {
-      setSecurityMessage({ type: 'error', text: 'Passwords do not match.' });
-      setUpdatingSecurity(false);
+    orders.forEach((o) => {
+      const status = (o.delivery_status || 'processing').toLowerCase();
+      if (status === 'delivered') {
+        counts.delivered += 1;
+      } else if (status === 'delayed') {
+        counts.delayed += 1;
+      } else if (
+        status === 'in transit' ||
+        status === 'in_transit' ||
+        status === 'shipped'
+      ) {
+        counts.in_transit += 1;
+      } else if (status === 'cancelled' || status === 'refunded') {
+        counts.cancelled += 1;
+      } else {
+        counts.processing += 1;
+      }
+    });
+
+    return counts;
+  }, [orders]);
+
+  // 3. FILTERED ORDERS
+  const filteredOrders = useMemo(() => {
+    return orders.filter((order) => {
+      const status = (order.delivery_status || 'processing').toLowerCase();
+
+      // Status Filter
+      if (
+        activeOrderFilter === 'processing' &&
+        status !== 'processing' &&
+        status !== 'pending' &&
+        status !== 'pending delivery'
+      ) {
+        return false;
+      }
+      if (
+        activeOrderFilter === 'in_transit' &&
+        status !== 'in transit' &&
+        status !== 'in_transit' &&
+        status !== 'shipped'
+      ) {
+        return false;
+      }
+      if (activeOrderFilter === 'delayed' && status !== 'delayed') {
+        return false;
+      }
+      if (activeOrderFilter === 'delivered' && status !== 'delivered') {
+        return false;
+      }
+      if (
+        activeOrderFilter === 'cancelled' &&
+        status !== 'cancelled' &&
+        status !== 'refunded'
+      ) {
+        return false;
+      }
+
+      // Search Query Filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase().trim();
+        const matchesTracking = order.tracking_number?.toLowerCase().includes(query);
+        const matchesId = order.id?.toLowerCase().includes(query);
+        const matchesItem = order.order_items?.some((item) =>
+          item.product_name.toLowerCase().includes(query)
+        );
+        if (!matchesTracking && !matchesId && !matchesItem) return false;
+      }
+
+      return true;
+    });
+  }, [orders, activeOrderFilter, searchQuery]);
+
+  // 4. BUY THIS AGAIN HANDLER
+  const handleBuyAgain = (order: Order) => {
+    if (!order.order_items || order.order_items.length === 0) {
+      toast.info('No produce items found in this order.');
       return;
     }
-    try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
-      setSecurityMessage({ type: 'success', text: 'Password updated successfully!' });
-      setNewPassword(''); setConfirmPassword('');
-    } catch (error) {
-      setSecurityMessage({ type: 'error', text: getErrorMessage(error) });
-    } finally {
-      setUpdatingSecurity(false);
-    }
+
+    order.order_items.forEach((item) => {
+      const matchedProduct = item.product_id ? productsMap.get(item.product_id) : undefined;
+      addToCart({
+        productId: item.product_id || item.id,
+        name: item.product_name,
+        image: matchedProduct?.image_url || '',
+        quantity: item.quantity,
+        purchaseType: (item.purchase_type as PurchaseType) || 'standard',
+        priceAtAddition: item.price_at_purchase,
+      });
+    });
+
+    toast.success('Items from this order added to your cart!');
   };
 
+  // 5. PROFILE UPDATE HANDLER
+  const handleUpdateProfile = async (data: {
+    firstName: string;
+    lastName: string;
+    phone: string;
+  }) => {
+    const { error } = await supabase.auth.updateUser({
+      data: {
+        first_name: data.firstName,
+        last_name: data.lastName,
+        phone_number: data.phone,
+      },
+    });
+    if (error) throw error;
+    setFirstName(data.firstName);
+    setLastName(data.lastName);
+    setPhone(data.phone);
+  };
+
+  // 6. ADDRESS UPDATE HANDLER
+  const handleSaveAddress = async (data: {
+    address: string;
+    stateName: string;
+    lga: string;
+    landmark: string;
+  }) => {
+    const { error } = await supabase.auth.updateUser({
+      data: {
+        default_address: data.address,
+        default_state: data.stateName,
+        default_lga: data.lga,
+        default_landmark: data.landmark,
+      },
+    });
+    if (error) throw error;
+    setAddress(data.address);
+    setStateName(data.stateName);
+    setLga(data.lga);
+    setLandmark(data.landmark);
+  };
+
+  // 7. PASSWORD UPDATE HANDLER
+  const handleUpdatePassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw error;
+  };
+
+  // 8. DELETE ACCOUNT HANDLER
   const handleDeleteAccount = async () => {
-    const confirmed = window.confirm("Are you sure you want to delete your account? This action cannot be undone and you will lose your order history.");
-    if (confirmed) {
-      await supabase.auth.updateUser({ data: { is_deleted: true } });
-      await supabase.auth.signOut();
-      toast.info("Your account has been deactivated.");
-      router.push('/');
-    }
+    await supabase.auth.updateUser({ data: { is_deleted: true } });
+    await supabase.auth.signOut();
+    toast.info('Your account has been deactivated.');
+    router.push('/');
   };
 
-  // --- NEW: LOGOUT HANDLER ---
+  // 9. LOGOUT HANDLER
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/login');
   };
 
-  const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('en-NG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-[#FDFDFD] p-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#1A4331]" />
+      </main>
+    );
+  }
 
-  if (loading) return <main className="min-h-screen bg-[#FDFDFD] p-8 flex items-center justify-center"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#1A4331]"></div></main>;
+  // Active section title for breadcrumb
+  const sectionTitleMap: Record<ProfileSection, string> = {
+    orders: 'Your orders',
+    reviews: 'Your reviews',
+    profile: 'Your profile',
+    addresses: 'Addresses',
+    country: 'Country & Language',
+    security: 'Account security',
+    'delete-account': 'Delete your account',
+    notifications: 'Notifications',
+  };
 
   return (
-    <main className="min-h-screen bg-[#FDFDFD] py-10 px-4 md:px-8 lg:px-16">
-      <div className="max-w-5xl mx-auto">
-        
-        {/* --- UPGRADED HEADER & LOGOUT --- */}
-        <header className="mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <div>
-            <h1 className="text-xl md:text-2xl font-black text-[#1A4331] tracking-tight">Hello, {firstName || 'User'}!</h1>
-            <p className="text-gray-500 mt-2 font-medium">Manage your orders, tracking, and account settings.</p>
-          </div>
-          
-          <button 
-            onClick={handleLogout}
-            aria-label="Log out of your account"
-            className="flex items-center justify-center gap-2 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 font-bold py-2.5 px-5 rounded-lg transition-colors border border-red-100 shadow-sm w-full sm:w-auto"
-          >
-            <FiLogOut className="text-lg" /> Log Out
-          </button>
-        </header>
-
-        {/* --- ACCESSIBLE TAB NAVIGATION --- */}
-        <div className="flex border-b border-gray-200 mb-8 overflow-x-auto scrollbar-hide" role="tablist" aria-label="Dashboard Tabs">
-          <button
-            role="tab"
-            aria-selected={activeTab === 'orders'}
-            onClick={() => setActiveTab('orders')}
-            className={`flex items-center gap-2 px-6 py-4 font-bold text-sm transition-all whitespace-nowrap border-b-2 ${
-              activeTab === 'orders' ? 'border-[#1A4331] text-[#1A4331]' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50'
-            }`}
-          >
-            <FiPackage className="text-lg" /> Order History
-          </button>
-          
-          <button
-            role="tab"
-            aria-selected={activeTab === 'profile'}
-            onClick={() => setActiveTab('profile')}
-            className={`flex items-center gap-2 px-6 py-4 font-bold text-sm transition-all whitespace-nowrap border-b-2 ${
-              activeTab === 'profile' ? 'border-[#1A4331] text-[#1A4331]' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50'
-            }`}
-          >
-            <FiUser className="text-lg" /> Profile Details
-          </button>
-          
-          <button
-            role="tab"
-            aria-selected={activeTab === 'security'}
-            onClick={() => setActiveTab('security')}
-            className={`flex items-center gap-2 px-6 py-4 font-bold text-sm transition-all whitespace-nowrap border-b-2 ${
-              activeTab === 'security' ? 'border-[#1A4331] text-[#1A4331]' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50'
-            }`}
-          >
-            <FiShield className="text-lg" /> Security
-          </button>
+    <main className="min-h-screen bg-[#F7F7F7] py-6 px-3 sm:px-6 lg:px-12 text-gray-800">
+      <div className="max-w-7xl mx-auto">
+        {/* =========================================================
+            BREADCRUMB BAR (TEMU STYLE: "Home > Your orders")
+        ========================================================= */}
+        <div className="mb-4 text-xs text-gray-500 font-medium flex items-center gap-1.5">
+          <Link href="/" className="hover:text-black transition-colors">
+            Home
+          </Link>
+          <span className="text-gray-300">›</span>
+          <span className="text-gray-800 font-bold">{sectionTitleMap[activeSection]}</span>
         </div>
 
-        {/* --- TAB CONTENT: ORDERS --- */}
-        {activeTab === 'orders' && (
-          <div role="tabpanel" aria-labelledby="orders-tab" className="animate-fade-in">
-            {orders.length === 0 ? (
-              <div className="bg-white p-16 rounded-2xl text-center border border-gray-100 shadow-sm flex flex-col items-center justify-center">
-                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mb-4">
-                  <FiPackage className="w-10 h-10" />
+        {/* =========================================================
+            DESKTOP 2-COLUMN LAYOUT (SIDEBAR + WORKSPACE)
+        ========================================================= */}
+        <div className="flex flex-col lg:flex-row items-start gap-6">
+          {/* LEFT SIDEBAR NAVIGATION */}
+          <ProfileSidebar
+            activeSection={activeSection}
+            activeOrderFilter={activeOrderFilter}
+            orderCounts={orderCounts}
+            onSelectSection={(sec) => setActiveSection(sec)}
+            onSelectOrderFilter={(f) => {
+              setActiveSection('orders');
+              setActiveOrderFilter(f);
+            }}
+            onLogout={handleLogout}
+          />
+
+          {/* RIGHT WORKSPACE AREA */}
+          <div className="flex-1 w-full min-w-0 space-y-4">
+            {/* =====================================================
+                SECTION: YOUR ORDERS
+            ===================================================== */}
+            {activeSection === 'orders' && (
+              <div className="space-y-4">
+                {/* TOP TABS & CAPSULE SEARCH ROW */}
+                <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-2xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+                  {/* HORIZONTAL STATUS TABS (TEMU STYLE) */}
+                  <div className="flex items-center gap-4 md:gap-6 overflow-x-auto scrollbar-hide text-xs sm:text-sm font-bold border-b md:border-b-0 border-gray-100 pb-2 md:pb-0">
+                    {(
+                      [
+                        { id: 'all', label: 'All orders' },
+                        { id: 'processing', label: 'Processing' },
+                        { id: 'in_transit', label: 'In Transit' },
+                        { id: 'delayed', label: 'Delayed' },
+                        { id: 'delivered', label: 'Delivered' },
+                        { id: 'cancelled', label: 'Cancelled' },
+                      ] as const
+                    ).map((tab) => {
+                      const isSelected = activeOrderFilter === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => setActiveOrderFilter(tab.id)}
+                          className={`relative py-1 cursor-pointer whitespace-nowrap transition-colors ${
+                            isSelected
+                              ? 'text-black font-extrabold after:absolute after:bottom-[-2px] after:left-0 after:right-0 after:h-[2.5px] after:bg-black after:rounded-full'
+                              : 'text-gray-500 hover:text-black font-semibold'
+                          }`}
+                        >
+                          {tab.label}
+                          {orderCounts[tab.id] > 0 && (
+                            <span className="ml-1 text-xs text-gray-400 font-normal">
+                              ({orderCounts[tab.id]})
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* PILL SEARCH INPUT */}
+                  <div className="relative w-full md:w-72">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Item name / Order ID / Tracking No."
+                      className="w-full pl-3.5 pr-8 py-2 rounded-full border border-gray-200 text-xs text-gray-800 outline-none focus:border-[#FA5400] transition-colors placeholder:text-gray-400 shadow-2xs"
+                    />
+                    <FiSearch className="absolute right-3 top-2.5 text-gray-400 w-3.5 h-3.5" />
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">No orders yet</h3>
-                <p className="text-gray-500 mb-6">Looks like you haven&apos;t placed any orders. Let&apos;s get some fresh produce!</p>
-                <Link href="/products" className="bg-[#1A4331] text-white font-bold py-3 px-8 rounded-lg hover:bg-[#123122] transition-colors shadow-md">
-                  Start Shopping
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {orders.map((order) => {
-                  const isDelivered = order.delivery_status === 'Delivered';
-                  return (
-                    <div key={order.id} className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow border border-gray-100 overflow-hidden">
-                      
-                      {/* Order Header */}
-                      <div className="bg-gray-50/50 p-5 md:p-6 border-b border-gray-100 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-                        <div>
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Order Placed</p>
-                          <p className="text-sm font-medium text-gray-800 flex items-center gap-2">
-                            <FiClock className="text-gray-400" /> {formatDate(order.created_at)}
-                          </p>
-                        </div>
-                        <div className="md:text-right">
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Tracking ID</p>
-                          <p className="font-mono font-bold text-[#1A4331]">{order.tracking_number}</p>
-                        </div>
-                      </div>
 
-                      {/* Order Items */}
-                      <div className="p-5 md:p-6">
-                        <div className="flex flex-col gap-3">
-                          {(order.order_items || []).map((item) => (
-                            <div key={item.id} className="flex justify-between items-center text-sm py-2 border-b border-gray-50 last:border-0 last:pb-0">
-                              <div className="flex items-center gap-3">
-                                <span className="bg-gray-100 text-gray-600 font-bold px-2 py-1 rounded text-xs">{item.quantity}x</span>
-                                <span className="font-bold text-gray-800">{item.product_name}</span>
-                                <span className="text-[10px] font-bold uppercase bg-green-50 text-green-700 px-1.5 py-0.5 rounded hidden sm:inline-block">
-                                  {item.purchase_type}
-                                </span>
-                              </div>
-                              <span className="font-bold text-gray-900">{formatNaira(item.price_at_purchase * item.quantity)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                {/* TEMU GREEN GUARANTEE RIBBON BANNER */}
+                <button
+                  type="button"
+                  onClick={() => setIsGuaranteeOpen(true)}
+                  className="w-full text-left bg-[#F4FAF6] border border-[#CDEBD8] hover:border-emerald-400 rounded-xl px-4 py-2.5 text-xs text-emerald-900 flex items-center justify-between gap-3 transition-colors cursor-pointer shadow-2xs"
+                >
+                  <div className="flex items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap">
+                    <FiShield className="text-emerald-700 w-4 h-4 flex-shrink-0" />
+                    <span className="font-extrabold text-emerald-800">Order guarantee</span>
+                    <span className="text-emerald-400">•</span>
+                    <span className="truncate text-emerald-700 font-medium">
+                      100% Farm Fresh Guarantee · Harvest Cold Packing · ₦1,500 Credit for delay · Replacement if damaged
+                    </span>
+                  </div>
+                  <span className="text-emerald-700 font-bold text-xs flex-shrink-0">
+                    ›
+                  </span>
+                </button>
 
-                      {/* Order Footer */}
-                      <div className="bg-gray-50/50 p-5 md:p-6 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <div className="flex items-center gap-3 w-full sm:w-auto">
-                          <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wide border ${
-                            isDelivered ? 'bg-green-50 text-green-700 border-green-200' : 'bg-blue-50 text-blue-700 border-blue-200'
-                          }`}>
-                            {isDelivered ? <FiCheckCircle className="text-sm" /> : <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>}
-                            {order.delivery_status || 'Processing'}
-                          </span>
-                          <span className={`px-3 py-1.5 rounded-md text-xs font-bold uppercase tracking-wide border ${
-                            order.payment_status === 'paid' ? 'bg-gray-100 text-gray-700 border-gray-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                          }`}>
-                            {order.payment_status}
-                          </span>
-                        </div>
-                        <div className="w-full sm:w-auto text-right flex justify-between sm:block items-center">
-                          <span className="text-gray-500 text-sm font-medium sm:hidden">Total</span>
-                          <span className="text-xl font-black text-gray-900">{formatNaira(order.total_amount)}</span>
-                        </div>
-                      </div>
-
+                {/* ORDERS LIST */}
+                {filteredOrders.length === 0 ? (
+                  <div className="bg-white p-12 md:p-16 rounded-2xl text-center border border-gray-100 shadow-2xs flex flex-col items-center justify-center">
+                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mb-3">
+                      <FiPackage className="w-8 h-8" />
                     </div>
-                  );
-                })}
+                    <h3 className="text-base font-bold text-gray-900">
+                      {searchQuery ? 'No matching orders found' : 'No orders in this category'}
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-1 mb-5 max-w-sm">
+                      {searchQuery
+                        ? 'Try searching with another item name or tracking number.'
+                        : 'Explore our catalog for farm-fresh produce picked right from harvest.'}
+                    </p>
+                    <Link
+                      href="/products"
+                      className="bg-[#FA5400] hover:bg-[#E04B00] text-white text-xs font-bold py-2.5 px-6 rounded-full transition-colors shadow-xs"
+                    >
+                      Start Shopping
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {filteredOrders.map((order) => (
+                      <TemuOrderCard
+                        key={order.id}
+                        order={order}
+                        productsMap={productsMap}
+                        onTrackOrder={(o) => setTrackingOrder(o)}
+                        onViewDetails={(o) => setDetailsOrder(o)}
+                        onLeaveReview={(o) => setReviewOrder(o)}
+                        onReturnRefund={(o) => setRefundOrder(o)}
+                        onBuyAgain={handleBuyAgain}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* =====================================================
+                    CAN'T FIND YOUR ORDER? (ASSISTANCE BOTTOM CARDS)
+                ===================================================== */}
+                <div className="pt-4">
+                  <h3 className="text-xs font-bold text-gray-700 mb-2">Can&apos;t find your order?</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <a
+                      href="https://wa.me/2348004463276?text=Hello%20GGN%20Farm%20Desk,%20I%20need%20help%20locating%20my%20order."
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-4 rounded-xl border border-orange-200/80 bg-white hover:bg-orange-50/30 flex items-center justify-between text-xs transition-colors group cursor-pointer shadow-2xs"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <FiMessageCircle className="w-4 h-4 text-[#FA5400]" />
+                        <span className="font-semibold text-gray-800">
+                          WhatsApp Farm Dispatch Desk
+                        </span>
+                      </div>
+                      <span className="text-[#FA5400] font-black group-hover:translate-x-0.5 transition-transform">
+                        ›
+                      </span>
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsGuaranteeOpen(true)}
+                      className="p-4 rounded-xl border border-orange-200/80 bg-white hover:bg-orange-50/30 flex items-center justify-between text-xs transition-colors group cursor-pointer shadow-2xs text-left"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <FiShield className="w-4 h-4 text-[#FA5400]" />
+                        <span className="font-semibold text-gray-800">
+                          Self-service farm guarantee & tracking
+                        </span>
+                      </div>
+                      <span className="text-[#FA5400] font-black group-hover:translate-x-0.5 transition-transform">
+                        ›
+                      </span>
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
-          </div>
-        )}
 
-        {/* --- TAB CONTENT: PROFILE & DELIVERY --- */}
-        {activeTab === 'profile' && (
-          <div role="tabpanel" aria-labelledby="profile-tab" className="bg-white p-6 md:p-10 rounded-2xl shadow-sm border border-gray-100 animate-fade-in">
-            <h2 className="text-2xl font-black text-gray-900 mb-6">Personal Information</h2>
-            
-            {profileMessage && (
-              <div className={`p-4 mb-8 rounded-lg text-sm font-medium flex items-center gap-2 ${profileMessage.type === 'error' ? 'bg-red-50 text-red-700 border border-red-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>
-                {profileMessage.type === 'success' && <FiCheckCircle className="text-lg" />}
-                {profileMessage.text}
-              </div>
+            {/* =====================================================
+                SECTION: YOUR REVIEWS
+            ===================================================== */}
+            {activeSection === 'reviews' && (
+              <ReviewsView
+                orders={orders}
+                productsMap={productsMap}
+                onLeaveReview={(o) => setReviewOrder(o)}
+              />
             )}
 
-            <form onSubmit={handleUpdateProfile} className="space-y-6 text-black">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="firstName" className="block text-sm font-bold text-gray-700 mb-2">First Name</label>
-                  <input id="firstName" type="text" value={firstName} onChange={(e)=>setFirstName(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-[#1A4331] focus:ring-1 focus:ring-[#1A4331] outline-none transition-shadow" />
-                </div>
-                <div>
-                  <label htmlFor="lastName" className="block text-sm font-bold text-gray-700 mb-2">Last Name</label>
-                  <input id="lastName" type="text" value={lastName} onChange={(e)=>setLastName(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-[#1A4331] focus:ring-1 focus:ring-[#1A4331] outline-none transition-shadow" />
-                </div>
-              </div>
+            {/* =====================================================
+                SECTION: YOUR PROFILE
+            ===================================================== */}
+            {activeSection === 'profile' && (
+              <ProfileInfoView
+                firstName={firstName}
+                lastName={lastName}
+                userEmail={userEmail}
+                phone={phone}
+                onUpdateProfile={handleUpdateProfile}
+              />
+            )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="email" className="block text-sm font-bold text-gray-700 mb-2">Email Address</label>
-                  <input id="email" type="email" value={userEmail} readOnly aria-readonly="true" className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 outline-none cursor-not-allowed" />
-                  <p className="text-xs text-gray-400 mt-2 font-medium flex items-center gap-1"><FiShield /> Secured. Cannot be changed.</p>
-                </div>
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-bold text-gray-700 mb-2">Phone Number</label>
-                  <input id="phone" type="tel" value={phone} onChange={(e)=>setPhone(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-[#1A4331] focus:ring-1 focus:ring-[#1A4331] outline-none transition-shadow" />
-                </div>
-              </div>
+            {/* =====================================================
+                SECTION: ADDRESSES
+            ===================================================== */}
+            {activeSection === 'addresses' && (
+              <AddressesView
+                firstName={firstName}
+                lastName={lastName}
+                phone={phone}
+                address={address}
+                stateName={stateName}
+                lga={lga}
+                landmark={landmark}
+                onSaveAddress={handleSaveAddress}
+              />
+            )}
 
-              <div className="pt-8 mt-8 border-t border-gray-100">
-                <h3 className="text-xl font-black text-gray-900 mb-6">Default Delivery Address</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <label htmlFor="state" className="block text-sm font-bold text-gray-700 mb-2">State</label>
-                    <input id="state" type="text" value={stateName} onChange={(e)=>setStateName(e.target.value)} className="w-full px-4 py-3 border text-black border-gray-300 rounded-xl focus:border-[#1A4331] focus:ring-1 focus:ring-[#1A4331] outline-none transition-shadow" />
-                  </div>
-                  <div>
-                    <label htmlFor="lga" className="block text-sm font-bold text-gray-700 mb-2">LGA</label>
-                    <input id="lga" type="text" value={lga} onChange={(e)=>setLga(e.target.value)} className="w-full px-4 py-3 border text-black border-gray-300 rounded-xl focus:border-[#1A4331] focus:ring-1 focus:ring-[#1A4331] outline-none transition-shadow" />
-                  </div>
-                </div>
-                <div className="mb-6">
-                  <label htmlFor="address" className="block text-sm font-bold text-gray-700 mb-2">Street Address</label>
-                  <textarea id="address" rows={3} value={address} onChange={(e)=>setAddress(e.target.value)} className="w-full px-4 py-3 border text-black border-gray-300 rounded-xl focus:border-[#1A4331] focus:ring-1 focus:ring-[#1A4331] outline-none transition-shadow resize-none"></textarea>
-                </div>
-                <div>
-                  <label htmlFor="landmark" className="block text-sm font-bold text-gray-700 mb-2">Closest Landmark</label>
-                  <input id="landmark" type="text" value={landmark} onChange={(e)=>setLandmark(e.target.value)} className="w-full px-4 py-3 border text-black border-gray-300 rounded-xl focus:border-[#1A4331] focus:ring-1 focus:ring-[#1A4331] outline-none transition-shadow" />
-                </div>
-              </div>
+            {/* =====================================================
+                SECTION: COUNTRY & LANGUAGE
+            ===================================================== */}
+            {activeSection === 'country' && <CountryLanguageView />}
 
-              <div className="pt-4">
-                <button type="submit" disabled={updatingProfile} className="w-full md:w-auto bg-[#1A4331] text-white font-bold py-3.5 px-8 rounded-xl hover:bg-[#123122] transition-colors disabled:bg-gray-400 shadow-md">
-                  {updatingProfile ? 'Saving Changes...' : 'Save Profile Changes'}
-                </button>
-              </div>
-            </form>
+            {/* =====================================================
+                SECTION: ACCOUNT SECURITY
+            ===================================================== */}
+            {(activeSection === 'security' || activeSection === 'delete-account') && (
+              <SecurityView
+                onUpdatePassword={handleUpdatePassword}
+                onDeleteAccount={handleDeleteAccount}
+              />
+            )}
+
+            {/* =====================================================
+                SECTION: NOTIFICATIONS
+            ===================================================== */}
+            {activeSection === 'notifications' && <NotificationsView />}
           </div>
-        )}
-
-        {/* --- TAB CONTENT: SECURITY --- */}
-        {activeTab === 'security' && (
-          <div role="tabpanel" aria-labelledby="security-tab" className="space-y-8 animate-fade-in">
-            
-            {/* Change Password */}
-            <div className="bg-white p-6 md:p-10 rounded-2xl shadow-sm border border-gray-100">
-              <h2 className="text-2xl font-black text-gray-900 mb-2">Change Password</h2>
-              <p className="text-gray-500 mb-8 font-medium">Ensure your account is using a long, random password to stay secure.</p>
-              
-              {securityMessage && (
-                <div className={`p-4 mb-6 rounded-lg text-sm font-medium flex items-center gap-2 ${securityMessage.type === 'error' ? 'bg-red-50 text-red-700 border border-red-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>
-                  {securityMessage.type === 'success' && <FiCheckCircle className="text-lg" />}
-                  {securityMessage.text}
-                </div>
-              )}
-
-              <form onSubmit={handleUpdatePassword} className="space-y-6 max-w-md">
-                <div>
-                  <label htmlFor="newPassword" className="block text-sm font-bold text-gray-700 mb-2">New Password</label>
-                  <input id="newPassword" type="password" required minLength={6} value={newPassword} onChange={(e)=>setNewPassword(e.target.value)} className="w-full px-4 py-3 border text-black border-gray-300 rounded-xl focus:border-[#1A4331] focus:ring-1 focus:ring-[#1A4331] outline-none transition-shadow" placeholder="••••••••" />
-                </div>
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-bold text-gray-700 mb-2">Confirm New Password</label>
-                  <input id="confirmPassword" type="password" required minLength={6} value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} className="w-full px-4 py-3 border text-black border-gray-300 rounded-xl focus:border-[#1A4331] focus:ring-1 focus:ring-[#1A4331] outline-none transition-shadow" placeholder="••••••••" />
-                </div>
-                <button type="submit" disabled={updatingSecurity} className="w-full bg-[#1A4331] text-white font-bold py-3.5 px-8 rounded-xl hover:bg-[#123122] transition-colors disabled:bg-gray-400 shadow-md">
-                  {updatingSecurity ? 'Updating Password...' : 'Update Password'}
-                </button>
-              </form>
-            </div>
-
-            {/* Danger Zone */}
-            <div className="bg-red-50 p-6 md:p-10 rounded-2xl border border-red-200 shadow-sm">
-              <h2 className="text-2xl font-black text-red-800 mb-3">Danger Zone</h2>
-              <p className="text-red-700 text-sm mb-6 font-medium max-w-2xl leading-relaxed">
-                Deleting your account will remove your access to the platform immediately. 
-                Your past order history will be retained internally strictly for business compliance and accounting purposes.
-              </p>
-              <button 
-                onClick={handleDeleteAccount} 
-                className="bg-red-600 text-white font-bold py-3.5 px-8 rounded-xl hover:bg-red-700 transition-colors shadow-md border border-red-700"
-              >
-                Deactivate My Account
-              </button>
-            </div>
-          </div>
-        )}
-
+        </div>
       </div>
+
+      {/* =========================================================
+          INTERACTIVE MODALS
+      ========================================================= */}
+      <OrderTrackingModal
+        order={trackingOrder}
+        isOpen={Boolean(trackingOrder)}
+        onClose={() => setTrackingOrder(null)}
+      />
+
+      <OrderDetailsModal
+        order={detailsOrder}
+        productsMap={productsMap}
+        isOpen={Boolean(detailsOrder)}
+        onClose={() => setDetailsOrder(null)}
+      />
+
+      <ProduceReviewModal
+        order={reviewOrder}
+        isOpen={Boolean(reviewOrder)}
+        onClose={() => setReviewOrder(null)}
+      />
+
+      <ReturnRefundModal
+        order={refundOrder}
+        isOpen={Boolean(refundOrder)}
+        onClose={() => setRefundOrder(null)}
+      />
+
+      <FarmGuaranteeModal
+        isOpen={isGuaranteeOpen}
+        onClose={() => setIsGuaranteeOpen(false)}
+      />
     </main>
   );
 }

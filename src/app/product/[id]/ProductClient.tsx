@@ -10,6 +10,7 @@ import { formatNaira } from '@/utils/format';
 import { FEATURES } from '@/config/features';
 import { FiShare2, FiChevronDown, FiShoppingCart } from 'react-icons/fi';
 import QuickAddModal from '@/components/QuickAddModal';
+import ProductCard from '@/components/ProductCard';
 
 interface ProductClientProps {
   product: Product;
@@ -636,96 +637,17 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
             </div>
 
             {/* EXPANDED RESPONSIVE GRID */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
-              {relatedProducts.map((related) => {
-                const relatedDiscount =
-                  related.original_price && related.original_price > related.price_per_unit
-                    ? Math.round(
-                        (((related.original_price - related.price_per_unit) /
-                          related.original_price) *
-                          100)
-                      )
-                    : 0;
-
-                return (
-                  <Link
-                    key={related.id}
-                    href={`/product/${related.id}`}
-                    className="group cursor-pointer block bg-white rounded-2xl p-2 md:p-3 border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300"
-                  >
-                    {/* PRODUCT IMAGE CONTAINER */}
-                    <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-gray-50 mb-2.5">
-                      {related.image_url ? (
-                        <Image
-                          src={related.image_url}
-                          alt={related.name}
-                          fill
-                          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                          className="object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                          No Img
-                        </div>
-                      )}
-
-                      {/* DISCOUNT BADGE */}
-                      {relatedDiscount > 0 && (
-                        <div className="absolute top-2 left-2 bg-[#D93F3F] text-white text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded shadow-2xs z-10">
-                          -{relatedDiscount}%
-                        </div>
-                      )}
-
-                      {/* CATEGORY TAG */}
-                      <div className="absolute bottom-2 left-2 z-10">
-                        <span className="bg-black/60 backdrop-blur-xs text-white text-[8px] md:text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                          {related.category || 'Produce'}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* PRODUCT DETAILS */}
-                    <div className="flex items-start justify-between gap-1.5">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-xs md:text-sm text-gray-900 truncate group-hover:text-[#FA5400] transition-colors">
-                          {related.name}
-                        </p>
-
-                        <div className="flex items-baseline gap-1 mt-0.5 flex-wrap">
-                          <span className="font-black text-xs md:text-sm text-gray-900">
-                            {formatNaira(related.price_per_unit)}
-                            <span className="text-[9px] text-gray-500 font-medium">
-                              /{related.unit || 'kg'}
-                            </span>
-                          </span>
-
-                          {related.original_price &&
-                            related.original_price > related.price_per_unit && (
-                              <span className="text-[9px] text-gray-400 line-through">
-                                {formatNaira(related.original_price)}
-                              </span>
-                            )}
-                        </div>
-                      </div>
-
-                      {/* QUICK ADD BUTTON */}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setQuickAddProduct(related);
-                          setIsQuickAddOpen(true);
-                        }}
-                        aria-label={`Select options and add ${related.name} to cart`}
-                        className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gray-100 hover:bg-[#FA5400] text-gray-700 hover:text-white flex items-center justify-center transition-all duration-200 shadow-2xs flex-shrink-0 active:scale-90 cursor-pointer"
-                      >
-                        <FiShoppingCart className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </Link>
-                );
-              })}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+              {relatedProducts.map((related) => (
+                <ProductCard
+                  key={related.id}
+                  product={related}
+                  onQuickAdd={(p) => {
+                    setQuickAddProduct(p);
+                    setIsQuickAddOpen(true);
+                  }}
+                />
+              ))}
             </div>
           </div>
         )}

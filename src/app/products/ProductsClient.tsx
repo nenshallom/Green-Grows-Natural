@@ -9,6 +9,8 @@ import { Product } from '@/types';
 import { formatNaira } from '@/utils/format';
 import { FEATURES } from '@/config/features';
 import QuickAddModal from '@/components/QuickAddModal';
+import ProductCard from '@/components/ProductCard';
+import BulkProductCard from '@/components/BulkProductCard';
 
 interface ProductsClientProps {
   initialProducts: Product[];
@@ -58,6 +60,7 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
   // Quick Add Modal State
   const [modalProduct, setModalProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [quickAddMode, setQuickAddMode] = useState<'standard' | 'bulk'>('standard');
 
   // Save to memory for backward navigation
   useEffect(() => {
@@ -95,8 +98,9 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
     setCurrentPage(1); 
   };
 
-  const handleOpenQuickAdd = (product: Product) => {
+  const handleOpenQuickAdd = (product: Product, mode: 'standard' | 'bulk' = 'standard') => {
     setModalProduct(product);
+    setQuickAddMode(mode);
     setIsModalOpen(true);
   };
 
@@ -178,59 +182,22 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-12">
-                  {currentProducts.map((product) => {
-                    const discountPercent = product.original_price && product.original_price > product.price_per_unit 
-                      ? Math.round(((product.original_price - product.price_per_unit) / product.original_price) * 100) 
-                      : 0;
-
-                    return (
-                      <Link href={`/product/${product.id}`} key={product.id} className="relative rounded-2xl overflow-hidden group h-[260px] md:h-[300px] shadow-sm hover:shadow-lg transition-shadow bg-gray-100 block">
-                        
-                        {product.image_url && (
-                          <Image 
-                            src={product.image_url} 
-                            alt={product.name} 
-                            fill
-                            sizes="(max-width: 768px) 50vw, 33vw"
-                            className="object-cover group-hover:scale-105 transition-transform duration-700" 
-                          />
-                        )}
-
-                        {discountPercent > 0 && (
-                          <div className="absolute top-3 left-3 bg-[#D93F3F] text-white text-[10px] md:text-xs font-black px-2 py-1 rounded shadow-sm z-10">
-                            -{discountPercent}%
-                          </div>
-                        )}
-
-                        <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex justify-between items-end">
-                          <div className="text-white relative z-10">
-                            <h3 className="font-bold text-sm md:text-base leading-tight mb-0.5 drop-shadow-md truncate max-w-[120px]">
-                              {product.name}
-                            </h3>
-                            <p className="text-gray-300 text-[10px] uppercase tracking-wider font-semibold mb-1">
-                              Farm Fresh
-                            </p>
-                            <span className="font-black text-sm md:text-base text-white drop-shadow-md">
-                              {formatNaira(product.price_per_unit)}<span className="text-[10px] font-medium text-gray-300">/{product.unit || 'kg'}</span>
-                            </span>
-                          </div>
-
-                          <button 
-                            type="button"
-                            onClick={(e) => { 
-                              e.preventDefault(); 
-                              e.stopPropagation();
-                              handleOpenQuickAdd(product); 
-                            }}
-                            className="bg-[#286266] hover:bg-[#1A4331] text-white text-xs font-bold px-4 py-2 rounded shadow-md transition-colors relative z-10 cursor-pointer"
-                          >
-                            Add to Cart
-                          </button>
-                        </div>
-                      </Link>
-                    );
-                  })}
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4 md:gap-6 mb-12">
+                  {currentProducts.map((product) =>
+                    activeFilter === 'Bulk Buy' ? (
+                      <BulkProductCard
+                        key={product.id}
+                        product={product}
+                        onQuickAdd={(p) => handleOpenQuickAdd(p, 'bulk')}
+                      />
+                    ) : (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        onQuickAdd={(p) => handleOpenQuickAdd(p, 'standard')}
+                      />
+                    )
+                  )}
                 </div>
 
                 {/* PAGINATION */}
@@ -311,6 +278,7 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
           setIsModalOpen(false);
           setModalProduct(null);
         }}
+        initialMode={quickAddMode}
       />
     </div>
   );

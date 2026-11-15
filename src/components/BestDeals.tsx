@@ -1,12 +1,9 @@
 'use client';
 import { useState, useMemo, useRef, useEffect } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
 import { Product } from '@/types';
-import { formatNaira } from '@/utils/format';
-import { FEATURES } from '@/config/features';
-import { FiChevronLeft, FiChevronRight, FiShoppingCart } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import QuickAddModal from '@/components/QuickAddModal';
+import ProductCard from '@/components/ProductCard';
 
 interface BestDealsProps {
   products: Product[];
@@ -171,94 +168,14 @@ export default function BestDeals({ products }: BestDealsProps) {
           No products found in this category.
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 md:gap-6">
-          {visibleProducts.map((product) => {
-            const discountPercent =
-              product.original_price && product.original_price > product.price_per_unit
-                ? Math.round(
-                    ((product.original_price - product.price_per_unit) / product.original_price) *
-                      100
-                  )
-                : 0;
-
-            return (
-              <Link
-                key={product.id}
-                href={`/product/${product.id}`}
-                className="relative rounded-2xl overflow-hidden group h-[220px] md:h-[260px] shadow-sm hover:shadow-lg transition-shadow bg-gray-100 block"
-              >
-                {/* PRODUCT IMAGE */}
-                {product.image_url && (
-                  <Image
-                    src={product.image_url}
-                    alt={product.name}
-                    fill
-                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                    className="object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                )}
-
-                {/* DISCOUNT BADGE */}
-                {discountPercent > 0 && (
-                  <div className="absolute top-3 left-3 bg-[#D93F3F] text-white text-[10px] md:text-xs font-black px-2 py-1 rounded shadow-sm z-10">
-                    -{discountPercent}%
-                  </div>
-                )}
-
-                {/* BOTTOM OVERLAY */}
-                <div className="absolute bottom-0 left-0 w-full py-3.5 px-2.5 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex justify-between items-end">
-                  {/* TEXT DETAILS */}
-                  <div className="text-white w-[68%] relative z-10">
-                    <h3 className="font-bold text-sm md:text-base leading-tight mb-0.5 drop-shadow-md truncate">
-                      {product.name}
-                    </h3>
-
-                    {/* DYNAMIC PURCHASE OPTION BADGE */}
-                    {(product.is_bulk_buy_enabled ||
-                      (FEATURES.ENABLE_GROUP_BUY && product.is_group_buy_enabled)) && (
-                      <p className="text-gray-300 text-[8px] uppercase tracking-wider font-semibold mb-1 truncate">
-                        {product.is_bulk_buy_enabled &&
-                        FEATURES.ENABLE_GROUP_BUY &&
-                        product.is_group_buy_enabled
-                          ? 'Bulk & Group Buy Available'
-                          : product.is_bulk_buy_enabled
-                          ? 'Bulk Buy Available'
-                          : 'Group Buy Available'}
-                      </p>
-                    )}
-
-                    <div className="flex flex-col w-fit">
-                      <span className="font-black text-sm md:text-base text-white drop-shadow-md">
-                        {formatNaira(product.price_per_unit)}
-                        <span className="text-[10px] font-medium text-gray-300">
-                          /{product.unit || 'kg'}
-                        </span>
-                      </span>
-                      {product.original_price && product.original_price > product.price_per_unit && (
-                        <span className="text-[10px] text-gray-400 line-through">
-                          {formatNaira(product.original_price)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* CART ICON BUTTON (OPENS QUICK ADD MODAL) */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleOpenQuickAdd(product);
-                    }}
-                    aria-label={`Select quantity and options for ${product.name}`}
-                    className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white text-[#1A4331] hover:bg-[#1A4331] hover:text-white shadow-md flex items-center justify-center transition-all duration-200 border border-white/50 active:scale-90 relative z-10 cursor-pointer"
-                  >
-                    <FiShoppingCart className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  </button>
-                </div>
-              </Link>
-            );
-          })}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+          {visibleProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onQuickAdd={handleOpenQuickAdd}
+            />
+          ))}
         </div>
       )}
 

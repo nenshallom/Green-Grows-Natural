@@ -58,10 +58,11 @@ export default function Home() {
           )}
         </div>
 
+        
+        <Testimonials />
         <div id="faq">
           <FAQ />
         </div>
-        <Testimonials />
       </main>
     </div>
   );

@@ -205,7 +205,7 @@ export default function CartPage() {
           ========================================================= */}
           <div className="w-full lg:w-[67%] space-y-4">
             {/* INCENTIVE PROMOTIONAL BANNER */}
-            <div className="bg-[#EBF7EE] text-[#1A4331] border border-[#D5EED8] rounded-xl px-4 py-3 flex items-center justify-between text-xs font-semibold shadow-2xs">
+            {/* <div className="bg-[#EBF7EE] text-[#1A4331] border border-[#D5EED8] rounded-xl px-4 py-3 flex items-center justify-between text-xs font-semibold shadow-2xs">
               <div className="flex items-center gap-2">
                 <span className="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-black">
                   ✓
@@ -213,7 +213,7 @@ export default function CartPage() {
                 <span>Free shipping special for you</span>
               </div>
               <span className="text-gray-500 font-normal">Limited-time offer</span>
-            </div>
+            </div> */}
 
             {/* WHITE CART CONTAINER */}
             <div className="bg-white rounded-2xl p-4 md:p-6 shadow-2xs border border-gray-100">
@@ -600,12 +600,13 @@ export default function CartPage() {
                   Protecting your privacy is important to us. Your data is kept secure and never
                   shared with third parties.
                 </p>
-                <Link
+                {/* CONSIDER ADDING A PRIVACY TERMS PAGE */}
+                {/* <Link
                   href="/privacy"
                   className="text-[11px] font-bold text-gray-600 hover:text-gray-900 transition-colors"
                 >
                   Learn more ›
-                </Link>
+                </Link> */}
               </div>
             </div>
           </div>

@@ -38,15 +38,17 @@ export default function UpdatePasswordPage() {
     try {
       // Because they clicked the email link, Supabase knows who they are! We can securely update.
       const { error } = await supabase.auth.updateUser({ password: newPassword });
-      
       if (error) throw error;
-      
-      setMessage({ type: 'success', text: 'Password successfully updated! Redirecting to dashboard...' });
-      
-      // Send them to their dashboard after a short delay
+
+      const { data: { user } } = await supabase.auth.getUser();
+      const isAdmin = user?.app_metadata?.role === 'admin' || user?.user_metadata?.role === 'admin';
+
+      setMessage({ type: 'success', text: 'Password successfully updated! Redirecting...' });
+
+      // Send them to the appropriate portal (Admin Command Center or Customer Dashboard)
       setTimeout(() => {
-        router.push('/dashboard');
-      }, 2000);
+        router.push(isAdmin ? '/admin' : '/dashboard');
+      }, 1500);
 
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message });
