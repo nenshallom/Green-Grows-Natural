@@ -120,7 +120,8 @@ export default function Navbar() {
   };
 
   // --- SMART HIDE LOGIC ---
-  if (pathname.startsWith('/admin') || pathname.includes('login') || pathname.includes('checkout')) {
+  // Hide storefront navigation only on administrative routes
+  if (pathname.startsWith('/admin')) {
     return null;
   }
 

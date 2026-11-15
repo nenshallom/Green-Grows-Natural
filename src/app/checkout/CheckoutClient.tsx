@@ -412,10 +412,43 @@ export default function CheckoutPage() {
         return;
       }
 
+      // Automatically save / update default address metadata right when user triggers payment
+      const shouldSaveAsNewDefault = !hasSavedDefaultAddress && saveAsDefault;
+      const shouldUpdateExistingDefault = hasSavedDefaultAddress && updateDefaultAddress;
+
+      if (shouldSaveAsNewDefault || shouldUpdateExistingDefault) {
+        try {
+          await supabase.auth.updateUser({
+            data: {
+              default_address: address,
+              default_state: state,
+              default_lga: lga,
+              default_landmark: landmark,
+              phone_number: phone,
+              additional_phone: additionalPhone,
+            },
+          });
+
+          // Update local component state so the UI immediately reflects saved status
+          setHasSavedDefaultAddress(true);
+          setInitialAddressData({
+            address,
+            state,
+            lga,
+            landmark,
+            phone,
+          });
+          setSaveAsDefault(false);
+          setUpdateDefaultAddress(false);
+        } catch (metaErr) {
+          console.warn('Could not persist address metadata before payment:', metaErr);
+        }
+      }
+
       setIsProcessing(false);
       initializePayment({
         onSuccess: () => saveOrderToDatabase('paid', 'paystack'),
-        onClose: () => toast.info('Payment window closed.'),
+        onClose: () => toast.info('Payment window closed. Your delivery address has been saved.'),
       });
     } catch (error) {
       toast.error(`Checkout Verification Error: ${getErrorMessage(error)}`);
