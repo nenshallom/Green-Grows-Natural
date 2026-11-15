@@ -57,10 +57,10 @@ export default function OrderTrackingModal({ order, isOpen, onClose }: OrderTrac
     {
       title: isDelayed ? '⚠️ Logistics Delay (In Transit)' : 'Dispatched & On the Way',
       desc: isDelayed
-        ? 'Logistics delay noted. ₦1,500 Freshness Delay Credit activated.'
+        ? 'Logistics delay noted. Our farm dispatch team is actively expediting delivery.'
         : 'Handed to GGN Express Farm Logistics courier',
       time: isDelayed
-        ? 'In transit (delay compensation applied)'
+        ? 'In transit (dispatch update)'
         : isInTransit
         ? 'Out for delivery today'
         : isDelivered

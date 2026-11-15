@@ -11,8 +11,8 @@ interface TemuOrderCardProps {
   productsMap: Map<string, Product>;
   onTrackOrder: (order: Order) => void;
   onViewDetails: (order: Order) => void;
-  onLeaveReview: (order: Order) => void;
-  onReturnRefund: (order: Order) => void;
+  onLeaveReview?: (order: Order) => void;
+  onReturnRefund?: (order: Order) => void;
   onBuyAgain: (order: Order) => void;
 }
 
@@ -108,17 +108,17 @@ export default function TemuOrderCard({
         </div>
       </div>
 
-      {/* DELAY GUARANTEE ALERT BANNER */}
+      {/* DELAY ALERT BANNER */}
       {isDelayed && (
         <div className="px-5 py-2.5 bg-amber-50/80 border-b border-amber-200/70 text-xs text-amber-900 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
             <span className="text-sm">⚠️</span>
             <span className="font-semibold">
-              Logistics Notice: Transport delay encountered. <strong>₦1,500 Freshness Delay Credit</strong> has been activated for this order.
+              Logistics Notice: Transport delay encountered. Our farm dispatch team is actively expediting delivery.
             </span>
           </div>
           <span className="text-[11px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200">
-            Credit Active
+            Delay Update
           </span>
         </div>
       )}
@@ -175,8 +175,8 @@ export default function TemuOrderCard({
           </div>
         </div>
 
-        {/* TEMU 4-BUTTON ACTION STACK */}
-        <div className="w-full md:w-48 flex flex-col gap-2 flex-shrink-0">
+        {/* ACTION BUTTON STACK */}
+        <div className="w-full md:w-44 flex flex-col gap-2 flex-shrink-0">
           {/* 1. TRACK ORDER (SOLID ORANGE) */}
           <button
             type="button"
@@ -186,25 +186,7 @@ export default function TemuOrderCard({
             Track order
           </button>
 
-          {/* 2. LEAVE A REVIEW (OUTLINE ORANGE) */}
-          <button
-            type="button"
-            onClick={() => onLeaveReview(order)}
-            className="w-full bg-white hover:bg-orange-50/50 border border-orange-300 text-[#FA5400] text-xs md:text-sm font-bold py-2 px-4 rounded-full transition-all cursor-pointer active:scale-98"
-          >
-            Leave a review
-          </button>
-
-          {/* 3. RETURN / REFUND (OUTLINE GRAY) */}
-          <button
-            type="button"
-            onClick={() => onReturnRefund(order)}
-            className="w-full bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 hover:text-black text-xs md:text-sm font-semibold py-2 px-4 rounded-full transition-all cursor-pointer active:scale-98"
-          >
-            Return/Refund
-          </button>
-
-          {/* 4. BUY THIS AGAIN (OUTLINE GRAY) */}
+          {/* 2. BUY THIS AGAIN (OUTLINE GRAY) */}
           <button
             type="button"
             onClick={() => onBuyAgain(order)}

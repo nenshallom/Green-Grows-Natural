@@ -51,7 +51,7 @@ export default function FarmGuaranteeModal({ isOpen, onClose }: FarmGuaranteeMod
             <div>
               <h3 className="text-sm font-bold text-gray-900">Perishable Replacement Guarantee</h3>
               <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">
-                If produce arrives damaged, wilted, or below quality standards, notify our farm desk within 24 hours of delivery for an instant replacement or full credit refund.
+                If produce arrives damaged, wilted, or below quality standards, notify our farm desk within 24 hours of delivery for an instant replacement or refund.
               </p>
             </div>
           </div>
@@ -61,9 +61,9 @@ export default function FarmGuaranteeModal({ isOpen, onClose }: FarmGuaranteeMod
               <FiClock />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-gray-900">₦1,500 Freshness Delay Credit</h3>
+              <h3 className="text-sm font-bold text-gray-900">Priority Transit Tracking</h3>
               <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">
-                We value your time and freshness. If your scheduled delivery window is missed due to logistics, a ₦1,500 freshness credit is credited straight to your wallet.
+                We actively monitor transit schedules. If unexpected road delays occur, our logistics desk provides live updates and prioritizes prompt delivery.
               </p>
             </div>
           </div>

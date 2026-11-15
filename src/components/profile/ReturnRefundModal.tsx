@@ -67,7 +67,7 @@ export default function ReturnRefundModal({
           <p className="font-bold text-orange-900 mb-1">
             🌿 Perishable Farm Fresh Policy
           </p>
-          Because our harvests are perishable, items damaged during transit or not meeting harvest quality are backed by our <strong>24-hour instant replacement or credit refund</strong>.
+          Because our harvests are perishable, items damaged during transit or not meeting harvest quality are backed by our <strong>24-hour instant replacement or refund</strong>.
         </div>
 
         {/* FAST ACTIONS */}

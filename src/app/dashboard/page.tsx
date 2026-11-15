@@ -400,7 +400,7 @@ export default function DashboardPage() {
                     <span className="font-extrabold text-emerald-800">Order guarantee</span>
                     <span className="text-emerald-400">•</span>
                     <span className="truncate text-emerald-700 font-medium">
-                      100% Farm Fresh Guarantee · Harvest Cold Packing · ₦1,500 Credit for delay · Replacement if damaged
+                      100% Farm Fresh Guarantee · Harvest Cold Packing · Prompt Dispatch · Replacement if damaged
                     </span>
                   </div>
                   <span className="text-emerald-700 font-bold text-xs flex-shrink-0">
