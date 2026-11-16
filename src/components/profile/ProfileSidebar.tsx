@@ -100,13 +100,13 @@ export default function ProfileSidebar({
                     }}
                     className={`w-full flex items-center justify-between text-left text-xs py-2 px-2.5 rounded-lg transition-all cursor-pointer ${
                       isSelected
-                        ? 'text-[#FA5400] font-bold bg-orange-50/70 border-l-2 border-[#FA5400]'
-                        : 'text-gray-600 hover:text-black hover:bg-gray-50'
+                        ? 'text-[#0F3024] font-semibold bg-[#FAFAFA] border-l-2 border-[#0F3024]'
+                        : 'text-[#718096] hover:text-[#2D3748] hover:bg-[#FAFAFA]'
                     }`}
                   >
                     <span>{sub.label}</span>
                     {orderCounts[sub.id] > 0 && (
-                      <span className="text-[10px] text-gray-400 font-semibold">
+                      <span className="text-[10px] text-[#718096] font-medium">
                         ({orderCounts[sub.id]})
                       </span>
                     )}
@@ -123,13 +123,13 @@ export default function ProfileSidebar({
         <button
           type="button"
           onClick={() => onSelectSection('reviews')}
-          className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold transition-colors cursor-pointer ${
+          className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-medium transition-colors cursor-pointer ${
             activeSection === 'reviews'
-              ? 'text-[#FA5400] bg-orange-50/70'
-              : 'text-gray-700 hover:bg-gray-50'
+              ? 'text-[#0F3024] bg-[#FAFAFA] font-semibold'
+              : 'text-[#2D3748] hover:bg-[#FAFAFA]'
           }`}
         >
-          <FiStar className="w-4 h-4 text-gray-500" />
+          <FiStar className="w-4 h-4 text-[#718096]" />
           <span>Your reviews</span>
         </button>
 
@@ -139,13 +139,13 @@ export default function ProfileSidebar({
         <button
           type="button"
           onClick={() => onSelectSection('profile')}
-          className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold transition-colors cursor-pointer ${
+          className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-medium transition-colors cursor-pointer ${
             activeSection === 'profile'
-              ? 'text-[#FA5400] bg-orange-50/70'
-              : 'text-gray-700 hover:bg-gray-50'
+              ? 'text-[#0F3024] bg-[#FAFAFA] font-semibold'
+              : 'text-[#2D3748] hover:bg-[#FAFAFA]'
           }`}
         >
-          <FiUser className="w-4 h-4 text-gray-500" />
+          <FiUser className="w-4 h-4 text-[#718096]" />
           <span>Your profile</span>
         </button>
 
@@ -155,13 +155,13 @@ export default function ProfileSidebar({
         <button
           type="button"
           onClick={() => onSelectSection('addresses')}
-          className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold transition-colors cursor-pointer ${
+          className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-medium transition-colors cursor-pointer ${
             activeSection === 'addresses'
-              ? 'text-[#FA5400] bg-orange-50/70'
-              : 'text-gray-700 hover:bg-gray-50'
+              ? 'text-[#0F3024] bg-[#FAFAFA] font-semibold'
+              : 'text-[#2D3748] hover:bg-[#FAFAFA]'
           }`}
         >
-          <FiMapPin className="w-4 h-4 text-gray-500" />
+          <FiMapPin className="w-4 h-4 text-[#718096]" />
           <span>Addresses</span>
         </button>
 
@@ -171,13 +171,13 @@ export default function ProfileSidebar({
         <button
           type="button"
           onClick={() => onSelectSection('country')}
-          className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold transition-colors cursor-pointer ${
+          className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-medium transition-colors cursor-pointer ${
             activeSection === 'country'
-              ? 'text-[#FA5400] bg-orange-50/70'
-              : 'text-gray-700 hover:bg-gray-50'
+              ? 'text-[#0F3024] bg-[#FAFAFA] font-semibold'
+              : 'text-[#2D3748] hover:bg-[#FAFAFA]'
           }`}
         >
-          <FiGlobe className="w-4 h-4 text-gray-500" />
+          <FiGlobe className="w-4 h-4 text-[#718096]" />
           <span>Country & Language</span>
         </button>
 
@@ -191,32 +191,32 @@ export default function ProfileSidebar({
               onSelectSection('security');
               setIsSecurityExpanded(!isSecurityExpanded);
             }}
-            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold transition-colors cursor-pointer ${
+            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-medium transition-colors cursor-pointer ${
               activeSection === 'security' || activeSection === 'delete-account'
-                ? 'text-gray-900 bg-gray-50'
-                : 'text-gray-700 hover:bg-gray-50'
+                ? 'text-[#2D3748] bg-[#FAFAFA] font-semibold'
+                : 'text-[#2D3748] hover:bg-[#FAFAFA]'
             }`}
           >
             <div className="flex items-center gap-2.5">
-              <FiShield className="w-4 h-4 text-gray-500" />
+              <FiShield className="w-4 h-4 text-[#718096]" />
               <span>Account security</span>
             </div>
             {isSecurityExpanded ? (
-              <FiChevronDown className="w-4 h-4 text-gray-400" />
+              <FiChevronDown className="w-4 h-4 text-[#718096]" />
             ) : (
-              <FiChevronRight className="w-4 h-4 text-gray-400" />
+              <FiChevronRight className="w-4 h-4 text-[#718096]" />
             )}
           </button>
 
           {isSecurityExpanded && (
-            <div className="ml-4 pl-3 border-l-2 border-gray-100 my-1 space-y-0.5">
+            <div className="ml-4 pl-3 border-l-2 border-[#E2E8F0] my-1 space-y-0.5">
               <button
                 type="button"
                 onClick={() => onSelectSection('security')}
                 className={`w-full text-left text-xs py-2 px-2.5 rounded-lg transition-all cursor-pointer ${
                   activeSection === 'security'
-                    ? 'text-[#FA5400] font-bold bg-orange-50/70'
-                    : 'text-gray-600 hover:text-black hover:bg-gray-50'
+                    ? 'text-[#0F3024] font-semibold bg-[#FAFAFA]'
+                    : 'text-[#718096] hover:text-[#2D3748] hover:bg-[#FAFAFA]'
                 }`}
               >
                 Account Info & Security
@@ -226,8 +226,8 @@ export default function ProfileSidebar({
                 onClick={() => onSelectSection('delete-account')}
                 className={`w-full text-left text-xs py-2 px-2.5 rounded-lg transition-all cursor-pointer ${
                   activeSection === 'delete-account'
-                    ? 'text-red-600 font-bold bg-red-50'
-                    : 'text-gray-600 hover:text-red-600 hover:bg-gray-50'
+                    ? 'text-[#C05E44] font-semibold bg-red-50/50'
+                    : 'text-[#718096] hover:text-[#C05E44] hover:bg-[#FAFAFA]'
                 }`}
               >
                 Delete your GGN account
@@ -242,13 +242,13 @@ export default function ProfileSidebar({
         <button
           type="button"
           onClick={() => onSelectSection('notifications')}
-          className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold transition-colors cursor-pointer ${
+          className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-medium transition-colors cursor-pointer ${
             activeSection === 'notifications'
-              ? 'text-[#FA5400] bg-orange-50/70'
-              : 'text-gray-700 hover:bg-gray-50'
+              ? 'text-[#0F3024] bg-[#FAFAFA] font-semibold'
+              : 'text-[#2D3748] hover:bg-[#FAFAFA]'
           }`}
         >
-          <FiBell className="w-4 h-4 text-gray-500" />
+          <FiBell className="w-4 h-4 text-[#718096]" />
           <span>Notifications</span>
         </button>
 

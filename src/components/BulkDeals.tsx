@@ -27,27 +27,27 @@ export default function BulkDeals({ products }: { products: Product[] }) {
   };
 
   return (
-    <section className="w-full mt-16 mb-12">
+    <section id="bulk-deals" className="w-full my-20 md:my-24 scroll-mt-28">
       {/* HEADER & VIEW ALL LINK */}
-      <div className="flex justify-between items-end mb-6">
+      <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-xl md:text-3xl font-black text-[#1A4331] tracking-tight">
-            Bulk Purchase Deals for You!
+          <h2 className="text-2xl md:text-3xl font-medium text-[#0F3024] tracking-[-0.5px] font-display">
+            Bulk Purchase Deals for You
           </h2>
-          <p className="text-xs md:text-sm text-gray-500 font-medium mt-0.5">
+          <p className="text-xs md:text-sm text-[#718096] font-normal mt-1 font-sans">
             Direct wholesale prices on farm harvests when ordering in batch quantities
           </p>
         </div>
         <Link
           href="/products?filter=Bulk+Buy"
-          className="text-xs md:text-sm font-bold text-gray-700 bg-white border border-gray-200 rounded-full px-4 py-2 hover:bg-gray-50 transition-colors flex items-center gap-1 shadow-xs flex-shrink-0"
+          className="text-xs md:text-sm font-semibold text-[#2D3748] bg-white border border-[#E2E8F0] rounded-full px-5 py-2 hover:border-[#0F3024] hover:text-[#0F3024] transition-colors flex items-center gap-1 shadow-2xs flex-shrink-0 font-sans cursor-pointer"
         >
-          View All <span className="text-lg leading-none">↗</span>
+          View All <span className="text-base leading-none">↗</span>
         </Link>
       </div>
 
-      {/* RESPONSIVE TEMU-STYLE BULK PRODUCT GRID */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+      {/* RESPONSIVE BULK PRODUCT GRID (24PX TO 32PX GAPS) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
         {bulkProducts.slice(0, 8).map((product) => (
           <BulkProductCard
             key={product.id}

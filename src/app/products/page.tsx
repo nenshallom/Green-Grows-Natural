@@ -19,8 +19,8 @@ export default async function ProductsCatalogPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#1A4331]"></div>
+        <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0F3024]"></div>
         </div>
       }
     >

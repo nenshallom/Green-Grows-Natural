@@ -79,7 +79,7 @@ export default function TemuOrderCard({
         <button
           type="button"
           onClick={() => onViewDetails(order)}
-          className="text-xs md:text-sm font-semibold text-gray-500 hover:text-[#FA5400] transition-colors flex items-center gap-0.5 cursor-pointer"
+          className="text-xs md:text-sm font-medium text-[#718096] hover:text-[#0F3024] transition-colors flex items-center gap-0.5 cursor-pointer font-sans"
         >
           View order details <FiChevronRight className="w-3.5 h-3.5" />
         </button>
@@ -176,21 +176,21 @@ export default function TemuOrderCard({
         </div>
 
         {/* ACTION BUTTON STACK */}
-        <div className="w-full md:w-44 flex flex-col gap-2 flex-shrink-0">
-          {/* 1. TRACK ORDER (SOLID ORANGE) */}
+        <div className="w-full md:w-44 flex flex-col gap-2 flex-shrink-0 font-sans">
+          {/* 1. TRACK ORDER */}
           <button
             type="button"
             onClick={() => onTrackOrder(order)}
-            className="w-full bg-[#FA5400] hover:bg-[#E04B00] text-white text-xs md:text-sm font-bold py-2.5 px-4 rounded-full transition-all shadow-xs cursor-pointer active:scale-98"
+            className="w-full bg-[#0F3024] hover:bg-[#153426] text-white text-xs md:text-sm font-medium py-2.5 px-4 rounded-full transition-all shadow-xs cursor-pointer active:scale-98"
           >
             Track order
           </button>
 
-          {/* 2. BUY THIS AGAIN (OUTLINE GRAY) */}
+          {/* 2. BUY THIS AGAIN */}
           <button
             type="button"
             onClick={() => onBuyAgain(order)}
-            className="w-full bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 hover:text-black text-xs md:text-sm font-semibold py-2 px-4 rounded-full transition-all cursor-pointer active:scale-98"
+            className="w-full bg-white hover:bg-[#FAFAFA] border border-[#E2E8F0] text-[#2D3748] hover:border-[#0F3024] text-xs md:text-sm font-medium py-2 px-4 rounded-full transition-all cursor-pointer active:scale-98"
           >
             Buy this again
           </button>

@@ -711,18 +711,18 @@ export default function CheckoutPage() {
                   )}
 
                   {hasSavedDefaultAddress && isAddressModified && (
-                    <label className="mt-2 flex items-start gap-3 p-3.5 rounded-xl bg-orange-50/70 border border-orange-200 cursor-pointer transition-colors group">
+                    <label className="mt-2 flex items-start gap-3 p-3.5 rounded-xl bg-[#FAFAFA] border border-[#E2E8F0] cursor-pointer transition-colors group">
                       <input
                         type="checkbox"
                         checked={updateDefaultAddress}
                         onChange={(e) => setUpdateDefaultAddress(e.target.checked)}
-                        className="mt-0.5 rounded text-[#FA5400] focus:ring-orange-500 w-4 h-4 cursor-pointer"
+                        className="mt-0.5 rounded text-[#0F3024] focus:ring-[#0F3024] w-4 h-4 cursor-pointer"
                       />
                       <div className="text-xs">
-                        <span className="font-bold text-orange-950 block">
+                        <span className="font-medium text-[#2D3748] block">
                           Update my saved default delivery address
                         </span>
-                        <span className="text-orange-800 text-[11px] leading-relaxed">
+                        <span className="text-[#718096] text-[11px] leading-relaxed">
                           Save these modified details as your new default delivery address for future farm orders.
                         </span>
                       </div>
@@ -873,10 +873,10 @@ export default function CheckoutPage() {
                 {/* GRAND TOTAL */}
                 <div className="border-t border-gray-200 pt-3 flex justify-between items-baseline">
                   <div>
-                    <span className="text-sm font-black text-gray-900 block">Total Due</span>
-                    <span className="text-[10px] text-gray-400">All taxes included</span>
+                    <span className="text-sm font-medium font-display text-[#2D3748] block">Total Due</span>
+                    <span className="text-[10px] text-[#718096]">All taxes included</span>
                   </div>
-                  <span className="text-2xl font-black text-emerald-800">
+                  <span className="text-2xl font-semibold text-[#C05E44] font-sans">
                     {formatNaira(activeCartTotal)}
                   </span>
                 </div>
@@ -888,7 +888,7 @@ export default function CheckoutPage() {
                   type="submit"
                   form="checkout-form"
                   disabled={isProcessing || activeItemCount === 0}
-                  className="w-full bg-[#1A4331] hover:bg-[#123122] disabled:bg-gray-300 text-white font-extrabold py-3.5 px-6 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-98 cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                  className="w-full bg-[#0F3024] hover:bg-[#153426] disabled:bg-gray-300 text-white font-medium py-3.5 px-6 rounded-full transition-all shadow-xs hover:shadow-md active:scale-98 cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm font-sans"
                 >
                   {isProcessing ? (
                     <>
@@ -905,20 +905,20 @@ export default function CheckoutPage() {
               </div>
 
               {/* GUARANTEE TRUST FOOTER */}
-              <div className="mt-4 pt-4 border-t border-gray-100 space-y-2 text-[11px] text-gray-500">
-                <div className="flex items-center gap-2 text-emerald-800 font-semibold">
-                  <FiTruck className="w-3.5 h-3.5 text-emerald-700 flex-shrink-0" />
+              <div className="mt-4 pt-4 border-t border-[#E2E8F0] space-y-2 text-[11px] text-[#718096] font-sans">
+                <div className="flex items-center gap-2 text-[#0F3024] font-medium">
+                  <FiTruck className="w-3.5 h-3.5 text-[#0F3024] flex-shrink-0" />
                   <span>Harvest-to-door temperature controlled transit</span>
                 </div>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <FiShield className="w-3.5 h-3.5 text-emerald-700 flex-shrink-0" />
+                <div className="flex items-center gap-2 text-[#718096]">
+                  <FiShield className="w-3.5 h-3.5 text-[#0F3024] flex-shrink-0" />
                   <span>24-Hour Perishable Replacement Guarantee</span>
                 </div>
-                <div className="flex items-center gap-2 text-gray-500 pt-1">
+                <div className="flex items-center gap-2 text-[#718096] pt-1">
                   <span>Courier Dispatch Hotline:</span>
                   <a
                     href="tel:+2348004463276"
-                    className="font-bold text-orange-600 hover:underline"
+                    className="font-medium text-[#0F3024] hover:underline"
                   >
                     0800-GGN-FARM
                   </a>
@@ -934,20 +934,20 @@ export default function CheckoutPage() {
         <section className="mt-12 pt-10 border-t border-gray-200/80">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
             <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-[#FA5400] text-[11px] font-black uppercase tracking-wider mb-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAFAFA] border border-[#E2E8F0] text-[#0F3024] text-[11px] font-medium uppercase tracking-[1.5px] font-display mb-2">
                 <span>🌾 Last-Minute Harvest Additions</span>
               </div>
-              <h2 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">
+              <h2 className="text-xl md:text-2xl font-medium font-display text-[#2D3748] tracking-tight">
                 Complete Your Farm Basket Before Paying
               </h2>
-              <p className="text-xs md:text-sm text-gray-500 mt-1 max-w-xl leading-relaxed">
+              <p className="text-xs md:text-sm text-[#718096] mt-1 max-w-xl leading-relaxed font-sans">
                 Picked fresh daily from our partner farms. Add complementary vegetables, tubers, fruits, or grains to your dispatch with a single tap before completing your order.
               </p>
             </div>
 
             <Link
               href="/products"
-              className="text-xs font-bold text-emerald-800 hover:text-emerald-900 hover:underline flex items-center gap-1 self-start sm:self-auto"
+              className="text-xs font-medium text-[#0F3024] hover:underline flex items-center gap-1 self-start sm:self-auto font-sans"
             >
               <span>Explore full catalog</span>
               <span>›</span>
@@ -1008,14 +1008,14 @@ export default function CheckoutPage() {
 
                         {/* DISCOUNT TAG */}
                         {discount > 0 && (
-                          <div className="absolute top-2 left-2 bg-[#D93F3F] text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow-2xs">
+                          <div className="absolute top-2 left-2 bg-[#C05E44] text-white text-[9px] font-semibold px-2 py-0.5 rounded-full font-sans">
                             -{discount}%
                           </div>
                         )}
 
                         {/* IN-CART BADGE */}
                         {inCartQty > 0 && (
-                          <div className="absolute bottom-2 right-2 bg-emerald-800/90 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-2xs backdrop-blur-xs flex items-center gap-1">
+                          <div className="absolute bottom-2 right-2 bg-[#0F3024] text-white text-[10px] font-medium px-2.5 py-0.5 rounded-full shadow-2xs backdrop-blur-xs flex items-center gap-1 font-display">
                             <FiCheck className="w-3 h-3 text-emerald-300" />
                             <span>{inCartQty} in order</span>
                           </div>
@@ -1023,7 +1023,7 @@ export default function CheckoutPage() {
                       </div>
 
                       {/* CATEGORY & TITLE */}
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-0.5 truncate">
+                      <span className="text-[10px] font-medium uppercase tracking-[1.5px] text-[#718096] block mb-0.5 truncate font-display">
                         {p.category}
                       </span>
                       <h3
@@ -1031,19 +1031,19 @@ export default function CheckoutPage() {
                           setQuickAddProduct(p);
                           setIsQuickAddOpen(true);
                         }}
-                        className="text-xs md:text-sm font-bold text-gray-900 truncate mb-1 hover:text-emerald-800 cursor-pointer"
+                        className="text-xs md:text-sm font-medium font-display text-[#2D3748] truncate mb-1 hover:text-[#0F3024] cursor-pointer"
                         title={p.name}
                       >
                         {p.name}
                       </h3>
 
                       {/* PRICING */}
-                      <div className="flex items-baseline gap-1.5 mb-3">
-                        <span className="text-xs md:text-sm font-extrabold text-[#1A4331]">
+                      <div className="flex items-baseline gap-1.5 mb-3 font-sans">
+                        <span className="text-xs md:text-sm font-semibold text-[#C05E44]">
                           {formatNaira(p.price_per_unit)}
                         </span>
                         {p.original_price && p.original_price > p.price_per_unit && (
-                          <span className="text-[11px] text-gray-400 line-through">
+                          <span className="text-[11px] text-[#718096] line-through">
                             {formatNaira(p.original_price)}
                           </span>
                         )}
@@ -1056,7 +1056,7 @@ export default function CheckoutPage() {
                         <button
                           type="button"
                           onClick={(e) => handleQuickAddProduct(p, e)}
-                          className="w-full bg-[#1A4331] hover:bg-[#123122] text-white text-xs font-bold py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-2xs active:scale-98 cursor-pointer"
+                          className="w-full bg-[#0F3024] hover:bg-[#153426] text-white text-xs font-medium py-2.5 px-3 rounded-full transition-all flex items-center justify-center gap-1.5 shadow-2xs active:scale-98 cursor-pointer font-sans"
                         >
                           <FiPlus className="w-3.5 h-3.5" />
                           <span>Add to Order</span>
@@ -1065,9 +1065,9 @@ export default function CheckoutPage() {
                         <button
                           type="button"
                           onClick={(e) => handleQuickAddProduct(p, e)}
-                          className="w-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 text-xs font-bold py-2.5 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-2xs active:scale-98 cursor-pointer"
+                          className="w-full bg-[#FAFAFA] hover:bg-emerald-50 border border-[#E2E8F0] text-[#0F3024] text-xs font-medium py-2.5 px-3 rounded-full transition-all flex items-center justify-center gap-1.5 shadow-2xs active:scale-98 cursor-pointer font-sans"
                         >
-                          <FiCheck className="w-3.5 h-3.5 text-emerald-600" />
+                          <FiCheck className="w-3.5 h-3.5 text-[#0F3024]" />
                           <span>Added ({inCartQty}x) · +1 More</span>
                         </button>
                       )}
@@ -1080,7 +1080,7 @@ export default function CheckoutPage() {
                             setQuickAddProduct(p);
                             setIsQuickAddOpen(true);
                           }}
-                          className="w-full text-center text-[10px] text-orange-600 hover:text-orange-700 font-bold hover:underline py-0.5 cursor-pointer"
+                          className="w-full text-center text-[10px] text-[#0F3024] hover:underline py-0.5 cursor-pointer font-sans"
                         >
                           Bulk harvest available ›
                         </button>
@@ -1093,16 +1093,16 @@ export default function CheckoutPage() {
           )}
 
           {/* BOTTOM QUICK JUMP-TO-PAYMENT SUMMARY CARD */}
-          <div className="mt-8 p-4 md:p-5 rounded-2xl bg-white border border-gray-200/80 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="mt-8 p-4 md:p-5 rounded-3xl bg-white border border-[#E2E8F0] shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-lg flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-[#FAFAFA] text-[#0F3024] border border-[#E2E8F0] flex items-center justify-center font-medium text-lg flex-shrink-0">
                 <FiPackage />
               </div>
               <div>
-                <p className="text-xs text-gray-500 font-medium">
+                <p className="text-xs text-[#718096] font-normal font-sans">
                   Current Order Total ({activeItemCount} {activeItemCount === 1 ? 'item' : 'items'}):
                 </p>
-                <p className="text-xl font-black text-emerald-800">
+                <p className="text-xl font-semibold text-[#C05E44] font-sans">
                   {formatNaira(activeCartTotal)}
                 </p>
               </div>
@@ -1116,7 +1116,7 @@ export default function CheckoutPage() {
                   formElement.scrollIntoView({ behavior: 'smooth' });
                 }
               }}
-              className="w-full sm:w-auto bg-[#FA5400] hover:bg-[#E04B00] text-white text-xs font-bold py-3 px-6 rounded-full transition-all shadow-sm hover:shadow active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto bg-[#0F3024] hover:bg-[#153426] text-white text-xs font-medium py-3 px-6 rounded-full transition-all shadow-xs hover:shadow active:scale-98 flex items-center justify-center gap-2 cursor-pointer font-sans"
             >
               <span>Review Details & Pay Now</span>
               <span>↑</span>

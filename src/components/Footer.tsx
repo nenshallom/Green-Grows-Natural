@@ -13,15 +13,15 @@ export default function Footer() {
   }
 
   return (
-    <footer id="footer" className="bg-[#286266] text-white pt-16 pb-8 mt-12">
-      <div className="max-w-[90%] mx-auto">
+    <footer id="footer" className="bg-[#0F3024] text-white pt-16 pb-10 mt-20 border-t border-[#0b241b]">
+      <div className="max-w-[90%] lg:max-w-7xl mx-auto">
         
         {/* TOP SECTION: Grid Layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-8 mb-16">
           
           {/* 1. Brand & About */}
           <div className="flex flex-col gap-4">
-            <Link href="/" className="flex items-center gap-2.5 text-2xl font-black tracking-tighter text-white group">
+            <Link href="/" className="flex items-center gap-2.5 text-2xl font-bold tracking-tight text-white group font-display">
               <div className="relative w-8 h-8 flex-shrink-0">
                 <Image
                   src="/images/ggnlogo-mark.webp"
@@ -32,64 +32,70 @@ export default function Footer() {
                 />
               </div>
               <span>
-                Green <span className="text-green-400">Grows Natural</span>
+                Green <span className="text-emerald-300">Grows Natural</span>
               </span>
             </Link>
-            <p className="text-gray-300 text-sm leading-relaxed pr-4">
-              Your trusted bridge between local farmers and your kitchen. We deliver 100% organic, farm-fresh produce directly to your doorstep with unbeatable bulk and group-buy discounts.
+            <p className="text-emerald-100/80 text-sm leading-relaxed pr-4 font-sans">
+              Your direct farm bridge between verified growers and your kitchen. Fresh organic produce, staple grains, and wholesome farm batches delivered with guaranteed quality.
             </p>
-            {/* Social Icons (Placeholders) */}
-            <div className="flex gap-4 mt-2">
-              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#D93F3F] transition-colors cursor-pointer">
-                <span className="text-xs font-bold">IG</span>
+            {/* Social Icons */}
+            <div className="flex gap-3 mt-2">
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#C05E44] transition-colors cursor-pointer text-xs font-bold font-sans">
+                IG
               </div>
-              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#D93F3F] transition-colors cursor-pointer">
-                <span className="text-xs font-bold">FB</span>
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#C05E44] transition-colors cursor-pointer text-xs font-bold font-sans">
+                FB
               </div>
-              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#D93F3F] transition-colors cursor-pointer">
-                <span className="text-xs font-bold">X</span>
+              <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#C05E44] transition-colors cursor-pointer text-xs font-bold font-sans">
+                X
               </div>
             </div>
           </div>
 
           {/* 2. Quick Links */}
           <div>
-            <h4 className="text-lg font-bold mb-4 border-b border-white/10 pb-2 inline-block">Quick Links</h4>
-            <ul className="space-y-3 text-sm text-gray-300">
-              <li><Link href="/products" className="hover:text-white hover:underline transition-colors">Shop All Products</Link></li>
-              <li><Link href="/products?filter=Bulk+Buy" className="hover:text-white hover:underline transition-colors">Bulk Purchases</Link></li>
-              <li><Link href="/products?filter=Group+Buy" className="hover:text-white hover:underline transition-colors">Active Group Deals</Link></li>
-              <li><Link href="/products" className="hover:text-white hover:underline transition-colors">Browse Categories</Link></li>
+            <h4 className="text-base font-bold mb-4 border-b border-white/15 pb-2 inline-block font-display tracking-wide">
+              Quick Links
+            </h4>
+            <ul className="space-y-2.5 text-sm text-emerald-100/80 font-sans">
+              <li><Link href="/products" className="hover:text-white transition-colors">Shop All Products</Link></li>
+              <li><Link href="/products?filter=Bulk+Buy" className="hover:text-white transition-colors">Bulk Purchases</Link></li>
+              <li><Link href="/products?filter=Group+Buy" className="hover:text-white transition-colors">Active Group Deals</Link></li>
+              <li><Link href="/products" className="hover:text-white transition-colors">Browse Categories</Link></li>
             </ul>
           </div>
 
           {/* 3. Customer Support */}
           <div>
-            <h4 className="text-lg font-bold mb-4 border-b border-white/10 pb-2 inline-block">Customer Support</h4>
-            <ul className="space-y-3 text-sm text-gray-300">
-              <li><Link href="/#faq" className="hover:text-white hover:underline transition-colors">Help & FAQs</Link></li>
-              <li><Link href="/#faq" className="hover:text-white hover:underline transition-colors">Shipping & Delivery</Link></li>
-              <li><Link href="/#faq" className="hover:text-white hover:underline transition-colors">Returns Policy</Link></li>
-              <li><a href="mailto:greengrowsnatural@gmail.com" className="hover:text-white hover:underline transition-colors">Contact Us</a></li>
+            <h4 className="text-base font-bold mb-4 border-b border-white/15 pb-2 inline-block font-display tracking-wide">
+              Customer Support
+            </h4>
+            <ul className="space-y-2.5 text-sm text-emerald-100/80 font-sans">
+              <li><Link href="/#faq" className="hover:text-white transition-colors">Help & FAQs</Link></li>
+              <li><Link href="/#faq" className="hover:text-white transition-colors">Shipping & Delivery</Link></li>
+              <li><Link href="/#faq" className="hover:text-white transition-colors">Returns & Refunds</Link></li>
+              <li><a href="mailto:greengrowsnatural@gmail.com" className="hover:text-white transition-colors">Contact Us</a></li>
             </ul>
           </div>
 
           {/* 4. Newsletter */}
           <div>
-            <h4 className="text-lg font-bold mb-4 border-b border-white/10 pb-2 inline-block">Stay Fresh</h4>
-            <p className="text-gray-300 text-sm mb-4">
-              Subscribe to our newsletter to get alerts on new group deals and seasonal harvests!
+            <h4 className="text-base font-bold mb-4 border-b border-white/15 pb-2 inline-block font-display tracking-wide">
+              Stay Fresh
+            </h4>
+            <p className="text-emerald-100/80 text-sm mb-4 font-sans leading-relaxed">
+              Subscribe to harvest alerts and seasonal discounts straight from local farm gates.
             </p>
-            <form className="flex flex-col gap-2" onSubmit={(e) => e.preventDefault()}>
+            <form className="flex flex-col gap-2.5" onSubmit={(e) => e.preventDefault()}>
               <input 
                 type="email" 
                 placeholder="Enter your email" 
-                className="w-full px-4 py-2.5 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:border-white transition-colors text-sm"
+                className="w-full px-4 py-2.5 rounded-full bg-white/10 border border-white/20 text-white placeholder-emerald-200/60 focus:outline-none focus:border-white transition-colors text-xs font-sans"
                 required
               />
               <button 
                 type="submit" 
-                className="w-full bg-[#872022] hover:bg-[#872022]/80 text-white font-bold py-2.5 rounded-lg transition-colors text-sm"
+                className="w-full bg-[#C05E44] hover:bg-[#a84e36] text-white font-bold py-2.5 rounded-full transition-colors text-xs font-sans tracking-wide cursor-pointer shadow-xs"
               >
                 Subscribe
               </button>
@@ -99,11 +105,11 @@ export default function Footer() {
         </div>
 
         {/* BOTTOM SECTION: Copyright & Legal */}
-        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-gray-400 text-xs text-center md:text-left">
+        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-emerald-200/60 font-sans">
+          <p className="text-center md:text-left">
             &copy; {new Date().getFullYear()} Green Grows Natural (GGN). All rights reserved.
           </p>
-          <div className="flex gap-4 text-xs text-gray-400">
+          <div className="flex gap-5">
             <Link href="/#faq" className="hover:text-white transition-colors">Privacy Policy</Link>
             <Link href="/#faq" className="hover:text-white transition-colors">Terms of Service</Link>
           </div>

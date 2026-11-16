@@ -79,7 +79,7 @@ export default function SecurityView({
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs text-gray-800 outline-none focus:border-[#1A4331]"
+              className="w-full px-3.5 py-2.5 border border-[#E2E8F0] rounded-xl text-xs text-[#2D3748] outline-none focus:border-[#0F3024] font-sans"
             />
           </div>
 
@@ -92,15 +92,15 @@ export default function SecurityView({
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs text-gray-800 outline-none focus:border-[#1A4331]"
+              className="w-full px-3.5 py-2.5 border border-[#E2E8F0] rounded-xl text-xs text-[#2D3748] outline-none focus:border-[#0F3024] font-sans"
             />
           </div>
 
-          <div className="pt-2">
+          <div className="pt-2 font-sans">
             <button
               type="submit"
               disabled={updating}
-              className="bg-[#FA5400] hover:bg-[#E04B00] text-white text-xs font-bold py-2.5 px-6 rounded-full transition-colors cursor-pointer disabled:opacity-50 shadow-xs"
+              className="bg-[#0F3024] hover:bg-[#153426] text-white text-xs font-medium py-2.5 px-6 rounded-full transition-colors cursor-pointer disabled:opacity-50 shadow-xs"
             >
               {updating ? 'Updating Password...' : 'Update Password'}
             </button>

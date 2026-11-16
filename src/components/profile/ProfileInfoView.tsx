@@ -58,23 +58,23 @@ export default function ProfileInfoView({
       <form onSubmit={handleSubmit} className="space-y-5 max-w-xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">First Name</label>
+            <label className="block text-xs font-medium text-[#2D3748] mb-1 font-sans">First Name</label>
             <input
               type="text"
               required
               value={first}
               onChange={(e) => setFirst(e.target.value)}
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs text-gray-800 outline-none focus:border-[#1A4331]"
+              className="w-full px-3.5 py-2.5 border border-[#E2E8F0] rounded-xl text-xs text-[#2D3748] outline-none focus:border-[#0F3024] font-sans"
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">Last Name</label>
+            <label className="block text-xs font-medium text-[#2D3748] mb-1 font-sans">Last Name</label>
             <input
               type="text"
               required
               value={last}
               onChange={(e) => setLast(e.target.value)}
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs text-gray-800 outline-none focus:border-[#1A4331]"
+              className="w-full px-3.5 py-2.5 border border-[#E2E8F0] rounded-xl text-xs text-[#2D3748] outline-none focus:border-[#0F3024] font-sans"
             />
           </div>
         </div>
@@ -102,15 +102,15 @@ export default function ProfileInfoView({
             value={userPhone}
             onChange={(e) => setUserPhone(e.target.value)}
             placeholder="+234 800 000 0000"
-            className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs text-gray-800 outline-none focus:border-[#1A4331]"
+            className="w-full px-3.5 py-2.5 border border-[#E2E8F0] rounded-xl text-xs text-[#2D3748] outline-none focus:border-[#0F3024] font-sans"
           />
         </div>
 
-        <div className="pt-2">
+        <div className="pt-2 font-sans">
           <button
             type="submit"
             disabled={updating}
-            className="bg-[#FA5400] hover:bg-[#E04B00] text-white text-xs font-bold py-2.5 px-6 rounded-full transition-colors cursor-pointer disabled:opacity-50 shadow-xs"
+            className="bg-[#0F3024] hover:bg-[#153426] text-white text-xs font-medium py-2.5 px-6 rounded-full transition-colors cursor-pointer disabled:opacity-50 shadow-xs"
           >
             {updating ? 'Saving Changes...' : 'Save Profile Details'}
           </button>

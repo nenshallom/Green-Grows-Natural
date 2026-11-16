@@ -90,7 +90,7 @@ export default function ReviewsView({
                 <button
                   type="button"
                   onClick={() => onLeaveReview(order)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-orange-300 text-xs font-bold text-[#FA5400] hover:bg-orange-50 transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#E2E8F0] text-xs font-medium text-[#0F3024] hover:border-[#0F3024] hover:bg-[#FAFAFA] transition-colors cursor-pointer font-sans"
                 >
                   <FiStar className="w-3.5 h-3.5" />
                   <span>Rate Freshness</span>

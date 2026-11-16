@@ -88,31 +88,31 @@ export default function AddressesView({
                 value={editState}
                 onChange={(e) => setEditState(e.target.value)}
                 placeholder="e.g. Lagos"
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs text-gray-800 outline-none focus:border-[#1A4331]"
+                className="w-full px-3.5 py-2.5 border border-[#E2E8F0] rounded-xl text-xs text-[#2D3748] outline-none focus:border-[#0F3024] font-sans"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">LGA</label>
+              <label className="block text-xs font-medium text-[#2D3748] mb-1 font-sans">LGA</label>
               <input
                 type="text"
                 required
                 value={editLga}
                 onChange={(e) => setEditLga(e.target.value)}
                 placeholder="e.g. Ikeja"
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs text-gray-800 outline-none focus:border-[#1A4331]"
+                className="w-full px-3.5 py-2.5 border border-[#E2E8F0] rounded-xl text-xs text-[#2D3748] outline-none focus:border-[#0F3024] font-sans"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">Street Address</label>
+            <label className="block text-xs font-medium text-[#2D3748] mb-1 font-sans">Street Address</label>
             <textarea
               rows={3}
               required
               value={editAddress}
               onChange={(e) => setEditAddress(e.target.value)}
               placeholder="e.g. Flat 4, 12 Farm Road, off Greenfield Ave"
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs text-gray-800 outline-none focus:border-[#1A4331] resize-none"
+              className="w-full px-3.5 py-2.5 border border-[#E2E8F0] rounded-xl text-xs text-[#2D3748] outline-none focus:border-[#0F3024] resize-none font-sans"
             />
           </div>
 
@@ -123,22 +123,22 @@ export default function AddressesView({
               value={editLandmark}
               onChange={(e) => setEditLandmark(e.target.value)}
               placeholder="e.g. Near St. Mary Church / Mobil Gas Station"
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs text-gray-800 outline-none focus:border-[#1A4331]"
+              className="w-full px-3.5 py-2.5 border border-[#E2E8F0] rounded-xl text-xs text-[#2D3748] outline-none focus:border-[#0F3024] font-sans"
             />
           </div>
 
-          <div className="flex items-center gap-3 pt-2">
+          <div className="flex items-center gap-3 pt-2 font-sans">
             <button
               type="submit"
               disabled={saving}
-              className="bg-[#FA5400] hover:bg-[#E04B00] text-white text-xs font-bold py-2.5 px-6 rounded-full transition-colors cursor-pointer disabled:opacity-50"
+              className="bg-[#0F3024] hover:bg-[#153426] text-white text-xs font-medium py-2.5 px-6 rounded-full transition-colors cursor-pointer disabled:opacity-50"
             >
               {saving ? 'Saving...' : 'Save Address'}
             </button>
             <button
               type="button"
               onClick={() => setIsEditing(false)}
-              className="text-gray-500 hover:text-gray-800 text-xs font-bold py-2.5 px-4"
+              className="text-[#718096] hover:text-[#2D3748] text-xs font-medium py-2.5 px-4"
             >
               Cancel
             </button>
@@ -147,15 +147,15 @@ export default function AddressesView({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* PRIMARY SAVED ADDRESS CARD */}
-          <div className="p-5 rounded-2xl border-2 border-orange-500/80 bg-orange-50/20 relative">
+          <div className="p-5 rounded-2xl border-2 border-[#0F3024] bg-white relative">
             <div className="flex items-center justify-between mb-3">
-              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#FA5400] text-white">
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-[1.5px] px-2.5 py-0.5 rounded-full bg-[#0F3024] text-white font-display">
                 <FiCheckCircle className="w-3 h-3" /> Default Delivery
               </span>
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                className="text-xs text-[#FA5400] font-bold hover:underline"
+                className="text-xs text-[#0F3024] font-medium hover:underline font-sans"
               >
                 Edit
               </button>

@@ -72,7 +72,7 @@ export default function NotFoundClient() {
           </div>
 
           {/* 404 PILL OVERLAY */}
-          <div className="absolute -bottom-2 bg-[#FA5400] text-white text-[11px] md:text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-md border-2 border-white">
+          <div className="absolute -bottom-2 bg-[#C05E44] text-white text-[11px] md:text-xs font-medium uppercase tracking-[1.5px] px-3.5 py-1 rounded-full shadow-xs border-2 border-white font-display">
             404 · Page Not Found
           </div>
         </div>
@@ -80,10 +80,10 @@ export default function NotFoundClient() {
         {/* =========================================================
             2. HEADLINE & EXPLANATORY PROSE
         ========================================================= */}
-        <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tight mt-4 mb-3">
+        <h1 className="text-2xl md:text-4xl font-semibold text-[#2D3748] tracking-tight mt-4 mb-3 font-display">
           Whoops! This Harvest Trail Has Gone Cold
         </h1>
-        <p className="text-sm md:text-base text-gray-600 max-w-lg mx-auto leading-relaxed mb-8">
+        <p className="text-sm md:text-base text-[#718096] max-w-lg mx-auto leading-relaxed mb-8 font-sans">
           The crop or page you are looking for might have been harvested, moved to another patch,
           or the link has a slight typo. Let&apos;s get you back on track!
         </p>
@@ -93,9 +93,9 @@ export default function NotFoundClient() {
         ========================================================= */}
         <form
           onSubmit={handleSearchSubmit}
-          className="max-w-md mx-auto mb-8 relative flex items-center shadow-sm rounded-full overflow-hidden border border-gray-300 focus-within:border-[#1A4331] focus-within:ring-2 focus-within:ring-emerald-100 bg-white transition-all"
+          className="max-w-md mx-auto mb-8 relative flex items-center shadow-xs rounded-full overflow-hidden border border-[#E2E8F0] focus-within:border-[#0F3024] focus-within:ring-1 focus-within:ring-[#0F3024] bg-white transition-all font-sans"
         >
-          <div className="pl-4 text-gray-400">
+          <div className="pl-4 text-[#718096]">
             <FiSearch className="w-5 h-5" />
           </div>
           <input
@@ -103,12 +103,12 @@ export default function NotFoundClient() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search fresh tomatoes, yam, honey..."
-            className="w-full py-3 px-3 text-xs md:text-sm text-gray-800 placeholder-gray-400 bg-transparent focus:outline-none"
+            className="w-full py-3 px-3 text-xs md:text-sm text-[#2D3748] placeholder-[#718096] bg-transparent focus:outline-none"
             aria-label="Search produce"
           />
           <button
             type="submit"
-            className="bg-[#1A4331] hover:bg-[#123122] text-white text-xs md:text-sm font-bold px-5 py-3 transition-colors cursor-pointer flex-shrink-0"
+            className="bg-[#0F3024] hover:bg-[#153426] text-white text-xs md:text-sm font-medium px-5 py-3 transition-colors cursor-pointer flex-shrink-0"
           >
             Search
           </button>
@@ -117,11 +117,11 @@ export default function NotFoundClient() {
         {/* =========================================================
             4. PRIMARY ACTION BUTTONS
         ========================================================= */}
-        <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
+        <div className="flex flex-wrap items-center justify-center gap-3 mb-10 font-sans">
           {/* RETURN HOME */}
           <Link
             href="/"
-            className="inline-flex items-center gap-2 bg-[#1A4331] hover:bg-[#123122] text-white font-bold text-xs md:text-sm py-3 px-6 rounded-full transition-all shadow-sm hover:shadow active:scale-98"
+            className="inline-flex items-center gap-2 bg-[#0F3024] hover:bg-[#153426] text-white font-medium text-xs md:text-sm py-3 px-6 rounded-full transition-all shadow-xs hover:shadow active:scale-98"
           >
             <FiHome className="w-4 h-4" />
             <span>Return to Store</span>
@@ -130,7 +130,7 @@ export default function NotFoundClient() {
           {/* BROWSE ALL PRODUCTS */}
           <Link
             href="/products"
-            className="inline-flex items-center gap-2 bg-[#FA5400] hover:bg-[#E04B00] text-white font-bold text-xs md:text-sm py-3 px-6 rounded-full transition-all shadow-sm hover:shadow active:scale-98"
+            className="inline-flex items-center gap-2 bg-[#C05E44] hover:bg-[#a84f37] text-white font-medium text-xs md:text-sm py-3 px-6 rounded-full transition-all shadow-xs hover:shadow active:scale-98"
           >
             <FiShoppingBag className="w-4 h-4" />
             <span>Browse All Harvests</span>
@@ -140,7 +140,7 @@ export default function NotFoundClient() {
           <button
             type="button"
             onClick={handleGoBack}
-            className="inline-flex items-center gap-2 bg-white hover:bg-gray-100 border border-gray-300 text-gray-700 hover:text-black font-semibold text-xs md:text-sm py-3 px-5 rounded-full transition-all cursor-pointer active:scale-98"
+            className="inline-flex items-center gap-2 bg-white hover:bg-[#FAFAFA] border border-[#E2E8F0] text-[#2D3748] font-medium text-xs md:text-sm py-3 px-5 rounded-full transition-all cursor-pointer active:scale-98"
           >
             <FiArrowLeft className="w-4 h-4" />
             <span>Go Back</span>

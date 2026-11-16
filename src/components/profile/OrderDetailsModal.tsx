@@ -40,13 +40,13 @@ export default function OrderDetailsModal({
         {/* HEADER */}
         <div className="border-b border-gray-100 pb-4 mb-5">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+            <span className="text-xs font-medium uppercase tracking-[1.5px] text-[#718096] font-display">
               Order Details
             </span>
-            <span className="text-xs text-gray-300">•</span>
-            <span className="text-xs font-bold text-[#1A4331]">{order.tracking_number}</span>
+            <span className="text-xs text-[#E2E8F0]">•</span>
+            <span className="text-xs font-semibold text-[#0F3024] font-display">{order.tracking_number}</span>
           </div>
-          <h2 className="text-2xl font-black text-gray-900 mt-1">
+          <h2 className="text-2xl font-semibold font-display text-[#2D3748] mt-1">
             Order #{order.tracking_number}
           </h2>
           <div className="flex items-center gap-4 text-xs text-gray-500 mt-1 flex-wrap font-medium">
@@ -135,68 +135,68 @@ export default function OrderDetailsModal({
         </div>
 
         {/* DESTINATION & RECIPIENT */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 pt-4 border-t border-gray-100">
-          <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-100">
-            <h4 className="text-xs font-black uppercase text-gray-400 tracking-wider mb-2 flex items-center gap-1.5">
-              <FiMapPin className="text-[#FA5400]" /> Delivery Destination
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 pt-4 border-t border-[#E2E8F0]">
+          <div className="p-4 rounded-2xl bg-white border border-[#E2E8F0]">
+            <h4 className="text-xs font-medium uppercase text-[#718096] tracking-[1.5px] font-display mb-2 flex items-center gap-1.5">
+              <FiMapPin className="text-[#0F3024]" /> Delivery Destination
             </h4>
-            <p className="text-xs text-gray-800 font-semibold leading-relaxed">
+            <p className="text-xs text-[#2D3748] font-semibold leading-relaxed">
               {order.shipping_address || 'No street address provided'}
             </p>
-            <p className="text-xs text-gray-600 mt-0.5">
+            <p className="text-xs text-[#718096] mt-0.5 font-sans">
               {order.lga ? `${order.lga}, ` : ''}{order.state || ''}
             </p>
             {order.landmark && (
-              <p className="text-[11px] text-gray-500 mt-1 italic">
+              <p className="text-[11px] text-[#718096] mt-1 italic font-sans">
                 Landmark: {order.landmark}
               </p>
             )}
           </div>
 
-          <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-100">
-            <h4 className="text-xs font-black uppercase text-gray-400 tracking-wider mb-2 flex items-center gap-1.5">
-              <FiPhone className="text-[#1A4331]" /> Recipient Information
+          <div className="p-4 rounded-2xl bg-white border border-[#E2E8F0]">
+            <h4 className="text-xs font-medium uppercase text-[#718096] tracking-[1.5px] font-display mb-2 flex items-center gap-1.5">
+              <FiPhone className="text-[#0F3024]" /> Recipient Information
             </h4>
-            <p className="text-xs text-gray-800 font-bold">
+            <p className="text-xs text-[#2D3748] font-medium font-display">
               {order.first_name || ''} {order.last_name || ''}
             </p>
-            <p className="text-xs text-gray-600 mt-0.5 font-medium">
+            <p className="text-xs text-[#718096] mt-0.5 font-normal font-sans">
               Phone: {order.contact_phone || 'N/A'}
             </p>
             {order.email && (
-              <p className="text-xs text-gray-600 mt-0.5 font-medium">
+              <p className="text-xs text-[#718096] mt-0.5 font-normal font-sans">
                 Email: {order.email}
               </p>
             )}
-            <div className="mt-2 pt-2 border-t border-gray-200/60 flex items-center gap-1 text-[11px] text-gray-500">
-              <FiCreditCard className="text-gray-400" />
+            <div className="mt-2 pt-2 border-t border-[#E2E8F0] flex items-center gap-1 text-[11px] text-[#718096]">
+              <FiCreditCard className="text-[#718096]" />
               <span>Paid via {order.payment_method || 'Paystack / Online'}</span>
             </div>
           </div>
         </div>
 
         {/* TOTAL INVOICE SUMMARY */}
-        <div className="bg-[#FAF9F6] p-4 rounded-xl border border-gray-200/70 space-y-2 text-xs">
-          <div className="flex justify-between text-gray-600">
+        <div className="bg-[#FAFAFA] p-4 rounded-2xl border border-[#E2E8F0] space-y-2 text-xs font-sans">
+          <div className="flex justify-between text-[#718096]">
             <span>Produce Subtotal:</span>
-            <span className="font-semibold text-gray-900">{formatNaira(order.total_amount)}</span>
+            <span className="font-semibold text-[#2D3748]">{formatNaira(order.total_amount)}</span>
           </div>
-          <div className="flex justify-between text-gray-600">
+          <div className="flex justify-between text-[#718096]">
             <span>Farm Direct Handling & Delivery:</span>
-            <span className="font-semibold text-emerald-700">Included / Free</span>
+            <span className="font-medium text-[#0F3024]">Included / Free</span>
           </div>
-          <div className="border-t border-gray-200 pt-2 flex justify-between items-baseline">
-            <span className="text-sm font-black text-gray-900">Total Paid:</span>
-            <span className="text-xl font-black text-[#FA5400]">{formatNaira(order.total_amount)}</span>
+          <div className="border-t border-[#E2E8F0] pt-2 flex justify-between items-baseline">
+            <span className="text-sm font-medium font-display text-[#2D3748]">Total Paid:</span>
+            <span className="text-xl font-semibold text-[#C05E44]">{formatNaira(order.total_amount)}</span>
           </div>
         </div>
 
         {/* CLOSE BUTTON */}
-        <div className="mt-6">
+        <div className="mt-6 font-sans">
           <button
             type="button"
             onClick={onClose}
-            className="w-full bg-[#1A4331] hover:bg-[#123122] text-white font-bold py-3 rounded-xl transition-colors cursor-pointer text-sm shadow-sm"
+            className="w-full bg-[#0F3024] hover:bg-[#153426] text-white font-medium py-3 rounded-full transition-colors cursor-pointer text-sm shadow-xs"
           >
             Done
           </button>

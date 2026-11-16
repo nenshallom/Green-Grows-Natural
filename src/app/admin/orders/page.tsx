@@ -313,7 +313,7 @@ export default function AdminOrdersPage() {
 
       {/* --- NEW: BULK ACTIONS BAR --- */}
       {selectedOrders.length > 0 && (
-        <div className="bg-[#1A4331] text-white p-4 rounded-xl mb-6 shadow-md flex flex-col sm:flex-row justify-between items-center gap-4 animate-fade-in">
+        <div className="bg-[#0F3024] text-white p-4 rounded-xl mb-6 shadow-md flex flex-col sm:flex-row justify-between items-center gap-4 animate-fade-in">
           <span className="font-bold">{selectedOrders.length} Order(s) Selected</span>
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm text-green-200 mr-2">Bulk Delivery Update:</span>

@@ -211,15 +211,15 @@ export default function QuickAddModal({
 
               {/* DISCOUNT BADGE */}
               {discountPercent > 0 && (
-                <div className="absolute top-3 left-3 bg-[#D93F3F] text-white text-[11px] font-black px-2.5 py-1 rounded shadow-sm z-10">
+                <div className="absolute top-3 left-3 bg-[#C05E44] text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-xs z-10 font-sans tracking-wide">
                   -{discountPercent}%
                 </div>
               )}
 
               {/* BULK BUY BADGE */}
               {isBulkActive && (
-                <div className="absolute top-3 right-3 bg-orange-600 text-white text-[10px] font-black px-2 py-0.5 rounded shadow-sm z-10 flex items-center gap-1">
-                  🔥 Bulk Pricing Active
+                <div className="absolute top-3 right-3 bg-[#0F3024] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-xs z-10 flex items-center gap-1 font-sans">
+                  Bulk Pricing
                 </div>
               )}
             </div>
@@ -234,8 +234,8 @@ export default function QuickAddModal({
                     onClick={() => setActiveImage(img)}
                     className={`relative w-14 h-14 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${
                       activeImage === img
-                        ? 'border-[#1A4331] ring-2 ring-[#1A4331]/20 scale-102 shadow-xs'
-                        : 'border-gray-200 hover:border-gray-400 opacity-75 hover:opacity-100'
+                        ? 'border-[#0F3024] ring-2 ring-[#0F3024]/20 scale-102 shadow-xs'
+                        : 'border-[#E2E8F0] hover:border-[#718096] opacity-75 hover:opacity-100'
                     }`}
                   >
                     <Image
@@ -257,37 +257,37 @@ export default function QuickAddModal({
           <div className="flex flex-col pt-1">
             {/* CATEGORY TAG */}
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-[#1A4331] bg-[#1A4331]/10 px-2.5 py-1 rounded-full">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#0F3024] bg-[#0F3024]/10 px-2.5 py-0.5 rounded-full font-display">
                 {product.category || 'Farm Fresh'}
               </span>
-              <span className="text-[11px] text-gray-400 font-medium">
-                • 100% Organic & Fresh
+              <span className="text-xs text-[#718096] font-medium font-sans">
+                • 100% Inspected Harvest
               </span>
             </div>
 
             {/* PRODUCT NAME */}
-            <h2 className="text-xl md:text-2xl font-black text-gray-900 leading-snug mb-2">
+            <h2 className="text-xl md:text-2xl font-medium text-[#2D3748] leading-snug mb-2 font-display">
               {product.name}
             </h2>
 
             {/* PRICE & DISCOUNT DISPLAY */}
-            <div className="flex items-baseline flex-wrap gap-2.5 mb-4">
-              <span className="text-2xl font-black text-[#1A4331]">
+            <div className="flex items-baseline flex-wrap gap-2.5 mb-4 font-sans">
+              <span className="text-2xl font-semibold text-[#C05E44]">
                 {formatNaira(unitPrice)}
-                <span className="text-xs font-semibold text-gray-500 ml-0.5">
+                <span className="text-xs font-normal text-[#718096] ml-0.5">
                   /{product.unit || 'kg'}
                 </span>
               </span>
 
               {hasDiscount && (
-                <span className="text-sm text-gray-400 line-through font-medium">
+                <span className="text-sm text-[#718096] line-through font-normal">
                   {formatNaira(product.original_price)}
                 </span>
               )}
 
               {discountPercent > 0 && (
-                <span className="text-[11px] font-bold text-[#D93F3F] bg-[#D93F3F]/10 border border-[#D93F3F]/20 px-2 py-0.5 rounded">
-                  {discountPercent}% OFF limited time
+                <span className="text-[11px] font-bold text-[#C05E44] bg-[#C05E44]/10 border border-[#C05E44]/20 px-2 py-0.5 rounded-full">
+                  {discountPercent}% OFF
                 </span>
               )}
             </div>
@@ -307,21 +307,21 @@ export default function QuickAddModal({
                     onClick={() => handleModeChange('standard')}
                     className={`p-2.5 rounded-xl border text-left transition-all ${
                       selectedMode === 'standard'
-                        ? 'border-[#1A4331] bg-[#1A4331]/5 shadow-xs ring-1 ring-[#1A4331]'
-                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                        ? 'border-[#0F3024] bg-[#0F3024]/5 shadow-xs ring-1 ring-[#0F3024]'
+                        : 'border-[#E2E8F0] hover:border-gray-300 bg-white'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-gray-900">Standard</span>
+                      <span className="text-xs font-bold text-[#2D3748]">Standard</span>
                       {selectedMode === 'standard' && (
-                        <FiCheck className="w-3.5 h-3.5 text-[#1A4331]" />
+                        <FiCheck className="w-3.5 h-3.5 text-[#0F3024]" />
                       )}
                     </div>
-                    <p className="text-[11px] font-semibold text-[#1A4331] mt-0.5">
+                    <p className="text-[11px] font-semibold text-[#0F3024] mt-0.5">
                       {formatNaira(product.price_per_unit)}
-                      <span className="text-[9px] text-gray-500">/{product.unit || 'kg'}</span>
+                      <span className="text-[9px] text-[#718096]">/{product.unit || 'kg'}</span>
                     </p>
-                    <p className="text-[9px] text-gray-500 mt-0.5">Single unit orders</p>
+                    <p className="text-[9px] text-[#718096] mt-0.5">Single unit orders</p>
                   </button>
 
                   {/* BULK BUY OPTION */}
@@ -330,23 +330,23 @@ export default function QuickAddModal({
                     onClick={() => handleModeChange('bulk')}
                     className={`p-2.5 rounded-xl border text-left transition-all ${
                       selectedMode === 'bulk'
-                        ? 'border-[#1A4331] bg-[#1A4331]/5 shadow-xs ring-1 ring-[#1A4331]'
-                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                        ? 'border-[#0F3024] bg-[#0F3024]/5 shadow-xs ring-1 ring-[#0F3024]'
+                        : 'border-[#E2E8F0] hover:border-gray-300 bg-white'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-gray-900 flex items-center gap-1">
-                        🔥 Bulk Buy
+                      <span className="text-xs font-bold text-[#2D3748] flex items-center gap-1">
+                        Bulk Buy
                       </span>
                       {selectedMode === 'bulk' && (
-                        <FiCheck className="w-3.5 h-3.5 text-[#1A4331]" />
+                        <FiCheck className="w-3.5 h-3.5 text-[#0F3024]" />
                       )}
                     </div>
-                    <p className="text-[11px] font-bold text-orange-600 mt-0.5">
+                    <p className="text-[11px] font-bold text-[#C05E44] mt-0.5">
                       {formatNaira(product.bulk_buy_price)}
-                      <span className="text-[9px] text-gray-500">/{product.unit || 'kg'}</span>
+                      <span className="text-[9px] text-[#718096]">/{product.unit || 'kg'}</span>
                     </p>
-                    <p className="text-[9px] text-gray-500 mt-0.5">
+                    <p className="text-[9px] text-[#718096] mt-0.5">
                       Min {bulkMin} {product.unit || 'units'}
                     </p>
                   </button>
@@ -369,7 +369,7 @@ export default function QuickAddModal({
                     id="modal-qty-select"
                     value={quantity}
                     onChange={(e) => handleQuantityChange(Number(e.target.value))}
-                    className="appearance-none bg-white border border-gray-300 rounded-xl pl-3.5 pr-8 py-2 text-sm font-bold text-gray-800 hover:border-gray-400 focus:outline-none focus:border-[#1A4331] cursor-pointer shadow-2xs"
+                    className="appearance-none bg-white border border-[#E2E8F0] rounded-xl pl-3.5 pr-8 py-2 text-sm font-medium text-[#2D3748] hover:border-[#0F3024] focus:outline-none focus:border-[#0F3024] cursor-pointer shadow-2xs font-sans"
                   >
                     {qtyOptions.map((q) => (
                       <option key={q} value={q}>
@@ -411,35 +411,35 @@ export default function QuickAddModal({
                 <span className="text-xs font-medium text-gray-500">
                   {product.stock_quantity > 0 ? (
                     product.stock_quantity <= 5 ? (
-                      <span className="text-[#D93F3F] font-bold">
+                      <span className="text-[#C05E44] font-bold">
                         Only {product.stock_quantity} left!
                       </span>
                     ) : (
                       <span>{product.stock_quantity} available</span>
                     )
                   ) : (
-                    <span className="text-red-500 font-bold">Out of stock</span>
+                    <span className="text-[#C05E44] font-bold">Out of stock</span>
                   )}
                 </span>
               </div>
             </div>
 
             {/* SUBTOTAL CALCULATION */}
-            <div className="flex justify-between items-baseline py-2.5 border-t border-gray-100 mb-4">
-              <span className="text-xs font-semibold text-gray-500">Subtotal:</span>
-              <span className="text-xl font-black text-[#1A4331]">
+            <div className="flex justify-between items-baseline py-2.5 border-t border-[#E2E8F0] mb-4">
+              <span className="text-xs font-semibold text-[#718096]">Subtotal:</span>
+              <span className="text-xl font-bold text-[#C05E44] font-sans">
                 {formatNaira(totalPrice)}
               </span>
             </div>
 
             {/* =====================================================
-                ADD TO CART BUTTON (PRIMARY ACTION)
+                ADD TO CART BUTTON (PRIMARY ACTION - MIDNIGHT PINE)
             ===================================================== */}
             <button
               type="button"
               onClick={handleAddToCart}
               disabled={product.stock_quantity === 0}
-              className="w-full bg-[#1A4331] hover:bg-[#143527] text-white font-bold py-3.5 px-6 rounded-full flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full bg-[#0F3024] hover:bg-[#194b39] text-white font-bold py-3.5 px-6 rounded-full flex items-center justify-center gap-2 shadow-xs transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-sans"
             >
               <FiShoppingCart className="w-5 h-5" />
               <span>Add to cart</span>
@@ -450,7 +450,7 @@ export default function QuickAddModal({
               <Link
                 href={`/product/${product.id}`}
                 onClick={onClose}
-                className="inline-flex items-center gap-1 text-xs font-bold text-gray-600 hover:text-[#1A4331] transition-colors"
+                className="inline-flex items-center gap-1 text-xs font-bold text-[#718096] hover:text-[#0F3024] transition-colors font-sans"
               >
                 <span>All details</span>
                 <span className="text-sm leading-none">›</span>

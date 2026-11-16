@@ -22,16 +22,16 @@ export default function BestDeals({ products }: BestDealsProps) {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  // 1. UNIFIED CATEGORIES: "Best Deals" always first, followed by all unique categories
+  // 1. UNIFIED CATEGORIES: "Best Deals" always first, followed by "Bulk", then unique categories
   const categories = useMemo(() => {
     const uniqueCats = Array.from(
       new Set(
         products
           .map((p) => p.category?.trim())
-          .filter((cat): cat is string => Boolean(cat))
+          .filter((cat): cat is string => Boolean(cat) && cat.toLowerCase() !== 'bulk')
       )
     );
-    return ['Best Deals', ...uniqueCats];
+    return ['Best Deals', 'Bulk', ...uniqueCats];
   }, [products]);
 
   // 2. DISCOUNT CHECKER HELPER
@@ -81,8 +81,15 @@ export default function BestDeals({ products }: BestDealsProps) {
     return () => observer.disconnect();
   }, [sortedAndFilteredProducts.length]);
 
-  // 6. PILL CHANGE: Instant in-page reshuffle & reset visible count
+  // 6. PILL CHANGE: Instant in-page reshuffle & reset visible count (or smooth scroll for Bulk)
   const handleTabChange = (category: string) => {
+    if (category === 'Bulk') {
+      const el = document.getElementById('bulk-deals');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+      return;
+    }
     setActiveTab(category);
     setVisibleCount(BATCH_SIZE);
   };
@@ -110,11 +117,11 @@ export default function BestDeals({ products }: BestDealsProps) {
   };
 
   return (
-    <section className="w-full mb-12">
+    <section className="w-full mb-20 md:mb-24">
       {/* =========================================================
-          UNIFIED CATEGORY PILLS BAR (No duplicate headers)
+          UNIFIED CATEGORY PILLS BAR (EVERGREEN APOTHECARY PILLS)
       ========================================================= */}
-      <div className="flex items-center justify-between gap-4 mb-6">
+      <div className="flex items-center justify-between gap-4 mb-8">
         {/* HORIZONTALLY SCROLLABLE PILL ROW */}
         <div
           ref={scrollContainerRef}
@@ -127,10 +134,10 @@ export default function BestDeals({ products }: BestDealsProps) {
                 key={cat}
                 type="button"
                 onClick={() => handleTabChange(cat)}
-                className={`flex-shrink-0 px-5 py-2.5 rounded-full text-sm font-bold transition-all shadow-xs active:scale-95 whitespace-nowrap border ${
+                className={`flex-shrink-0 px-5 py-2 rounded-full text-xs font-bold transition-all active:scale-95 whitespace-nowrap uppercase tracking-[1.5px] font-display cursor-pointer ${
                   isSelected
-                    ? 'bg-[#1A4331] text-white border-[#1A4331] shadow-sm'
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-[#1A4331] hover:text-[#1A4331] hover:bg-[#1A4331]/5'
+                    ? 'bg-[#0F3024] text-white shadow-xs'
+                    : 'bg-white text-[#2D3748] border border-[#E2E8F0] hover:border-[#0F3024] hover:text-[#0F3024]'
                 }`}
               >
                 {cat}
@@ -145,7 +152,7 @@ export default function BestDeals({ products }: BestDealsProps) {
             type="button"
             onClick={() => handleScroll('left')}
             aria-label="Scroll categories left"
-            className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:border-[#1A4331] hover:text-[#1A4331] hover:bg-gray-50 transition-colors shadow-xs"
+            className="w-8 h-8 rounded-full border border-[#E2E8F0] flex items-center justify-center text-[#718096] hover:border-[#0F3024] hover:text-[#0F3024] hover:bg-white transition-colors shadow-2xs cursor-pointer"
           >
             <FiChevronLeft className="w-4 h-4" />
           </button>
@@ -153,7 +160,7 @@ export default function BestDeals({ products }: BestDealsProps) {
             type="button"
             onClick={() => handleScroll('right')}
             aria-label="Scroll categories right"
-            className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:border-[#1A4331] hover:text-[#1A4331] hover:bg-gray-50 transition-colors shadow-xs"
+            className="w-8 h-8 rounded-full border border-[#E2E8F0] flex items-center justify-center text-[#718096] hover:border-[#0F3024] hover:text-[#0F3024] hover:bg-white transition-colors shadow-2xs cursor-pointer"
           >
             <FiChevronRight className="w-4 h-4" />
           </button>
@@ -161,14 +168,14 @@ export default function BestDeals({ products }: BestDealsProps) {
       </div>
 
       {/* =========================================================
-          PRODUCT GRID (DYNAMIC RESHUFFLE & UNENDING SCROLL)
+          PRODUCT GRID (24PX TO 32PX GRID GAPS)
       ========================================================= */}
       {visibleProducts.length === 0 ? (
-        <div className="py-16 text-center text-gray-500 font-medium bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+        <div className="py-20 text-center text-[#718096] font-medium bg-white rounded-2xl border border-dashed border-[#E2E8F0]">
           No products found in this category.
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
           {visibleProducts.map((product) => (
             <ProductCard
               key={product.id}
@@ -184,8 +191,8 @@ export default function BestDeals({ products }: BestDealsProps) {
       ========================================================= */}
       {visibleCount < sortedAndFilteredProducts.length && (
         <div ref={sentinelRef} className="py-8 flex justify-center items-center w-full">
-          <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
-            <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#1A4331] border-t-transparent" />
+          <div className="flex items-center gap-2 text-sm text-[#718096] font-normal font-sans">
+            <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#0F3024] border-t-transparent" />
             <span>Loading more fresh products...</span>
           </div>
         </div>

@@ -35,14 +35,14 @@ export default function FAQ() {
   };
 
   return (
-    <section className="w-full mt-24 mb-16 max-w-4xl mx-auto">
+    <section className="w-full my-20 md:my-24 max-w-4xl mx-auto">
       
       {/* HEADER */}
       <div className="text-center mb-10">
-        <h2 className="text-3xl md:text-4xl font-black text-[#1A4331] tracking-tight mb-3">
+        <h2 className="text-2xl md:text-3xl font-medium text-[#0F3024] tracking-[-0.5px] mb-2 font-display">
           Frequently Asked Questions
         </h2>
-        <p className="text-gray-500 font-medium text-sm md:text-base">
+        <p className="text-[#718096] font-normal text-sm md:text-base font-sans">
           Everything you need to know about our products, delivery, and deals.
         </p>
       </div>
@@ -56,20 +56,20 @@ export default function FAQ() {
             <div 
               key={index} 
               className={`border rounded-2xl transition-colors duration-300 overflow-hidden ${
-                isOpen ? 'border-[#1A4331] bg-[#1A4331]/5' : 'border-gray-200 bg-white hover:border-[#1A4331]/30'
+                isOpen ? 'border-[#0F3024] bg-[#0F3024]/5' : 'border-[#E2E8F0] bg-white hover:border-[#0F3024]/30'
               }`}
             >
               {/* QUESTION BUTTON */}
               <button
                 onClick={() => toggleFAQ(index)}
-                className="w-full flex justify-between items-center p-5 md:p-6 text-left focus:outline-none"
+                className="w-full flex justify-between items-center p-5 md:p-6 text-left focus:outline-none cursor-pointer"
               >
-                <span className={`font-bold text-base md:text-lg transition-colors ${isOpen ? 'text-[#1A4331]' : 'text-gray-800'}`}>
+                <span className={`font-medium text-base md:text-lg transition-colors font-display ${isOpen ? 'text-[#0F3024]' : 'text-[#2D3748]'}`}>
                   {faq.question}
                 </span>
                 
                 {/* THE PLUS/MINUS ICON */}
-                <div className={`flex-shrink-0 ml-4 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isOpen ? 'bg-[#1A4331] text-white' : 'bg-gray-100 text-gray-500'}`}>
+                <div className={`flex-shrink-0 ml-4 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isOpen ? 'bg-[#0F3024] text-white' : 'bg-gray-100 text-[#718096]'}`}>
                   <svg 
                     className={`w-5 h-5 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} 
                     fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
@@ -90,7 +90,7 @@ export default function FAQ() {
                 }`}
               >
                 <div className="overflow-hidden">
-                  <p className="p-5 md:p-6 pt-0 text-gray-600 text-sm md:text-base leading-relaxed">
+                  <p className="p-5 md:p-6 pt-0 text-[#2D3748]/85 text-sm md:text-base leading-relaxed font-sans">
                     {faq.answer}
                   </p>
                 </div>

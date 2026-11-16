@@ -147,10 +147,10 @@ export default function OrderTrackingModal({ order, isOpen, onClose }: OrderTrac
               <div key={step.stepNum} className="relative flex items-start gap-4">
                 {/* TIMELINE ICON BULLET */}
                 <div
-                  className={`absolute -left-6 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all z-10 ${
+                  className={`absolute -left-6 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-all z-10 ${
                     isCompleted
-                      ? 'bg-[#FA5400] text-white shadow-xs'
-                      : 'bg-gray-100 text-gray-400 border border-gray-300'
+                      ? 'bg-[#0F3024] text-white shadow-xs'
+                      : 'bg-[#FAFAFA] text-[#718096] border border-[#E2E8F0]'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -159,20 +159,20 @@ export default function OrderTrackingModal({ order, isOpen, onClose }: OrderTrac
                 <div className="pt-0.5">
                   <div className="flex items-center gap-2">
                     <h3
-                      className={`text-sm font-bold leading-tight ${
-                        isCurrent ? 'text-[#FA5400]' : isCompleted ? 'text-gray-900' : 'text-gray-400'
+                      className={`text-sm font-medium font-display leading-tight ${
+                        isCurrent ? 'text-[#0F3024]' : isCompleted ? 'text-[#2D3748]' : 'text-[#718096]'
                       }`}
                     >
                       {step.title}
                     </h3>
                     {isCurrent && (
-                      <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full bg-[#FA5400]/10 text-[#FA5400]">
+                      <span className="text-[9px] font-medium uppercase px-2 py-0.5 rounded-full bg-[#0F3024]/10 text-[#0F3024] font-display">
                         Current
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">{step.desc}</p>
-                  <p className="text-[10px] text-gray-400 mt-0.5 font-medium">{step.time}</p>
+                  <p className="text-xs text-[#718096] mt-0.5 leading-relaxed font-sans">{step.desc}</p>
+                  <p className="text-[10px] text-[#718096] mt-0.5 font-normal font-sans">{step.time}</p>
                 </div>
               </div>
             );
@@ -180,11 +180,11 @@ export default function OrderTrackingModal({ order, isOpen, onClose }: OrderTrac
         </div>
 
         {/* FOOTER */}
-        <div className="mt-8 pt-4 border-t border-gray-100 flex justify-end">
+        <div className="mt-8 pt-4 border-t border-[#E2E8F0] flex justify-end font-sans">
           <button
             type="button"
             onClick={onClose}
-            className="w-full bg-[#FA5400] hover:bg-[#E04B00] text-white font-bold py-3 rounded-xl transition-colors cursor-pointer text-sm shadow-sm"
+            className="w-full bg-[#0F3024] hover:bg-[#153426] text-white font-medium py-3 rounded-full transition-colors cursor-pointer text-sm shadow-xs"
           >
             Close Tracking
           </button>

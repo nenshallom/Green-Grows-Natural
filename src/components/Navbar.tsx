@@ -6,12 +6,15 @@ import { useCart } from '@/context/CartContext';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase'; // <-- NEW: Import Supabase
 import { FEATURES } from '@/config/features';
+import MarketingNavbarBanner from '@/components/MarketingNavbarBanner';
 
 // --- ICONS IMPORT ---
 import { CiBellOn, CiSearch } from "react-icons/ci";
 import { RiCustomerService2Fill } from "react-icons/ri";
-import { FiMenu, FiX, FiHome, FiShoppingCart, FiMail, FiPhone } from "react-icons/fi";
+import { FiMenu, FiX, FiHome, FiShoppingCart, FiMail, FiPhone, FiChevronDown } from "react-icons/fi";
 import { VscAccount } from "react-icons/vsc";
+
+const DEFAULT_CATEGORIES = ['Vegetables', 'Tubers', 'Grains', 'Fruits', 'Livestock'];
 
 export default function Navbar() {
   const { itemCount, openCartModal, isCartModalOpen } = useCart();
@@ -22,6 +25,57 @@ export default function Navbar() {
   const [activeSection, setActiveSection] = useState('home');
   const [searchQuery, setSearchQuery] = useState('');
   
+  // --- CATEGORIES DROPDOWN STATE ---
+  const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
+  const [categories, setCategories] = useState<string[]>(DEFAULT_CATEGORIES);
+  const categoryMenuRef = useRef<HTMLDivElement>(null);
+
+  // Fetch actual distinct categories from database
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('category');
+        if (!error && data && data.length > 0) {
+          const unique = Array.from(
+            new Set(
+              data
+                .map((p) => p.category?.trim())
+                .filter((cat): cat is string => Boolean(cat))
+            )
+          );
+          if (unique.length > 0) {
+            setCategories(unique);
+          }
+        }
+      } catch {
+        // Fallback to DEFAULT_CATEGORIES
+      }
+    }
+    loadCategories();
+  }, []);
+
+  // Close category dropdown on route navigation
+  useEffect(() => {
+    setIsCategoryMenuOpen(false);
+  }, [pathname]);
+
+  // Close category dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (categoryMenuRef.current && !categoryMenuRef.current.contains(event.target as Node)) {
+        setIsCategoryMenuOpen(false);
+      }
+    };
+    if (isCategoryMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isCategoryMenuOpen]);
+
   // --- MOBILE SEARCH STATE ---
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
@@ -127,8 +181,8 @@ export default function Navbar() {
 
   const getNavClass = (section: string) => {
     return activeSection === section 
-      ? "text-[#1A4331] border-b-2 border-[#1A4331] pb-1 font-black" 
-      : "text-gray-600 hover:text-[#1A4331] transition-colors pb-1";  
+      ? "text-[#0F3024] border-b-2 border-[#0F3024] pb-1 font-semibold" 
+      : "text-[#718096] hover:text-[#0F3024] transition-colors pb-1";  
   };
 
   const getMobileNavClass = (section: string) => {
@@ -139,14 +193,13 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="w-full bg-white md:bg-transparent shadow-sm md:shadow-none z-50 sticky top-0">
+      <nav className="w-full bg-[#FAFAFA] z-50 sticky top-0 border-b border-[#E2E8F0]">
         
         {/* ==========================================
             DESKTOP NAVBAR 
         ========================================== */}
         <div className="hidden md:block">
-          {/* change bg to white */}
-          <div className="bg-white w-full mx-auto pt-9 px-6 lg:px-12 py-3 flex items-center justify-between relative border-gray-100 border-b-1">
+          <div className="bg-[#FAFAFA] w-full mx-auto pt-7 px-6 lg:px-12 py-3 flex items-center justify-between relative">
             {/* BRAND LOGO & TEXT */}
             <div className="flex-shrink-0 flex items-center">
               <Link href="/" className="flex items-center gap-3 group">
@@ -157,40 +210,89 @@ export default function Navbar() {
                     fill 
                     sizes="(max-width: 768px) 36px, 44px"
                     priority
-                    className="object-contain drop-shadow-sm" 
+                    className="object-contain drop-shadow-xs" 
                   />
                 </div>
                 <div className="flex flex-col whitespace-nowrap">
-                  <span className="text-[#286266] font-black text-2xl tracking-tight leading-none">
+                  <span className="text-[#0F3024] font-black text-2xl tracking-tight leading-none font-display">
                     GGN
                   </span>
-                  <span className="text-[10px] font-semibold tracking-wider uppercase text-[#286266] mt-0.5">
+                  <span className="text-[10px] font-semibold tracking-wider uppercase text-[#0F3024] mt-0.5">
                     Green Grows Natural
                   </span>
                 </div>
               </Link>
             </div>
 
-            {/* CENTER: PERMANENT STAGNANT SEARCH BAR */}
+            {/* CATEGORIES DROPDOWN TRIGGER (TEMU STYLE: JUST BEFORE SEARCH BAR) */}
+            <div 
+              className="relative flex-shrink-0 ml-3 lg:ml-6" 
+              ref={categoryMenuRef}
+              onMouseEnter={() => setIsCategoryMenuOpen(true)}
+              onMouseLeave={() => setIsCategoryMenuOpen(false)}
+            >
+              <button
+                type="button"
+                onClick={() => setIsCategoryMenuOpen((prev) => !prev)}
+                className={`flex items-center gap-1.5 py-2 px-3.5 rounded-full text-xs lg:text-sm font-bold transition-all cursor-pointer ${
+                  isCategoryMenuOpen 
+                    ? 'text-[#0F3024] bg-white border border-[#E2E8F0] shadow-2xs' 
+                    : 'text-[#2D3748] hover:text-[#0F3024] hover:bg-white/80'
+                }`}
+                aria-expanded={isCategoryMenuOpen}
+                aria-haspopup="true"
+              >
+                <span>Categories</span>
+                <FiChevronDown 
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                    isCategoryMenuOpen ? 'rotate-180 text-[#0F3024]' : 'text-[#718096]'
+                  }`} 
+                />
+              </button>
+
+              {/* POPUP DROPDOWN POPOVER */}
+              {isCategoryMenuOpen && (
+                <div 
+                  className="absolute top-full left-0 pt-2 w-52 z-50 animate-fade-in"
+                  role="menu"
+                >
+                  <div className="bg-white rounded-2xl shadow-xl border border-[#E2E8F0] py-2 overflow-hidden">
+                    {categories.map((cat) => (
+                      <Link 
+                        key={cat}
+                        href={`/products?category=${encodeURIComponent(cat)}`} 
+                        onClick={() => setIsCategoryMenuOpen(false)} 
+                        className="block px-4 py-2 text-sm font-medium text-[#2D3748] hover:bg-[#0F3024]/5 hover:text-[#0F3024] transition-colors"
+                        role="menuitem"
+                      >
+                        {cat}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* CENTER: SEARCH BAR (FROST BORDER & WHITE CANVAS) */}
             <div className="flex-1 max-w-lg mx-6 lg:mx-10">
               <form 
                 onSubmit={handleSearchSubmit} 
-                className="w-full flex items-center pl-4 pr-1.5 py-1.5 bg-gray-50 border border-gray-200 rounded-full focus-within:border-[#286266] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#286266]/15 transition-all shadow-sm"
+                className="w-full flex items-center pl-4 pr-1.5 py-1.5 bg-white border border-[#E2E8F0] rounded-full focus-within:border-[#0F3024] focus-within:ring-2 focus-within:ring-[#0F3024]/10 transition-all shadow-xs"
               >
-                <CiSearch className="w-5 h-5 text-gray-400 mr-2.5 flex-shrink-0 font-bold" />
+                <CiSearch className="w-5 h-5 text-[#718096] mr-2.5 flex-shrink-0 font-bold" />
                 <input 
                   type="text" 
                   placeholder="Search produce, fruits, grains..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full py-1 bg-transparent text-gray-900 text-sm outline-none placeholder-gray-400 font-medium" 
+                  className="w-full py-1 bg-transparent text-[#2D3748] text-sm outline-none placeholder-[#718096] font-medium" 
                 />
                 {searchQuery && (
                   <button 
                     type="button" 
                     onClick={() => setSearchQuery('')}
                     aria-label="Clear search"
-                    className="text-gray-400 hover:text-gray-600 p-1 mr-1"
+                    className="text-[#718096] hover:text-[#2D3748] p-1 mr-1"
                   >
                     <FiX className="w-4 h-4" />
                   </button>
@@ -198,62 +300,55 @@ export default function Navbar() {
                 <button 
                   type="submit" 
                   aria-label="Submit search"
-                  className="bg-[#286266] text-white px-4 py-1.5 rounded-full text-xs font-bold hover:bg-[#1f4e51] transition-colors flex-shrink-0 ml-1"
+                  className="bg-[#0F3024] hover:bg-[#194b39] text-white px-5 py-1.5 rounded-full text-xs font-medium font-sans transition-colors flex-shrink-0 ml-1 cursor-pointer"
                 >
                   Search
                 </button>
               </form>
             </div>
 
-            {/* RIGHT ACTION CLUSTER: CART + ACCOUNT */}
-            <div className="flex items-center gap-3 sm:gap-4 text-[#286266] text-sm font-medium">
+            {/* RIGHT ACTION CLUSTER: CART + ACCOUNT (DEEP SLATE + MUTED TERRACOTTA) */}
+            <div className="flex items-center gap-3 sm:gap-4 text-[#2D3748] text-sm font-medium">
               {/* CART TRIGGER BUTTON */}
               <button
                 type="button"
                 onClick={openCartModal}
                 aria-label="Open shopping cart"
-                className={`relative p-2 hover:bg-gray-100 rounded-lg transition-all flex items-center gap-2 ${
-                  isCartModalOpen ? 'scale-110 bg-gray-100' : ''
+                className={`relative p-2 hover:bg-white rounded-xl border border-transparent hover:border-[#E2E8F0] transition-all flex items-center gap-2 cursor-pointer ${
+                  isCartModalOpen ? 'scale-105 bg-white border-[#E2E8F0]' : ''
                 }`}
               >
-                <FiShoppingCart className="w-5 h-5 text-[#286266]" />
+                <FiShoppingCart className="w-5 h-5 text-[#2D3748]" />
                 {itemCount > 0 && (
-                  <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-[#872022] rounded-full border border-white">
+                  <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-[#C05E44] rounded-full border border-white shadow-2xs">
                     {itemCount}
                   </span>
                 )}
               </button>
               
               {/* ACCOUNT LINK */}
-              <Link href={isLoggedIn ? '/dashboard' : '/login'} className="hover:bg-gray-100 p-2 rounded-lg transition-colors text-[#286266]" aria-label="Account">
+              <Link 
+                href={isLoggedIn ? '/dashboard' : '/login'} 
+                className="hover:bg-white p-2 rounded-xl border border-transparent hover:border-[#E2E8F0] transition-colors text-[#2D3748]" 
+                aria-label="Account"
+              >
                 <VscAccount className="w-5 h-5" />
               </Link>
             </div>
           </div>
           
-          {/* bottom navigation  */}
-          <div className="flex  mx-auto px-6 lg:px-12 py-3  justify-between items-center text-sm font-bold text-gray-700 bg-white rounded-b-lg">
-            <nav className="flex gap-8">
-              <a href="#home" onClick={(e) => handleNavClick(e, 'home')} className={getNavClass('home')}>Home</a>
-              <a href="#deals" onClick={(e) => handleNavClick(e, 'deals')} className={getNavClass('deals')}>Offers & Deals</a>
-            </nav>
-            <nav className="flex gap-8 items-center">
-              <a href="#faq" onClick={(e) => handleNavClick(e, 'faq')} className={getNavClass('faq')}>FAQ</a>
-              <a href="#footer" onClick={(e) => handleNavClick(e, 'footer')} className={`transition-colors pb-1 ${activeSection === 'footer' ? 'text-[#1A4331]' : 'text-gray-600 hover:text-[#1A4331]'}`}>
-                <RiCustomerService2Fill className="w-5 h-5" />
-              </a>
-            </nav>
-          </div>
+          {/* DYNAMIC MARKETING ANNOUNCEMENT & COUNTDOWN TICKER (HOMEPAGE ONLY) */}
+          <MarketingNavbarBanner />
         </div>
 
         {/* ==========================================
             MOBILE NAVBAR 
         ========================================== */}
-        <div className="md:hidden bg-[#286266] w-full px-4 py-3 flex flex-col gap-2.5 shadow-md">
+        <div className="md:hidden bg-[#0F3024] w-full px-4 py-3 flex flex-col gap-2.5 shadow-sm">
           <div className="flex justify-between items-center text-white">
             <div className="flex items-center gap-2.5">
               <button onClick={() => setIsMobileMenuOpen(true)} aria-label="Open mobile menu">
-                <FiMenu className="text-2xl hover:text-green-200 transition-colors" />
+                <FiMenu className="text-2xl hover:text-emerald-200 transition-colors" />
               </button>
               <Link href="/" className="flex items-center gap-2">
                 <div className="relative w-8 h-8 flex-shrink-0">
@@ -267,8 +362,8 @@ export default function Navbar() {
                   />
                 </div>
                 <div className="leading-tight">
-                  <span className="font-black text-lg tracking-tight block">GGN</span>
-                  <span className="text-[7px] font-semibold tracking-wider uppercase text-green-200 block -mt-0.5">Green Grows Natural</span>
+                  <span className="font-black text-lg tracking-tight block font-display">GGN</span>
+                  <span className="text-[7px] font-semibold tracking-wider uppercase text-emerald-200 block -mt-0.5">Green Grows Natural</span>
                 </div>
               </Link>
             </div>
@@ -297,7 +392,7 @@ export default function Navbar() {
               >
                 <FiShoppingCart className="text-[22px]" />
                 {itemCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold text-white bg-[#872022] rounded-full border border-white">
+                  <span className="absolute -top-1.5 -right-2 inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold text-white bg-[#C05E44] rounded-full border border-white">
                     {itemCount}
                   </span>
                 )}
@@ -324,7 +419,7 @@ export default function Navbar() {
                   placeholder="Search produce, fruits, grains..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full py-2 pl-3.5 pr-16 rounded-full bg-white text-gray-900 text-sm outline-none font-medium shadow-md" 
+                  className="w-full py-2 pl-3.5 pr-16 rounded-full bg-white text-[#2D3748] text-sm outline-none font-medium shadow-md border border-[#E2E8F0]" 
                 />
                 <div className="absolute right-2 flex items-center gap-1">
                   {searchQuery && (
@@ -337,7 +432,7 @@ export default function Navbar() {
                       <FiX className="w-4 h-4" />
                     </button>
                   )}
-                  <button type="submit" aria-label="Search" className="bg-[#286266] text-white p-1.5 rounded-full">
+                  <button type="submit" aria-label="Search" className="bg-[#0F3024] text-white p-1.5 rounded-full">
                     <CiSearch className="text-base font-bold" />
                   </button>
                 </div>
@@ -360,6 +455,11 @@ export default function Navbar() {
             </div>
           </div>
         </div>
+
+        {/* MOBILE MARKETING TICKER (HOMEPAGE ONLY) */}
+        <div className="md:hidden">
+          <MarketingNavbarBanner />
+        </div>
       </nav>
 
       {/* ==========================================
@@ -369,7 +469,7 @@ export default function Navbar() {
         <div className="md:hidden fixed inset-0 z-[100] flex">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={() => setIsMobileMenuOpen(false)}></div>
           <div className="relative w-[80%] max-w-[320px] bg-white h-full flex flex-col overflow-y-auto animate-slide-in-left shadow-2xl">
-            <div className="bg-[#286266] p-5 text-white flex flex-col justify-between h-[120px]">
+            <div className="bg-[#0F3024] p-5 text-white flex flex-col justify-between h-[120px]">
               
               <div className="flex justify-end">
                 {/* --- UPDATED: Dynamic Drawer Link and Text --- */}
@@ -395,23 +495,29 @@ export default function Navbar() {
               </div>
             </div>
 
-            <div className="flex flex-col text-gray-800 text-sm font-semibold">
-              <a href="#home" onClick={(e) => handleNavClick(e, 'home')} className={`flex justify-between items-center p-4 border-b border-gray-100 hover:bg-gray-50 ${activeSection === 'home' ? 'text-[#1A4331]' : ''}`}>
-                Home <FiHome className="text-lg text-gray-600" />
+            <div className="flex flex-col text-[#2D3748] text-sm font-medium font-sans">
+              <a href="#home" onClick={(e) => handleNavClick(e, 'home')} className={`flex justify-between items-center p-4 border-b border-[#E2E8F0] hover:bg-[#FAFAFA] ${activeSection === 'home' ? 'text-[#0F3024]' : ''}`}>
+                Home <FiHome className="text-lg text-[#718096]" />
               </a>
-              <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="flex justify-between items-center p-4 hover:bg-gray-50">
-                My Order <FiShoppingCart className="text-lg text-gray-600" />
+              <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="flex justify-between items-center p-4 hover:bg-[#FAFAFA]">
+                My Order <FiShoppingCart className="text-lg text-[#718096]" />
               </Link>
-              <Link href="/products" onClick={() => setIsMobileMenuOpen(false)} className="flex justify-between items-center p-4 border-b border-gray-100 hover:bg-gray-50">
-                All Products <FiShoppingCart className="text-lg text-gray-600" />
+              <Link href="/products" onClick={() => setIsMobileMenuOpen(false)} className="flex justify-between items-center p-4 border-b border-[#E2E8F0] hover:bg-[#FAFAFA]">
+                All Products <FiShoppingCart className="text-lg text-[#718096]" />
               </Link>
 
-              <div className="p-4 border-b border-gray-100 flex flex-col gap-4">
-                <h3 className="font-bold text-black text-base">Top Categories</h3>
-                <Link href="/products?category=Fruits" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 font-medium">Fruits</Link>
-                <Link href="/products?category=Grains" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 font-medium">Nuts, Grains & Legumes</Link>
-                <Link href="/products?category=Vegetables" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 font-medium">Vegetables</Link>
-                <Link href="/products?category=Tubers" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 font-medium">Tubers & Roots</Link>
+              <div className="p-4 border-b border-[#E2E8F0] flex flex-col gap-3">
+                <h3 className="font-medium font-display text-[#0F3024] text-base">Categories</h3>
+                {categories.map((cat) => (
+                  <Link 
+                    key={cat}
+                    href={`/products?category=${encodeURIComponent(cat)}`} 
+                    onClick={() => setIsMobileMenuOpen(false)} 
+                    className="text-[#718096] font-medium hover:text-[#0F3024] transition-colors"
+                  >
+                    {cat}
+                  </Link>
+                ))}
               </div>
 
               <div className="p-4 border-b border-gray-100 flex flex-col gap-4">

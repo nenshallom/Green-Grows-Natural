@@ -12,11 +12,7 @@ interface BulkProductCardProps {
   priority?: boolean;
 }
 
-export default function BulkProductCard({
-  product,
-  onQuickAdd,
-  priority = false,
-}: BulkProductCardProps) {
+export default function BulkProductCard({ product, onQuickAdd, priority = false }: BulkProductCardProps) {
   const bulkThreshold = product.bulk_threshold || 2;
   const bulkPrice = product.bulk_buy_price ?? product.price_per_unit;
   const standardPrice = product.price_per_unit;
@@ -29,7 +25,7 @@ export default function BulkProductCard({
   return (
     <Link
       href={`/product/${product.id}`}
-      className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300 block"
+      className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-[#E2E8F0] hover:border-[#718096]/40 hover:shadow-sm transition-all duration-300 block"
     >
       {/* =========================================================
           TOP: ASPECT-SQUARE PRODUCT IMAGE & BULK BADGES
@@ -45,60 +41,59 @@ export default function BulkProductCard({
             className="object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">
+          <div className="w-full h-full flex items-center justify-center text-[#718096] text-xs font-sans">
             No image
           </div>
         )}
 
-        {/* TOP-LEFT: WHOLESALE SAVINGS BADGE */}
+        {/* TOP-LEFT: WHOLESALE SAVINGS BADGE (MUTED TERRACOTTA PILL) */}
         {savingsPercent > 0 ? (
-          <div className="absolute top-2 left-2 bg-[#D93F3F] text-white text-[10px] font-black px-1.5 py-0.5 rounded shadow-2xs z-10 flex items-center gap-1">
+          <div className="absolute top-2.5 left-2.5 bg-[#C05E44] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-2xs z-10 flex items-center gap-1 font-sans tracking-wide">
             <span>BULK</span>
             <span>-{savingsPercent}%</span>
           </div>
         ) : (
-          <div className="absolute top-2 left-2 bg-emerald-700 text-white text-[10px] font-black px-1.5 py-0.5 rounded shadow-2xs z-10">
+          <div className="absolute top-2.5 left-2.5 bg-[#0F3024] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-2xs z-10 font-sans tracking-wide">
             WHOLESALE
           </div>
         )}
 
         {/* TOP-RIGHT: MINIMUM THRESHOLD (MOQ) BADGE */}
-        <div className="absolute top-2 right-2 bg-white/95 backdrop-blur-xs text-orange-600 text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1 z-10 border border-orange-100">
-          <span>🔥</span>
+        <div className="absolute top-2.5 right-2.5 bg-white/95 backdrop-blur-xs text-[#2D3748] text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1 z-10 border border-[#E2E8F0] font-sans">
           <span>Min {bulkThreshold} {product.unit || 'kg'}</span>
         </div>
       </div>
 
       {/* =========================================================
-          BOTTOM: WHITE PRODUCT DETAILS CARD (BULK EMPHASIS)
+          BOTTOM: PRODUCT DETAILS (MIN 16PX PADDING)
       ========================================================= */}
-      <div className="p-2.5 sm:p-3 flex flex-col flex-1 justify-between gap-1.5">
+      <div className="p-4 sm:p-4.5 flex flex-col flex-1 justify-between gap-2.5">
         <div>
-          {/* TITLE */}
-          <h3 className="font-medium text-xs sm:text-sm text-gray-900 leading-snug line-clamp-2 group-hover:text-[#FA5400] transition-colors mb-1">
+          {/* TITLE (OUTFIT MEDIUM 18PX) */}
+          <h3 className="font-medium text-sm sm:text-base text-[#2D3748] leading-snug line-clamp-2 group-hover:text-[#0F3024] transition-colors mb-1.5 font-display">
             {product.name}
           </h3>
 
-          {/* PRICING & CIRCULAR CART ACTION ROW */}
-          <div className="flex items-center justify-between gap-1.5 mt-0.5">
-            <div className="flex items-baseline gap-1.5 flex-wrap min-w-0">
-              {/* Cancelled Standard Unit Price */}
+          {/* PRICING & CART ACTION ROW */}
+          <div className="flex items-center justify-between gap-2 mt-1">
+            <div className="flex items-baseline gap-1.5 flex-wrap min-w-0 font-sans">
+              {/* Cancelled Standard Unit Price (Soft Ash) */}
               {standardPrice > bulkPrice && (
-                <span className="text-[11px] sm:text-xs text-gray-400 line-through font-medium">
+                <span className="text-xs text-[#718096] line-through font-normal">
                   {formatNaira(standardPrice)}
                 </span>
               )}
 
-              {/* Bold Wholesale Bulk Price */}
-              <span className="text-sm sm:text-base font-extrabold text-[#FA5400]">
+              {/* Bold Wholesale Bulk Price (Muted Terracotta) */}
+              <span className="text-base sm:text-lg font-semibold text-[#C05E44] leading-none">
                 {formatNaira(bulkPrice)}
-                <span className="text-[10px] text-gray-500 font-medium ml-0.5">
+                <span className="text-xs text-[#718096] font-normal ml-0.5">
                   /{product.unit || 'kg'}
                 </span>
               </span>
             </div>
 
-            {/* TEMU CIRCULAR OUTLINE CART BUTTON (PRE-LOADS BULK) */}
+            {/* MINIMAL CIRCULAR CART BUTTON */}
             <button
               type="button"
               onClick={(e) => {
@@ -107,33 +102,30 @@ export default function BulkProductCard({
                 onQuickAdd(product);
               }}
               aria-label={`Bulk purchase for ${product.name}`}
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 hover:border-black text-gray-700 hover:text-black hover:bg-gray-50 flex items-center justify-center transition-all cursor-pointer active:scale-90 flex-shrink-0 shadow-2xs"
+              className="w-8 h-8 rounded-full border border-[#E2E8F0] hover:border-[#0F3024] text-[#2D3748] hover:text-[#0F3024] hover:bg-[#FAFAFA] flex items-center justify-center transition-all cursor-pointer active:scale-90 flex-shrink-0 shadow-2xs"
             >
               <FiShoppingCart className="w-3.5 h-3.5" />
             </button>
           </div>
 
           {/* MINIMUM BATCH / LOT COMMITMENT CALLOUT */}
-          <div className="mt-1.5 inline-flex items-center gap-1 text-[10px] text-gray-600 bg-gray-50 border border-gray-100 rounded px-1.5 py-0.5 font-medium">
-            <span className="text-gray-400">📦</span>
-            <span>Lot:</span>
-            <span className="font-bold text-gray-900">{formatNaira(minOrderTotal)}</span>
-            <span className="text-gray-400">({bulkThreshold} {product.unit || 'kg'})</span>
+          <div className="mt-2 inline-flex items-center gap-1.5 text-xs text-[#2D3748] bg-[#FAFAFA] border border-[#E2E8F0] rounded-lg px-2 py-1 font-sans">
+            <span className="text-[#718096]">Batch:</span>
+            <span className="font-bold text-[#2D3748]">{formatNaira(minOrderTotal)}</span>
+            <span className="text-[#718096]">({bulkThreshold} {product.unit || 'kg'})</span>
           </div>
         </div>
 
-        {/* RANKING & BULK PROOF */}
-        <div className="pt-1.5 border-t border-gray-50 space-y-0.5">
-          {/* WHOLESALE RANKING SUBTEXT */}
-          <p className="text-[10px] text-[#C25E00] font-bold uppercase tracking-tight truncate">
-            WHOLESALE DEAL | In {product.category || 'Produce'}
+        {/* PROVENANCE & BULK PROOF */}
+        <div className="pt-2 border-t border-[#E2E8F0] space-y-0.5">
+          <p className="text-[10px] text-[#718096] font-semibold uppercase tracking-wider truncate font-display">
+            DIRECT WHOLESALE | In {product.category || 'Produce'}
           </p>
 
-          {/* RATINGS & VOLUME */}
-          <div className="flex items-center gap-1.5 text-[11px] text-gray-600 font-medium">
-            <span className="text-amber-500 font-bold text-xs tracking-tighter">★★★★★</span>
-            <span className="text-[10px] text-gray-400">•</span>
-            <span className="text-[10px] text-gray-600 font-semibold">100+ bulk orders</span>
+          <div className="flex items-center gap-1.5 text-xs text-[#718096] font-sans">
+            <span className="text-[#C05E44] font-bold text-xs tracking-tighter">★★★★★</span>
+            <span className="text-[10px] text-[#718096]">•</span>
+            <span className="text-[11px] text-[#718096] font-medium">Verified farm harvest</span>
           </div>
         </div>
       </div>

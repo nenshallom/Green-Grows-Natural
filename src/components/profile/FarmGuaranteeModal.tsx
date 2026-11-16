@@ -94,11 +94,11 @@ export default function FarmGuaranteeModal({ isOpen, onClose }: FarmGuaranteeMod
         </div>
 
         {/* FOOTER BUTTON */}
-        <div className="mt-6 pt-4 border-t border-gray-100">
+        <div className="mt-6 pt-4 border-t border-[#E2E8F0] font-sans">
           <button
             type="button"
             onClick={onClose}
-            className="w-full bg-[#1A4331] hover:bg-[#123122] text-white font-bold py-3 rounded-xl transition-colors cursor-pointer text-sm shadow-sm"
+            className="w-full bg-[#0F3024] hover:bg-[#153426] text-white font-medium py-3 rounded-full transition-colors cursor-pointer text-sm shadow-xs"
           >
             Got it, thanks!
           </button>

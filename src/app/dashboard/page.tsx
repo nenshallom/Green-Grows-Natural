@@ -283,8 +283,8 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#FDFDFD] p-8 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#1A4331]" />
+      <main className="min-h-screen bg-[#FAFAFA] p-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0F3024]" />
       </main>
     );
   }
@@ -383,48 +383,48 @@ export default function DashboardPage() {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Item name / Order ID / Tracking No."
-                      className="w-full pl-3.5 pr-8 py-2 rounded-full border border-gray-200 text-xs text-gray-800 outline-none focus:border-[#FA5400] transition-colors placeholder:text-gray-400 shadow-2xs"
+                      className="w-full pl-3.5 pr-8 py-2 rounded-full border border-[#E2E8F0] text-xs text-[#2D3748] outline-none focus:border-[#0F3024] transition-colors placeholder:text-[#718096] shadow-2xs font-sans"
                     />
-                    <FiSearch className="absolute right-3 top-2.5 text-gray-400 w-3.5 h-3.5" />
+                    <FiSearch className="absolute right-3 top-2.5 text-[#718096] w-3.5 h-3.5" />
                   </div>
                 </div>
 
-                {/* TEMU GREEN GUARANTEE RIBBON BANNER */}
+                {/* GREEN GUARANTEE RIBBON BANNER */}
                 <button
                   type="button"
                   onClick={() => setIsGuaranteeOpen(true)}
-                  className="w-full text-left bg-[#F4FAF6] border border-[#CDEBD8] hover:border-emerald-400 rounded-xl px-4 py-2.5 text-xs text-emerald-900 flex items-center justify-between gap-3 transition-colors cursor-pointer shadow-2xs"
+                  className="w-full text-left bg-white border border-[#E2E8F0] hover:border-[#0F3024] rounded-2xl px-4 py-3 text-xs text-[#2D3748] flex items-center justify-between gap-3 transition-colors cursor-pointer shadow-xs"
                 >
                   <div className="flex items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap">
-                    <FiShield className="text-emerald-700 w-4 h-4 flex-shrink-0" />
-                    <span className="font-extrabold text-emerald-800">Order guarantee</span>
-                    <span className="text-emerald-400">•</span>
-                    <span className="truncate text-emerald-700 font-medium">
+                    <FiShield className="text-[#0F3024] w-4 h-4 flex-shrink-0" />
+                    <span className="font-medium font-display text-[#0F3024]">Order guarantee</span>
+                    <span className="text-[#E2E8F0]">•</span>
+                    <span className="truncate text-[#718096] font-normal font-sans">
                       100% Farm Fresh Guarantee · Harvest Cold Packing · Prompt Dispatch · Replacement if damaged
                     </span>
                   </div>
-                  <span className="text-emerald-700 font-bold text-xs flex-shrink-0">
+                  <span className="text-[#0F3024] font-semibold text-xs flex-shrink-0">
                     ›
                   </span>
                 </button>
 
                 {/* ORDERS LIST */}
                 {filteredOrders.length === 0 ? (
-                  <div className="bg-white p-12 md:p-16 rounded-2xl text-center border border-gray-100 shadow-2xs flex flex-col items-center justify-center">
-                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mb-3">
+                  <div className="bg-white p-12 md:p-16 rounded-3xl text-center border border-[#E2E8F0] shadow-xs flex flex-col items-center justify-center font-sans">
+                    <div className="w-16 h-16 bg-[#FAFAFA] rounded-full flex items-center justify-center text-[#718096] mb-3 border border-[#E2E8F0]">
                       <FiPackage className="w-8 h-8" />
                     </div>
-                    <h3 className="text-base font-bold text-gray-900">
+                    <h3 className="text-base font-medium font-display text-[#2D3748]">
                       {searchQuery ? 'No matching orders found' : 'No orders in this category'}
                     </h3>
-                    <p className="text-xs text-gray-500 mt-1 mb-5 max-w-sm">
+                    <p className="text-xs text-[#718096] mt-1 mb-5 max-w-sm">
                       {searchQuery
                         ? 'Try searching with another item name or tracking number.'
                         : 'Explore our catalog for farm-fresh produce picked right from harvest.'}
                     </p>
                     <Link
                       href="/products"
-                      className="bg-[#FA5400] hover:bg-[#E04B00] text-white text-xs font-bold py-2.5 px-6 rounded-full transition-colors shadow-xs"
+                      className="bg-[#0F3024] hover:bg-[#153426] text-white text-xs font-medium py-2.5 px-6 rounded-full transition-colors shadow-xs"
                     >
                       Start Shopping
                     </Link>
@@ -449,22 +449,22 @@ export default function DashboardPage() {
                 {/* =====================================================
                     CAN'T FIND YOUR ORDER? (ASSISTANCE BOTTOM CARDS)
                 ===================================================== */}
-                <div className="pt-4">
-                  <h3 className="text-xs font-bold text-gray-700 mb-2">Can&apos;t find your order?</h3>
+                <div className="pt-4 font-sans">
+                  <h3 className="text-xs font-medium font-display text-[#2D3748] mb-2 uppercase tracking-[1.5px]">Can&apos;t find your order?</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <a
                       href="https://wa.me/2348004463276?text=Hello%20GGN%20Farm%20Desk,%20I%20need%20help%20locating%20my%20order."
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-4 rounded-xl border border-orange-200/80 bg-white hover:bg-orange-50/30 flex items-center justify-between text-xs transition-colors group cursor-pointer shadow-2xs"
+                      className="p-4 rounded-2xl border border-[#E2E8F0] bg-white hover:bg-[#FAFAFA] flex items-center justify-between text-xs transition-colors group cursor-pointer shadow-xs"
                     >
                       <div className="flex items-center gap-2.5">
-                        <FiMessageCircle className="w-4 h-4 text-[#FA5400]" />
-                        <span className="font-semibold text-gray-800">
+                        <FiMessageCircle className="w-4 h-4 text-[#0F3024]" />
+                        <span className="font-medium text-[#2D3748]">
                           WhatsApp Farm Dispatch Desk
                         </span>
                       </div>
-                      <span className="text-[#FA5400] font-black group-hover:translate-x-0.5 transition-transform">
+                      <span className="text-[#0F3024] font-semibold group-hover:translate-x-0.5 transition-transform">
                         ›
                       </span>
                     </a>
@@ -472,15 +472,15 @@ export default function DashboardPage() {
                     <button
                       type="button"
                       onClick={() => setIsGuaranteeOpen(true)}
-                      className="p-4 rounded-xl border border-orange-200/80 bg-white hover:bg-orange-50/30 flex items-center justify-between text-xs transition-colors group cursor-pointer shadow-2xs text-left"
+                      className="p-4 rounded-2xl border border-[#E2E8F0] bg-white hover:bg-[#FAFAFA] flex items-center justify-between text-xs transition-colors group cursor-pointer shadow-xs text-left"
                     >
                       <div className="flex items-center gap-2.5">
-                        <FiShield className="w-4 h-4 text-[#FA5400]" />
-                        <span className="font-semibold text-gray-800">
+                        <FiShield className="w-4 h-4 text-[#0F3024]" />
+                        <span className="font-medium text-[#2D3748]">
                           Self-service farm guarantee & tracking
                         </span>
                       </div>
-                      <span className="text-[#FA5400] font-black group-hover:translate-x-0.5 transition-transform">
+                      <span className="text-[#0F3024] font-semibold group-hover:translate-x-0.5 transition-transform">
                         ›
                       </span>
                     </button>

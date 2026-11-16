@@ -129,16 +129,16 @@ export default function ProduceReviewModal({
               value={comments}
               onChange={(e) => setComments(e.target.value)}
               placeholder="Tell us about the produce taste, packaging, and delivery experience..."
-              className="w-full p-3 border border-gray-200 rounded-xl text-xs text-gray-800 focus:border-[#1A4331] focus:ring-1 focus:ring-[#1A4331] outline-none resize-none"
+              className="w-full p-3 border border-[#E2E8F0] rounded-xl text-xs text-[#2D3748] focus:border-[#0F3024] focus:ring-1 focus:ring-[#0F3024] outline-none resize-none font-sans"
             />
           </div>
 
           {/* SUBMIT BUTTON */}
-          <div className="pt-2">
+          <div className="pt-2 font-sans">
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-[#FA5400] hover:bg-[#E04B00] text-white font-bold py-3 rounded-xl transition-colors cursor-pointer text-sm shadow-sm disabled:opacity-50"
+              className="w-full bg-[#0F3024] hover:bg-[#153426] text-white font-medium py-3 rounded-full transition-colors cursor-pointer text-sm shadow-xs disabled:opacity-50"
             >
               {submitting ? 'Submitting Review...' : 'Submit Review'}
             </button>

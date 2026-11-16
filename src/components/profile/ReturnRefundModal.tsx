@@ -49,14 +49,14 @@ export default function ReturnRefundModal({
 
         {/* HEADER */}
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-full bg-orange-50 text-[#FA5400] flex items-center justify-center text-2xl font-bold flex-shrink-0">
+          <div className="w-12 h-12 rounded-full bg-[#FAFAFA] text-[#0F3024] border border-[#E2E8F0] flex items-center justify-center text-2xl font-bold flex-shrink-0">
             <FiRefreshCw />
           </div>
           <div>
-            <h2 className="text-xl font-black text-gray-900 tracking-tight">
+            <h2 className="text-xl font-medium font-display text-[#2D3748] tracking-tight">
               Return / Freshness Claim
             </h2>
-            <p className="text-xs text-gray-500 font-medium">
+            <p className="text-xs text-[#718096] font-normal font-sans">
               Order #{orderId}
             </p>
           </div>

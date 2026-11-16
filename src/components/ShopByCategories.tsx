@@ -21,20 +21,20 @@ export default function ShopByCategories({ activeCategories }: ShopByCategoriesP
   };
 
   return (
-    <section className="w-full mb-6">
+    <section className="w-full my-12 md:my-16 font-sans">
       {/* SECTION HEADER WITH OPTIONAL ARROW CONTROLS */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl md:text-2xl font-black text-[#1A4331] tracking-tight">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl md:text-3xl font-medium text-[#0F3024] font-display tracking-[-0.5px]">
           Shop by Categories
         </h2>
 
         {/* Desktop Arrow Controls */}
-        <div className="hidden md:flex items-center gap-1.5">
+        <div className="hidden md:flex items-center gap-2">
           <button
             type="button"
             onClick={() => handleScroll('left')}
             aria-label="Scroll categories left"
-            className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:border-[#1A4331] hover:text-[#1A4331] hover:bg-gray-50 transition-colors shadow-xs"
+            className="w-9 h-9 rounded-full border border-[#E2E8F0] flex items-center justify-center text-[#718096] hover:border-[#0F3024] hover:text-[#0F3024] hover:bg-white transition-colors shadow-2xs"
           >
             <FiChevronLeft className="w-4 h-4" />
           </button>
@@ -42,22 +42,22 @@ export default function ShopByCategories({ activeCategories }: ShopByCategoriesP
             type="button"
             onClick={() => handleScroll('right')}
             aria-label="Scroll categories right"
-            className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:border-[#1A4331] hover:text-[#1A4331] hover:bg-gray-50 transition-colors shadow-xs"
+            className="w-9 h-9 rounded-full border border-[#E2E8F0] flex items-center justify-center text-[#718096] hover:border-[#0F3024] hover:text-[#0F3024] hover:bg-white transition-colors shadow-2xs"
           >
             <FiChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* HORIZONTAL SCROLLABLE ROW OF BORDERED PILLS */}
+      {/* HORIZONTAL SCROLLABLE ROW OF STRICT APOTHECARY PILLS */}
       <div
         ref={scrollContainerRef}
-        className="flex items-center gap-2.5 overflow-x-auto pb-2 scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex items-center gap-3 overflow-x-auto pb-2 scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {/* "All Categories" Default Pill */}
         <Link
           href="/products"
-          className="flex-shrink-0 px-5 py-2.5 rounded-full border border-gray-300 bg-white text-sm font-bold text-gray-700 hover:border-[#1A4331] hover:text-[#1A4331] hover:bg-[#1A4331]/5 transition-all shadow-sm active:scale-95 whitespace-nowrap"
+          className="flex-shrink-0 py-2 px-5 rounded-full border border-[#E2E8F0] bg-white text-xs font-bold font-display uppercase tracking-[1.5px] text-[#2D3748] hover:border-[#0F3024] hover:text-[#0F3024] transition-all shadow-2xs active:scale-95 whitespace-nowrap"
         >
           All Categories
         </Link>
@@ -67,7 +67,7 @@ export default function ShopByCategories({ activeCategories }: ShopByCategoriesP
           <Link
             key={index}
             href={`/products?category=${encodeURIComponent(categoryName)}`}
-            className="flex-shrink-0 px-5 py-2.5 rounded-full border border-gray-200 bg-white text-sm font-bold text-gray-700 hover:border-[#1A4331] hover:text-[#1A4331] hover:bg-[#1A4331]/5 transition-all shadow-sm active:scale-95 whitespace-nowrap"
+            className="flex-shrink-0 py-2 px-5 rounded-full border border-[#E2E8F0] bg-white text-xs font-bold font-display uppercase tracking-[1.5px] text-[#2D3748] hover:border-[#0F3024] hover:text-[#0F3024] transition-all shadow-2xs active:scale-95 whitespace-nowrap"
           >
             {categoryName}
           </Link>

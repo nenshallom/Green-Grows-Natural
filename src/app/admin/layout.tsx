@@ -70,6 +70,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Link href="/admin/customers" className="block px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors font-medium">
             👥 Customer CRM
           </Link>
+          <Link href="/admin/marketing" className="block px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors font-medium">
+            📢 Marketing & Banners
+          </Link>
         </nav>
 
         <div className="p-4 border-t border-gray-800">

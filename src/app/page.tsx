@@ -35,8 +35,8 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen">
-      <main className="max-w-[95%] mx-auto py-8 space-y-16">
+    <div className="min-h-screen bg-[#FAFAFA]">
+      <main className="max-w-[95%] lg:max-w-7xl mx-auto py-8 sm:py-12 space-y-20 md:space-y-24">
         {/* --- HERO SECTION --- */}
         {/* <div id="home">
           <Hero />
@@ -47,7 +47,7 @@ export default function Home() {
         <div id="deals" className="scroll-mt-24">
           {loading ? (
             <div className="py-12 flex justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1A4331]"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0F3024]"></div>
             </div>
           ) : (
             <>

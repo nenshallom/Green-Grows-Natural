@@ -202,9 +202,9 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
     (product.current_group_buyers ?? 0) >= (product.group_threshold || 1);
 
   return (
-    <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-12">
+    <div className="min-h-screen bg-[#FAFAFA] text-[#2D3748] font-sans py-8 md:py-12 px-4 sm:px-6 lg:px-12">
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-14 mb-16 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-14 mb-20 items-start">
           {/* =========================================================
               LEFT COLUMN: CONTINUOUS AUTO-SLIDING & SWIPABLE CAROUSEL
               (Zero arrow pointers, swipable in both directions)
@@ -212,7 +212,7 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
           <div className="flex flex-col gap-3">
             {/* HERO SLIDING TRACK CONTAINER */}
             <div
-              className="relative w-full aspect-square rounded-3xl overflow-hidden bg-gray-50 border border-gray-100 shadow-sm group select-none cursor-grab active:cursor-grabbing"
+              className="relative w-full aspect-square rounded-3xl overflow-hidden bg-white border border-[#E2E8F0] shadow-xs group select-none cursor-grab active:cursor-grabbing"
               onMouseEnter={() => setIsPaused(true)}
               onMouseLeave={() => {
                 setIsPaused(false);
@@ -244,7 +244,7 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                     </div>
                   ))
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                  <div className="w-full h-full flex items-center justify-center text-[#718096] text-sm">
                     No Image Available
                   </div>
                 )}
@@ -252,21 +252,21 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
 
               {/* DISCOUNT BADGE (Top-Left) */}
               {isDiscountActive && activeDiscountPercent > 0 && (
-                <div className="absolute top-4 left-4 bg-[#D93F3F] text-white text-xs font-black px-2.5 py-1 rounded shadow-sm z-10 pointer-events-none">
+                <div className="absolute top-4 left-4 bg-[#C05E44] text-white text-xs font-semibold px-3 py-1 rounded-full shadow-xs z-10 pointer-events-none font-sans">
                   -{activeDiscountPercent}%
                 </div>
               )}
 
               {/* BULK BUY BADGE (Top-Right) */}
               {computedPriceType === 'bulk' && (
-                <div className="absolute top-4 right-4 bg-orange-600 text-white text-xs font-bold px-2.5 py-1 rounded shadow-sm z-10 flex items-center gap-1 pointer-events-none">
-                  🔥 Bulk Buy
+                <div className="absolute top-4 right-4 bg-[#0F3024] text-white text-xs font-medium px-3 py-1 rounded-full shadow-xs z-10 flex items-center gap-1 pointer-events-none font-display">
+                  Bulk Buy
                 </div>
               )}
 
               {/* SUBTLE PROGRESS DOTS (Bottom Center) */}
               {allImages.length > 1 && (
-                <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/30 backdrop-blur-xs px-2.5 py-1 rounded-full z-10 pointer-events-none">
+                <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-[#0F3024]/40 backdrop-blur-xs px-2.5 py-1 rounded-full z-10 pointer-events-none">
                   {allImages.map((_, idx) => (
                     <span
                       key={idx}
@@ -291,8 +291,8 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                     onClick={() => setCurrentImageIndex(idx)}
                     className={`relative w-16 h-16 rounded-2xl overflow-hidden border-2 flex-shrink-0 transition-all cursor-pointer ${
                       currentImageIndex === idx
-                        ? 'border-[#FA5400] ring-2 ring-[#FA5400]/20 scale-102 shadow-xs'
-                        : 'border-gray-200 hover:border-gray-400 opacity-80 hover:opacity-100'
+                        ? 'border-[#0F3024] ring-2 ring-[#0F3024]/20 scale-102 shadow-xs'
+                        : 'border-[#E2E8F0] hover:border-[#0F3024] opacity-80 hover:opacity-100'
                     }`}
                   >
                     <Image
@@ -309,51 +309,49 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
           </div>
 
           {/* =========================================================
-              RIGHT COLUMN: PRODUCT DETAILS & TEMU ACTION AREA
+              RIGHT COLUMN: PRODUCT DETAILS & ACTION AREA
           ========================================================= */}
           <div className="flex flex-col pt-1">
             {/* TITLE & SHARE BUTTON */}
             <div className="flex items-start justify-between gap-4 mb-2">
-              <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 leading-snug">
+              <h1 className="text-2xl md:text-3xl font-semibold text-[#2D3748] leading-snug font-display tracking-tight">
                 {product.name}
               </h1>
               <button
                 type="button"
                 onClick={handleShare}
                 aria-label="Share product"
-                className="p-2 rounded-full border border-gray-200 text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors flex-shrink-0 shadow-2xs cursor-pointer"
+                className="p-2.5 rounded-full border border-[#E2E8F0] text-[#718096] hover:text-[#0F3024] hover:bg-white transition-colors flex-shrink-0 shadow-2xs cursor-pointer"
               >
                 <FiShare2 className="w-5 h-5" />
               </button>
             </div>
 
-            {/* TEMU SOCIAL PROOF & RATING ROW */}
-            <div className="flex items-center justify-between flex-wrap gap-2 text-xs mb-3">
-              <div className="flex items-center gap-1 text-gray-600 font-medium">
-                <span>100+ sold</span>
-                <span>|</span>
-                <span className="text-gray-800 font-semibold">Sold by Green Grown Natural</span>
-                <span className="text-gray-400 text-sm">›</span>
+            {/* SOCIAL PROOF & RATING ROW */}
+            <div className="flex items-center justify-between flex-wrap gap-2 text-xs mb-3 font-sans">
+              <div className="flex items-center gap-1.5 text-[#718096]">
+                <span>100+ verified orders</span>
+                <span>•</span>
+                <span className="text-[#2D3748] font-medium">Sold by Green Grown Natural</span>
               </div>
 
-              <div className="flex items-center gap-1 font-bold text-gray-900">
+              <div className="flex items-center gap-1 font-semibold text-[#2D3748]">
                 <span>4.8</span>
                 <span className="text-amber-500 tracking-tighter">★★★★★</span>
               </div>
             </div>
 
-            {/* TEMU LAUREL RANKING BADGE */}
+            {/* CATEGORY RANKING BADGE */}
             <div className="mb-4">
-              <div className="inline-flex items-center gap-1.5 bg-[#FFF4EB] border border-[#FFE0CC] text-[#C25E00] text-xs font-bold px-3 py-1.5 rounded-lg shadow-2xs">
-                <span>🌾</span>
-                <span>#1 Best-Selling Item</span>
-                <span>in {product.category || 'Agro Produce'}</span>
-                <span className="text-sm leading-none ml-0.5">›</span>
+              <div className="inline-flex items-center gap-1.5 bg-white border border-[#E2E8F0] text-[#0F3024] text-xs font-medium px-3.5 py-1.5 rounded-full shadow-2xs font-display">
+                <span>🌱</span>
+                <span>Top Harvest Selection</span>
+                <span className="text-[#718096] font-sans font-normal">in {product.category || 'Agro Produce'}</span>
               </div>
             </div>
 
             {/* =========================================================
-                TEMU PRICING ROW:
+                PRICING ROW:
                 1. Strikethrough Normal Price (FIRST)
                 2. Discounted Price (SECOND)
                 3. Discount Tag Box (THIRD)
@@ -361,57 +359,56 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
             <div className="flex items-baseline flex-wrap gap-3 mb-5">
               {/* 1. CANCELLED NORMAL PRICE */}
               {isDiscountActive && baselinePrice && (
-                <span className="text-xl md:text-2xl font-bold text-gray-400 line-through">
+                <span className="text-xl md:text-2xl font-normal text-[#718096] line-through font-sans">
                   {formatNaira(baselinePrice)}
                 </span>
               )}
 
               {/* 2. CURRENT ACTIVE PRICE */}
-              <span className="text-3xl md:text-4xl font-black text-gray-900">
+              <span className="text-3xl md:text-4xl font-semibold text-[#C05E44] font-sans">
                 {formatNaira(currentUnitPrice)}
-                <span className="text-sm font-semibold text-gray-500 ml-1">
+                <span className="text-sm font-normal text-[#718096] ml-1">
                   /{product.unit || 'kg'}
                 </span>
               </span>
 
-              {/* 3. ORANGE DISCOUNT BOX TAG */}
+              {/* 3. DISCOUNT BOX TAG */}
               {isDiscountActive && activeDiscountPercent > 0 && (
-                <span className="text-xs font-bold text-[#FA5400] border border-[#FA5400] bg-[#FFF8F2] rounded-md px-2 py-0.5">
+                <span className="text-xs font-semibold text-[#C05E44] border border-[#C05E44]/40 bg-[#C05E44]/10 rounded-full px-2.5 py-0.5 font-sans">
                   {activeDiscountPercent}% OFF
                 </span>
               )}
             </div>
 
             {/* SERVICE & QUALITY GUARANTEE BANNER */}
-            <div className="mb-6 bg-[#FFF8F2] border border-[#FFE7D6] rounded-2xl p-3.5 flex items-center justify-between text-xs font-bold text-gray-800 shadow-2xs">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-emerald-700 flex items-center gap-1">
-                  <span className="text-sm font-bold">✓</span> 100% Farm Fresh Guarantee
+            <div className="mb-6 bg-white border border-[#E2E8F0] rounded-2xl p-4 flex items-center justify-between text-xs text-[#2D3748] shadow-xs">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <span className="text-[#0F3024] flex items-center gap-1 font-medium font-sans">
+                  <span className="text-xs">✓</span> 100% Farm Fresh Guarantee
                 </span>
-                <span className="text-gray-300">|</span>
-                <span className="text-emerald-700 flex items-center gap-1">
-                  <span className="text-sm font-bold">✓</span> Same-Day Harvest & Fast Delivery
+                <span className="text-[#E2E8F0]">|</span>
+                <span className="text-[#0F3024] flex items-center gap-1 font-medium font-sans">
+                  <span className="text-xs">✓</span> Same-Day Harvest & Cold-Chain Dispatch
                 </span>
               </div>
-              <span className="text-gray-400 text-sm font-black">›</span>
             </div>
 
             {/* PRODUCT DESCRIPTION */}
-            <p className="text-sm text-gray-600 leading-relaxed mb-6">
+            <p className="text-sm text-[#718096] leading-relaxed mb-6 font-sans">
               {product.description ||
                 'Fresh, organically cultivated, and packed with essential nutrients directly from trusted local farms.'}
             </p>
 
             {/* GROUP BUY MODE SWITCH (If Feature Enabled) */}
             {FEATURES.ENABLE_GROUP_BUY && product.is_group_buy_enabled && (
-              <div className="flex gap-2 mb-6">
+              <div className="flex gap-2.5 mb-6">
                 <button
                   type="button"
                   onClick={() => handleModeSelect('standard')}
-                  className={`flex-1 py-2.5 px-2 rounded-xl font-bold text-xs transition-colors cursor-pointer ${
+                  className={`flex-1 py-2.5 px-4 rounded-full font-medium text-xs font-display tracking-[0.5px] transition-colors cursor-pointer ${
                     purchaseMode === 'standard'
-                      ? 'bg-[#1A4331] text-white shadow-xs'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-[#0F3024] text-white shadow-xs'
+                      : 'bg-white text-[#2D3748] border border-[#E2E8F0] hover:border-[#0F3024]'
                   }`}
                 >
                   Standard & Bulk Buy
@@ -421,11 +418,11 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                   type="button"
                   onClick={() => !isGroupFull && handleModeSelect('group')}
                   disabled={isGroupFull}
-                  className={`flex-1 py-2.5 px-2 rounded-xl font-bold text-xs transition-colors cursor-pointer ${
+                  className={`flex-1 py-2.5 px-4 rounded-full font-medium text-xs font-display tracking-[0.5px] transition-colors cursor-pointer ${
                     purchaseMode === 'group'
-                      ? 'bg-[#FA5400] text-white shadow-xs'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  } ${isGroupFull ? 'opacity-50 cursor-not-allowed border border-gray-300' : ''}`}
+                      ? 'bg-[#C05E44] text-white shadow-xs'
+                      : 'bg-white text-[#2D3748] border border-[#E2E8F0] hover:border-[#C05E44]'
+                  } ${isGroupFull ? 'opacity-50 cursor-not-allowed border border-[#E2E8F0]' : ''}`}
                 >
                   {isGroupFull ? 'Campaign Full' : 'Join Group Buy'}
                 </button>
@@ -439,7 +436,7 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
               product.is_bulk_buy_enabled &&
               product.bulk_threshold && (
                 <div className="mb-6">
-                  <p className="text-xs font-bold uppercase tracking-wider text-gray-600 mb-2.5">
+                  <p className="text-xs font-medium uppercase tracking-[1.5px] text-[#718096] font-display mb-2.5">
                     Choose Purchase Option:
                   </p>
                   <div className="grid grid-cols-2 gap-3">
@@ -451,27 +448,27 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                           setQuantity(1);
                         }
                       }}
-                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
+                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                         computedPriceType === 'standard'
-                          ? 'border-[#FA5400] bg-[#FFF8F2] shadow-xs ring-1 ring-[#FA5400]'
-                          : 'border-gray-200 hover:border-gray-300 bg-white'
+                          ? 'border-[#0F3024] bg-white shadow-xs ring-1 ring-[#0F3024]'
+                          : 'border-[#E2E8F0] hover:border-[#0F3024] bg-white'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold text-gray-900">Standard</span>
+                        <span className="text-xs font-medium font-display text-[#2D3748]">Standard</span>
                         {computedPriceType === 'standard' && (
-                          <span className="w-4 h-4 rounded-full bg-[#FA5400] text-white flex items-center justify-center text-[10px] font-bold">
+                          <span className="w-4 h-4 rounded-full bg-[#0F3024] text-white flex items-center justify-center text-[10px] font-bold">
                             ✓
                           </span>
                         )}
                       </div>
-                      <p className="text-xs font-bold text-gray-900">
+                      <p className="text-xs font-semibold text-[#2D3748] font-sans">
                         {formatNaira(product.price_per_unit)}
-                        <span className="text-[10px] font-medium text-gray-500">
+                        <span className="text-[10px] font-normal text-[#718096]">
                           /{product.unit || 'kg'}
                         </span>
                       </p>
-                      <p className="text-[10px] text-gray-500 mt-0.5">Single unit orders</p>
+                      <p className="text-[10px] text-[#718096] mt-0.5">Single unit orders</p>
                     </button>
 
                     {/* BULK BUY OPTION CARD */}
@@ -480,29 +477,29 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                       onClick={() => {
                         setQuantity(product.bulk_threshold || 2);
                       }}
-                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
+                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                         computedPriceType === 'bulk'
-                          ? 'border-[#FA5400] bg-[#FFF8F2] shadow-xs ring-1 ring-[#FA5400]'
-                          : 'border-gray-200 hover:border-gray-300 bg-white'
+                          ? 'border-[#C05E44] bg-white shadow-xs ring-1 ring-[#C05E44]'
+                          : 'border-[#E2E8F0] hover:border-[#C05E44] bg-white'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold text-gray-900 flex items-center gap-1">
-                          🔥 Bulk Buy
+                        <span className="text-xs font-medium font-display text-[#2D3748] flex items-center gap-1">
+                          Bulk Wholesale
                         </span>
                         {computedPriceType === 'bulk' && (
-                          <span className="w-4 h-4 rounded-full bg-[#FA5400] text-white flex items-center justify-center text-[10px] font-bold">
+                          <span className="w-4 h-4 rounded-full bg-[#C05E44] text-white flex items-center justify-center text-[10px] font-bold">
                             ✓
                           </span>
                         )}
                       </div>
-                      <p className="text-xs font-bold text-[#FA5400]">
+                      <p className="text-xs font-semibold text-[#C05E44] font-sans">
                         {formatNaira(product.bulk_buy_price || product.price_per_unit)}
-                        <span className="text-[10px] font-medium text-gray-500">
+                        <span className="text-[10px] font-normal text-[#718096]">
                           /{product.unit || 'kg'}
                         </span>
                       </p>
-                      <p className="text-[10px] text-gray-500 mt-0.5">
+                      <p className="text-[10px] text-[#718096] mt-0.5">
                         Min {product.bulk_threshold} {product.unit || 'units'}
                       </p>
                     </button>
@@ -511,11 +508,11 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
               )}
 
             {/* =========================================================
-                TEMU QUANTITY SELECTOR (Qty [ 1 ▼ ] + Quick Stepper)
+                QUANTITY SELECTOR (Qty [ 1 ▼ ] + Quick Stepper)
             ========================================================= */}
             <div className="mb-6">
               <div className="flex items-center gap-3">
-                <span className="text-sm font-bold text-gray-700">Qty</span>
+                <span className="text-sm font-medium text-[#2D3748] font-sans">Qty</span>
 
                 {/* STYLED DROPDOWN */}
                 <div className="relative">
@@ -524,7 +521,7 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                     value={quantity}
                     onChange={(e) => handleQuantityChange(Number(e.target.value))}
                     disabled={purchaseMode === 'group'}
-                    className="appearance-none bg-white border border-gray-300 rounded-xl pl-3.5 pr-8 py-2 text-sm font-bold text-gray-900 hover:border-gray-400 focus:outline-none focus:border-[#FA5400] cursor-pointer shadow-2xs disabled:bg-gray-100"
+                    className="appearance-none bg-white border border-[#E2E8F0] rounded-xl pl-3.5 pr-8 py-2 text-sm font-medium text-[#2D3748] hover:border-[#0F3024] focus:outline-none focus:border-[#0F3024] cursor-pointer shadow-2xs disabled:bg-gray-100"
                   >
                     {Array.from(
                       { length: Math.min(25, product.stock_quantity || 10) },
@@ -535,59 +532,59 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                       </option>
                     ))}
                   </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#718096]">
                     <FiChevronDown className="w-4 h-4" />
                   </div>
                 </div>
 
                 {/* QUICK STEPPER BUTTONS */}
-                <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden bg-gray-50 shadow-2xs">
+                <div className="flex items-center border border-[#E2E8F0] rounded-xl overflow-hidden bg-white shadow-2xs">
                   <button
                     type="button"
                     onClick={() => handleQuantityChange(quantity - 1)}
                     disabled={quantity <= 1 || purchaseMode === 'group'}
-                    className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-200 disabled:opacity-30 disabled:hover:bg-transparent transition-colors font-bold text-base cursor-pointer"
+                    className="w-9 h-9 flex items-center justify-center text-[#718096] hover:bg-[#FAFAFA] hover:text-[#2D3748] disabled:opacity-30 disabled:hover:bg-transparent transition-colors font-medium text-base cursor-pointer"
                   >
                     −
                   </button>
-                  <span className="w-9 text-center text-xs font-bold text-gray-900">
+                  <span className="w-9 text-center text-xs font-semibold text-[#2D3748]">
                     {quantity}
                   </span>
                   <button
                     type="button"
                     onClick={() => handleQuantityChange(quantity + 1)}
                     disabled={quantity >= product.stock_quantity || purchaseMode === 'group'}
-                    className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-200 disabled:opacity-30 disabled:hover:bg-transparent transition-colors font-bold text-base cursor-pointer"
+                    className="w-9 h-9 flex items-center justify-center text-[#718096] hover:bg-[#FAFAFA] hover:text-[#2D3748] disabled:opacity-30 disabled:hover:bg-transparent transition-colors font-medium text-base cursor-pointer"
                   >
                     +
                   </button>
                 </div>
 
                 {/* STOCK STATUS */}
-                <span className="text-xs font-medium text-gray-500">
+                <span className="text-xs font-normal text-[#718096]">
                   {product.stock_quantity > 0 ? (
                     product.stock_quantity <= 5 ? (
-                      <span className="text-[#D93F3F] font-bold">
+                      <span className="text-[#C05E44] font-medium">
                         Only {product.stock_quantity} left in stock!
                       </span>
                     ) : (
                       <span>{product.stock_quantity} units available</span>
                     )
                   ) : (
-                    <span className="text-red-500 font-bold">Out of stock</span>
+                    <span className="text-[#C05E44] font-medium">Out of stock</span>
                   )}
                 </span>
               </div>
             </div>
 
             {/* =========================================================
-                TEMU DYNAMIC "ADD TO CART" CALL-TO-ACTION
+                DYNAMIC "ADD TO CART" CALL-TO-ACTION
             ========================================================= */}
             <div className="space-y-3">
               {/* LIVE SUBTOTAL */}
               <div className="flex justify-between items-baseline px-1">
-                <span className="text-xs font-semibold text-gray-500">Subtotal</span>
-                <span className="text-xl font-black text-gray-900">
+                <span className="text-xs font-medium text-[#718096]">Subtotal</span>
+                <span className="text-xl font-semibold text-[#2D3748] font-sans">
                   {formatNaira(currentUnitPrice * quantity)}
                 </span>
               </div>
@@ -597,16 +594,16 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                 type="button"
                 onClick={handleAddToCart}
                 disabled={product.stock_quantity < 1 || (purchaseMode === 'group' && isGroupFull)}
-                className="w-full bg-[#FA5400] hover:bg-[#E04B00] text-white font-bold text-base md:text-lg py-4 px-8 rounded-full transition-all duration-200 shadow-md hover:shadow-lg active:scale-[0.99] disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                className="w-full bg-[#0F3024] hover:bg-[#153426] text-white font-medium text-base md:text-lg py-4 px-8 rounded-full transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.99] disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2 font-sans"
               >
                 {product.stock_quantity < 1 ? (
                   'Out of Stock'
                 ) : purchaseMode === 'group' && isGroupFull ? (
                   'Campaign Full'
                 ) : isDiscountActive && activeDiscountPercent > 0 ? (
-                  `-${activeDiscountPercent}% now! Add to cart!`
+                  `-${activeDiscountPercent}% Special — Add to Cart`
                 ) : (
-                  'Add to cart'
+                  'Add to Cart'
                 )}
               </button>
             </div>
@@ -615,29 +612,28 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
 
         {/* =========================================================
             CROSS-CATEGORY SUGGESTED PRODUCTS ("You Might Also Like")
-            Expanded recommendations across diverse categories
         ========================================================= */}
         {relatedProducts.length > 0 && (
-          <div className="pt-10 border-t border-gray-100">
-            <div className="flex items-end justify-between mb-6">
+          <div className="pt-16 border-t border-[#E2E8F0] my-20 md:my-24">
+            <div className="flex items-end justify-between mb-8">
               <div>
-                <h2 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight">
+                <h2 className="text-2xl md:text-3xl font-medium text-[#0F3024] font-display tracking-[-0.5px]">
                   You Might Also Like
                 </h2>
-                <p className="text-xs text-gray-500 font-medium mt-0.5">
+                <p className="text-xs text-[#718096] font-normal mt-1 font-sans">
                   Handpicked farm-fresh harvests across our store
                 </p>
               </div>
               <Link
                 href="/products"
-                className="text-xs font-bold text-[#1A4331] hover:underline flex items-center gap-1"
+                className="text-xs font-semibold text-[#0F3024] hover:underline flex items-center gap-1 font-sans"
               >
                 View Catalog <span className="text-sm">›</span>
               </Link>
             </div>
 
             {/* EXPANDED RESPONSIVE GRID */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
               {relatedProducts.map((related) => (
                 <ProductCard
                   key={related.id}
