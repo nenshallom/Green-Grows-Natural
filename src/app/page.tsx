@@ -36,7 +36,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
-      <main className="max-w-[95%] lg:max-w-7xl mx-auto py-8 sm:py-12 space-y-20 md:space-y-24">
+      <main className="max-w-[95%] lg:max-w-7xl mx-auto sm:py-12  md:space-y-6">
         {/* --- HERO SECTION --- */}
         {/* <div id="home">
           <Hero />
