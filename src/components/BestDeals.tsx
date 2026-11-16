@@ -175,7 +175,7 @@ export default function BestDeals({ products }: BestDealsProps) {
           No products found in this category.
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 lg:gap-8">
           {visibleProducts.map((product) => (
             <ProductCard
               key={product.id}
