@@ -47,7 +47,7 @@ export default function BulkDeals({ products }: { products: Product[] }) {
       </div>
 
       {/* RESPONSIVE BULK PRODUCT GRID (24PX TO 32PX GAPS) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 lg:gap-8">
         {bulkProducts.slice(0, 8).map((product) => (
           <BulkProductCard
             key={product.id}
