@@ -190,7 +190,7 @@ export default function CartPage() {
     <div className="min-h-screen bg-[#FAFAFA] py-8 px-4 sm:px-6 lg:px-12 text-[#2D3748] font-sans">
       <div className="max-w-7xl mx-auto">
         {/* BREADCRUMB */}
-        <nav className="text-xs text-[#718096] mb-6 flex items-center gap-1.5 font-normal">
+        <nav className="hidden md:flex text-xs text-[#718096] mb-6 items-center gap-1.5 font-normal">
           <Link href="/" className="hover:text-[#0F3024] transition-colors">
             Home
           </Link>

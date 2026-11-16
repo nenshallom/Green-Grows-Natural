@@ -327,7 +327,7 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
 
         <div className="relative max-w-7xl mx-auto">
           {/* BREADCRUMB NAVIGATION */}
-          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs md:text-sm text-emerald-200/80 mb-5 font-sans">
+          <nav aria-label="Breadcrumb" className="hidden md:flex items-center gap-2 text-xs md:text-sm text-emerald-200/80 mb-5 font-sans">
             <Link href="/" className="hover:text-white transition-colors">Home</Link>
             <FiChevronRight className="w-3.5 h-3.5 text-emerald-300/50" />
             <Link 
@@ -387,7 +387,7 @@ export default function ProductsClient({ initialProducts }: ProductsClientProps)
       {/* =========================================================
           2. HORIZONTAL QUICK CATEGORY PILLS BAR
       ========================================================= */}
-      <section className="bg-[#FAFAFA]/95 border-b border-[#E2E8F0] shadow-xs py-3 px-4 sm:px-6 lg:px-8 sticky top-0 md:top-[85px] z-30 backdrop-blur-md">
+      <section className="hidden bg-[#FAFAFA]/95 border-b border-[#E2E8F0] shadow-xs py-3 px-4 sm:px-6 lg:px-8 sticky top-0 md:top-[85px] z-30 backdrop-blur-md">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden w-full">
             {quickPills.map((opt) => {

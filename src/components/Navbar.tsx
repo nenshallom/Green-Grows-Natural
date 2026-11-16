@@ -224,7 +224,7 @@ export default function Navbar() {
               </Link>
             </div>
 
-            {/* CATEGORIES DROPDOWN TRIGGER (TEMU STYLE: JUST BEFORE SEARCH BAR) */}
+            {/* CATEGORIES DROPDOWN TRIGGER  */}
             <div 
               className="relative flex-shrink-0 ml-3 lg:ml-6" 
               ref={categoryMenuRef}
@@ -236,7 +236,7 @@ export default function Navbar() {
                 onClick={() => setIsCategoryMenuOpen((prev) => !prev)}
                 className={`flex items-center gap-1.5 py-2 px-3.5 rounded-full text-xs lg:text-sm font-bold transition-all cursor-pointer ${
                   isCategoryMenuOpen 
-                    ? 'text-[#0F3024] bg-white border border-[#E2E8F0] shadow-2xs' 
+                    ? 'text-[#0F3024] bg-white' 
                     : 'text-[#2D3748] hover:text-[#0F3024] hover:bg-white/80'
                 }`}
                 aria-expanded={isCategoryMenuOpen}

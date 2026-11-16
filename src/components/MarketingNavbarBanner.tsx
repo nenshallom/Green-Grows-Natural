@@ -308,23 +308,28 @@ export default function MarketingNavbarBanner() {
           key={current.id || currentIndex}
           className="flex-1 flex flex-wrap items-center justify-center md:justify-start gap-2.5 min-w-0 text-center md:text-left animate-fade-in"
         >
-          {/* CAMPAIGN BADGE */}
-          <span
+          {/* CAMPAIGN BADGE AND TIMER*/}
+          <span className=' flex gap-5'>
+            <span
             className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-2xs flex-shrink-0 ${theme.badge}`}
           >
             <span className={`w-1.5 h-1.5 rounded-full ${theme.badgeDot} animate-ping`}></span>
             {current.badge_text || 'PROMOTION'}
           </span>
 
+          {/* OPTIONAL LIVE COUNTDOWN TIMER */}
+          {current.expires_at && (
+            <LiveCountdownBadge expiresAt={current.expires_at} theme={current.theme_color} />
+          )}
+          </span>
+          
+
           {/* HEADLINE */}
           <span className={`text-xs md:text-sm font-extrabold truncate max-w-xl ${theme.accentText}`}>
             {current.headline}
           </span>
 
-          {/* OPTIONAL LIVE COUNTDOWN TIMER */}
-          {current.expires_at && (
-            <LiveCountdownBadge expiresAt={current.expires_at} theme={current.theme_color} />
-          )}
+          
         </div>
 
         {/* =========================================================
