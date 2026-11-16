@@ -11,7 +11,7 @@ import MarketingNavbarBanner from '@/components/MarketingNavbarBanner';
 // --- ICONS IMPORT ---
 import { CiBellOn, CiSearch } from "react-icons/ci";
 import { RiCustomerService2Fill } from "react-icons/ri";
-import { FiMenu, FiX, FiHome, FiShoppingCart, FiMail, FiPhone, FiChevronDown } from "react-icons/fi";
+import { FiMenu, FiX, FiHome, FiShoppingCart, FiMail, FiPhone, FiChevronDown, FiList } from "react-icons/fi";
 import { VscAccount } from "react-icons/vsc";
 
 const DEFAULT_CATEGORIES = ['Vegetables', 'Tubers', 'Grains', 'Fruits', 'Livestock'];
@@ -342,117 +342,132 @@ export default function Navbar() {
         </div>
 
         {/* ==========================================
-            MOBILE NAVBAR 
+            MOBILE NAVBAR (EVERGREEN APOTHECARY & TEMU STRUCTURE)
         ========================================== */}
-        <div className="md:hidden bg-[#0F3024] w-full px-4 py-3 flex flex-col gap-2.5 shadow-sm">
-          <div className="flex justify-between items-center text-white">
-            <div className="flex items-center gap-2.5">
-              <button onClick={() => setIsMobileMenuOpen(true)} aria-label="Open mobile menu">
-                <FiMenu className="text-2xl hover:text-emerald-200 transition-colors" />
-              </button>
-              <Link href="/" className="flex items-center gap-2">
-                <div className="relative w-8 h-8 flex-shrink-0">
-                  <Image
-                    src="/images/ggnlogo-mark.webp"
-                    alt="Green Grows Natural Logo"
-                    fill
-                    sizes="32px"
-                    priority
-                    className="object-contain"
-                  />
-                </div>
-                <div className="leading-tight">
-                  <span className="font-black text-lg tracking-tight block font-display">GGN</span>
-                  <span className="text-[7px] font-semibold tracking-wider uppercase text-emerald-200 block -mt-0.5">Green Grows Natural</span>
-                </div>
-              </Link>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              {/* MOBILE SEARCH TOGGLE */}
-              <button
+        <div className="md:hidden bg-[#FAFAFA] w-full flex flex-col border-b border-[#E2E8F0]">
+          {/* ROW 1: PRIMARY APP BAR */}
+          <div className="w-full px-3 py-2.5 flex items-center justify-between gap-2">
+            {/* BRAND LOGO & MONOGRAM */}
+            <Link href="/" className="flex items-center gap-1.5 flex-shrink-0" aria-label="GGN Home">
+              <div className="relative w-7 h-7 flex-shrink-0">
+                <Image
+                  src="/images/ggnlogo-mark.webp"
+                  alt="Green Grows Natural Logo"
+                  fill
+                  sizes="28px"
+                  priority
+                  className="object-contain"
+                />
+              </div>
+              <span className="font-black text-lg tracking-tight text-[#0F3024] font-display leading-none">
+                GGN
+              </span>
+            </Link>
+
+            {/* ALWAYS-VISIBLE SEARCH PILL */}
+            <form 
+              onSubmit={handleSearchSubmit} 
+              className="flex-1 min-w-0 flex items-center bg-white border border-[#E2E8F0] rounded-full px-2.5 py-1.5 focus-within:border-[#0F3024] focus-within:ring-2 focus-within:ring-[#0F3024]/10 shadow-2xs transition-all"
+            >
+              <CiSearch className="w-4 h-4 text-[#718096] flex-shrink-0 mr-1.5 font-bold" />
+              <input 
+                ref={mobileSearchInputRef}
+                type="text" 
+                placeholder="Search produce, grains..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-transparent text-xs text-[#2D3748] placeholder-[#718096] outline-none font-medium font-sans min-w-0" 
+              />
+              {searchQuery && (
+                <button 
+                  type="button"
+                  onClick={() => { setSearchQuery(''); mobileSearchInputRef.current?.focus(); }}
+                  aria-label="Clear search"
+                  className="text-[#718096] hover:text-[#2D3748] p-0.5 ml-1 flex-shrink-0"
+                >
+                  <FiX className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </form>
+
+            {/* RIGHT ACTION CLUSTER: CATEGORIES + ACCOUNT + CART */}
+            <div className="flex items-center gap-0.5 flex-shrink-0 text-[#2D3748]">
+              {/* CATEGORIES DRAWER TRIGGER (TEMU STYLE LIST ICON) */}
+              <button 
                 type="button"
-                onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
-                aria-label="Toggle search"
-                className={`p-1.5 rounded-full transition-colors ${
-                  isMobileSearchOpen ? 'bg-white/20 text-green-200' : 'hover:bg-white/10 text-white'
-                }`}
+                onClick={() => setIsMobileMenuOpen(true)} 
+                className="p-1.5 rounded-xl hover:bg-white border border-transparent hover:border-[#E2E8F0] text-[#2D3748] hover:text-[#0F3024] transition-colors" 
+                aria-label="Open categories menu"
               >
-                <CiSearch className="text-[22px] font-bold" />
+                <FiList className="w-5 h-5" />
               </button>
 
-              {/* MOBILE CART BUTTON */}
+              {/* USER ACCOUNT LINK */}
+              <Link 
+                href={isLoggedIn ? '/dashboard' : '/login'} 
+                className="p-1.5 rounded-xl hover:bg-white border border-transparent hover:border-[#E2E8F0] text-[#2D3748] hover:text-[#0F3024] transition-colors" 
+                aria-label="Account"
+              >
+                <VscAccount className="w-5 h-5" />
+              </Link>
+
+              {/* SHOPPING CART BUTTON */}
               <button
                 type="button"
                 onClick={openCartModal}
                 aria-label="Open shopping cart"
-                className={`relative p-1 transition-transform active:scale-90 ${
-                  isCartModalOpen ? 'scale-110' : ''
+                className={`relative p-1.5 rounded-xl hover:bg-white border border-transparent hover:border-[#E2E8F0] text-[#2D3748] hover:text-[#0F3024] transition-all ${
+                  isCartModalOpen ? 'scale-105 bg-white border-[#E2E8F0]' : ''
                 }`}
               >
-                <FiShoppingCart className="text-[22px]" />
+                <FiShoppingCart className="w-5 h-5" />
                 {itemCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 inline-flex items-center justify-center px-1.5 py-0.5 text-[9px] font-bold text-white bg-[#C05E44] rounded-full border border-white">
+                  <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.2 text-[9px] font-bold text-white bg-[#C05E44] rounded-full border border-white leading-tight min-w-[16px] h-4 shadow-2xs font-sans">
                     {itemCount}
                   </span>
                 )}
               </button>
-              
-              {/* MOBILE ACCOUNT LINK */}
-              <Link href={isLoggedIn ? '/dashboard' : '/login'} aria-label="Account">
-                <VscAccount className="text-[22px]" />
-              </Link>
-
-              <Link href="/dashboard" title="Dashboard" aria-label="Notifications">
-                <CiBellOn className="text-[24px]" />
-              </Link>
             </div>
           </div>
 
-          {/* EXPANDABLE MOBILE SEARCH BAR */}
-          {isMobileSearchOpen && (
-            <div className="w-full pt-1 pb-1 animate-fade-in">
-              <form onSubmit={handleSearchSubmit} className="relative w-full flex items-center">
-                <input 
-                  ref={mobileSearchInputRef}
-                  type="text" 
-                  placeholder="Search produce, fruits, grains..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full py-2 pl-3.5 pr-16 rounded-full bg-white text-[#2D3748] text-sm outline-none font-medium shadow-md border border-[#E2E8F0]" 
-                />
-                <div className="absolute right-2 flex items-center gap-1">
-                  {searchQuery && (
-                    <button 
-                      type="button"
-                      onClick={() => { setSearchQuery(''); mobileSearchInputRef.current?.focus(); }}
-                      aria-label="Clear search"
-                      className="text-gray-400 hover:text-gray-600 p-1"
-                    >
-                      <FiX className="w-4 h-4" />
-                    </button>
-                  )}
-                  <button type="submit" aria-label="Search" className="bg-[#0F3024] text-white p-1.5 rounded-full">
-                    <CiSearch className="text-base font-bold" />
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          <div className="flex justify-between items-center text-white text-xs font-medium pt-0.5 border-t border-white/10">
-            <div className="flex gap-4 tracking-wide pt-1">
-              <a href="#categories" onClick={(e) => handleNavClick(e, 'categories')} className={getMobileNavClass('categories')}>Categories</a>
-              <a href="#deals" onClick={(e) => handleNavClick(e, 'deals')} className={getMobileNavClass('deals')}>Offers & Deals</a>
-            </div>
-            <div className="flex items-center gap-3 pt-1">
-              <a href="#faq" onClick={(e) => handleNavClick(e, 'faq')} className={`opacity-90 hover:opacity-100 ${activeSection === 'faq' ? 'border-b border-white' : ''}`}>
-                FAQs
-              </a>
-              <a href="#footer" onClick={(e) => handleNavClick(e, 'footer')} className={`opacity-90 hover:opacity-100 ${activeSection === 'footer' ? 'text-green-200' : ''}`}>
-                <RiCustomerService2Fill className="text-sm" />
-              </a>
-            </div>
+          {/* ROW 2: HORIZONTAL QUICK-CATEGORY SCROLL STRIP */}
+          <div className="bg-white border-t border-[#E2E8F0] px-3.5 py-2 flex items-center gap-5 overflow-x-auto no-scrollbar scrollbar-none whitespace-nowrap text-xs font-sans">
+            <Link
+              href="/products"
+              className={`transition-colors pb-0.5 ${
+                pathname === '/products' && !searchQuery
+                  ? 'text-[#0F3024] font-bold border-b-2 border-[#0F3024]'
+                  : 'text-[#718096] hover:text-[#0F3024] font-medium'
+              }`}
+            >
+              All Produce
+            </Link>
+            {categories.map((cat) => (
+              <Link 
+                key={cat}
+                href={`/products?category=${encodeURIComponent(cat)}`}
+                className="text-[#718096] hover:text-[#0F3024] font-medium transition-colors pb-0.5"
+              >
+                {cat}
+              </Link>
+            ))}
+            <Link 
+              href="/products?filter=Bulk+Buy"
+              className="text-[#718096] hover:text-[#0F3024] font-medium transition-colors pb-0.5"
+            >
+              Bulk Buy
+            </Link>
+            <a 
+              href="#deals"
+              onClick={(e) => handleNavClick(e, 'deals')}
+              className={`transition-colors pb-0.5 ${
+                activeSection === 'deals' && pathname === '/'
+                  ? 'text-[#0F3024] font-bold border-b-2 border-[#0F3024]'
+                  : 'text-[#718096] hover:text-[#0F3024] font-medium'
+              }`}
+            >
+              Offers & Deals
+            </a>
           </div>
         </div>
 
@@ -463,88 +478,139 @@ export default function Navbar() {
       </nav>
 
       {/* ==========================================
-          MOBILE SIDEBAR DRAWER
+          MOBILE SIDEBAR DRAWER (EVERGREEN APOTHECARY THEME)
       ========================================== */}
       {isMobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-[100] flex">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={() => setIsMobileMenuOpen(false)}></div>
-          <div className="relative w-[80%] max-w-[320px] bg-white h-full flex flex-col overflow-y-auto animate-slide-in-left shadow-2xl">
-            <div className="bg-[#0F3024] p-5 text-white flex flex-col justify-between h-[120px]">
+          <div 
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" 
+            onClick={() => setIsMobileMenuOpen(false)}
+          ></div>
+          <div className="relative w-[85%] max-w-[320px] bg-[#FAFAFA] h-full flex flex-col overflow-y-auto animate-slide-in-left shadow-2xl">
+            <div className="bg-[#0F3024] p-5 text-white flex flex-col justify-between h-[125px]">
               
               <div className="flex justify-end">
-                {/* --- UPDATED: Dynamic Drawer Link and Text --- */}
-                <Link href={isLoggedIn ? '/dashboard' : '/login'} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-1 text-sm font-medium hover:text-green-200">
-                  {isLoggedIn ? 'My Profile' : 'Sign in'} <VscAccount className="text-lg" />
+                <Link 
+                  href={isLoggedIn ? '/dashboard' : '/login'} 
+                  onClick={() => setIsMobileMenuOpen(false)} 
+                  className="flex items-center gap-1.5 text-xs font-medium text-white/90 hover:text-white bg-white/10 px-3 py-1 rounded-full border border-white/15 transition-colors font-sans"
+                >
+                  <VscAccount className="text-sm" />
+                  <span>{isLoggedIn ? 'My Profile' : 'Sign in'}</span>
                 </Link>
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="relative w-10 h-10 flex-shrink-0">
+                <div className="relative w-9 h-9 flex-shrink-0">
                   <Image
                     src="/images/ggnlogo-mark.webp"
                     alt="Green Grows Natural Logo"
                     fill
-                    sizes="40px"
+                    sizes="36px"
                     className="object-contain"
                   />
                 </div>
                 <div className="leading-tight">
-                  <p className="text-[10px] font-bold tracking-wider uppercase text-green-200">Browse Catalog</p>
-                  <h2 className="text-base font-black tracking-tight text-white leading-tight">Green Grows Natural</h2>
+                  <p className="text-[9px] font-semibold tracking-wider uppercase text-emerald-200">Fresh Agro Marketplace</p>
+                  <h2 className="text-base font-black tracking-tight text-white leading-tight font-display">Green Grows Natural</h2>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-col text-[#2D3748] text-sm font-medium font-sans">
-              <a href="#home" onClick={(e) => handleNavClick(e, 'home')} className={`flex justify-between items-center p-4 border-b border-[#E2E8F0] hover:bg-[#FAFAFA] ${activeSection === 'home' ? 'text-[#0F3024]' : ''}`}>
-                Home <FiHome className="text-lg text-[#718096]" />
-              </a>
-              <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="flex justify-between items-center p-4 hover:bg-[#FAFAFA]">
-                My Order <FiShoppingCart className="text-lg text-[#718096]" />
-              </Link>
-              <Link href="/products" onClick={() => setIsMobileMenuOpen(false)} className="flex justify-between items-center p-4 border-b border-[#E2E8F0] hover:bg-[#FAFAFA]">
-                All Products <FiShoppingCart className="text-lg text-[#718096]" />
-              </Link>
-
-              <div className="p-4 border-b border-[#E2E8F0] flex flex-col gap-3">
-                <h3 className="font-medium font-display text-[#0F3024] text-base">Categories</h3>
-                {categories.map((cat) => (
-                  <Link 
-                    key={cat}
-                    href={`/products?category=${encodeURIComponent(cat)}`} 
-                    onClick={() => setIsMobileMenuOpen(false)} 
-                    className="text-[#718096] font-medium hover:text-[#0F3024] transition-colors"
-                  >
-                    {cat}
-                  </Link>
-                ))}
+            <div className="flex flex-col text-[#2D3748] text-sm font-medium font-sans divide-y divide-[#E2E8F0]">
+              <div className="py-2 px-3 flex flex-col gap-0.5">
+                <a 
+                  href="#home" 
+                  onClick={(e) => handleNavClick(e, 'home')} 
+                  className={`flex justify-between items-center px-3 py-2.5 rounded-xl hover:bg-white transition-colors ${
+                    activeSection === 'home' && pathname === '/' ? 'text-[#0F3024] font-semibold bg-white' : 'text-[#2D3748]'
+                  }`}
+                >
+                  <span>Home</span> <FiHome className="text-base text-[#718096]" />
+                </a>
+                <Link 
+                  href="/dashboard" 
+                  onClick={() => setIsMobileMenuOpen(false)} 
+                  className="flex justify-between items-center px-3 py-2.5 rounded-xl hover:bg-white transition-colors text-[#2D3748]"
+                >
+                  <span>My Orders</span> <FiShoppingCart className="text-base text-[#718096]" />
+                </Link>
+                <Link 
+                  href="/products" 
+                  onClick={() => setIsMobileMenuOpen(false)} 
+                  className="flex justify-between items-center px-3 py-2.5 rounded-xl hover:bg-white transition-colors text-[#2D3748]"
+                >
+                  <span>All Products</span> <FiShoppingCart className="text-base text-[#718096]" />
+                </Link>
               </div>
 
-              <div className="p-4 border-b border-gray-100 flex flex-col gap-4">
-                <h3 className="font-bold text-black text-base">Best Deals & Offers</h3>
-                <Link href="/products?filter=Bulk+Buy" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 font-medium">Bulk Purchase</Link>
-                {FEATURES.ENABLE_GROUP_BUY && (
-                  <Link href="/products?filter=Group+Buy" onClick={() => setIsMobileMenuOpen(false)} className="text-gray-600 font-medium">Group Purchase</Link>
-                )}
-              </div>
-
-              <div className="p-4 flex flex-col gap-4 mb-6">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-bold text-black text-base">Contact Us</h3>
-                  <RiCustomerService2Fill className="text-xl text-black" />
+              <div className="p-4 flex flex-col gap-2.5">
+                <h3 className="font-semibold font-display text-[#0F3024] text-xs uppercase tracking-wider">Product Categories</h3>
+                <div className="flex flex-col gap-1">
+                  {categories.map((cat) => (
+                    <Link 
+                      key={cat}
+                      href={`/products?category=${encodeURIComponent(cat)}`} 
+                      onClick={() => setIsMobileMenuOpen(false)} 
+                      className="px-3 py-2 rounded-xl text-sm font-medium text-[#718096] hover:text-[#0F3024] hover:bg-white transition-colors"
+                    >
+                      {cat}
+                    </Link>
+                  ))}
                 </div>
-                <a href="mailto:greengrowsnatural@gmail.com" className="flex items-center gap-3 text-gray-700 font-medium text-xs hover:text-green-700">
-                  <FiMail className="text-base text-black" /> greengrowsnatural@gmail.com
-                </a>
-                <a href="tel:09065670171" className="flex items-center gap-3 text-gray-700 font-medium text-xs hover:text-green-700">
-                  <FiPhone className="text-base text-black" /> 09065670171
-                </a>
+              </div>
+
+              <div className="p-4 flex flex-col gap-2.5">
+                <h3 className="font-semibold font-display text-[#0F3024] text-xs uppercase tracking-wider">Deals & Savings</h3>
+                <div className="flex flex-col gap-1">
+                  <Link 
+                    href="/products?filter=Bulk+Buy" 
+                    onClick={() => setIsMobileMenuOpen(false)} 
+                    className="px-3 py-2 rounded-xl text-sm font-medium text-[#718096] hover:text-[#0F3024] hover:bg-white transition-colors"
+                  >
+                    Bulk Purchase
+                  </Link>
+                  {FEATURES.ENABLE_GROUP_BUY && (
+                    <Link 
+                      href="/products?filter=Group+Buy" 
+                      onClick={() => setIsMobileMenuOpen(false)} 
+                      className="px-3 py-2 rounded-xl text-sm font-medium text-[#718096] hover:text-[#0F3024] hover:bg-white transition-colors"
+                    >
+                      Group Purchase
+                    </Link>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-4 flex flex-col gap-3">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-semibold font-display text-[#0F3024] text-xs uppercase tracking-wider">Need Help?</h3>
+                  <RiCustomerService2Fill className="text-base text-[#0F3024]" />
+                </div>
+                <div className="flex flex-col gap-2 text-xs">
+                  <a 
+                    href="mailto:greengrowsnatural@gmail.com" 
+                    className="flex items-center gap-2.5 text-[#718096] hover:text-[#0F3024] transition-colors"
+                  >
+                    <FiMail className="text-sm text-[#0F3024]" /> greengrowsnatural@gmail.com
+                  </a>
+                  <a 
+                    href="tel:09065670171" 
+                    className="flex items-center gap-2.5 text-[#718096] hover:text-[#0F3024] transition-colors"
+                  >
+                    <FiPhone className="text-sm text-[#0F3024]" /> 09065670171
+                  </a>
+                </div>
               </div>
             </div>
           </div>
           <div className="flex-1 p-3">
-            <button onClick={() => setIsMobileMenuOpen(false)} className="text-white hover:text-gray-300 transition-colors">
-              <FiX className="text-4xl drop-shadow-lg" />
+            <button 
+              onClick={() => setIsMobileMenuOpen(false)} 
+              className="text-white hover:text-gray-300 transition-colors p-2" 
+              aria-label="Close menu"
+            >
+              <FiX className="text-3xl drop-shadow-lg" />
             </button>
           </div>
         </div>

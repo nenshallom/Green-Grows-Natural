@@ -46,6 +46,17 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
 /* Playful Bouncing Cart Modal Animations */
 .animate-cart-spawn {
   transform-origin: top right;
